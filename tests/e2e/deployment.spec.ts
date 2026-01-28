@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
  */
 
 // Get URL from environment or use the dev deployment URL
-const BASE_URL = process.env['BASE_URL'] || 'https://d1q6nlczw9cdpt.cloudfront.net';
+const BASE_URL = process.env['BASE_URL'] ?? 'https://d1q6nlczw9cdpt.cloudfront.net';
 
 // Run tests serially to avoid race conditions
 test.describe.configure({ mode: 'serial' });
@@ -98,7 +98,7 @@ test.describe('Deployment Verification', () => {
 
   test('should serve assets with correct cache headers', async ({ page }) => {
     // Intercept asset requests
-    const assetResponses: Array<{ url: string; cacheControl: string | undefined }> = [];
+    const assetResponses: { url: string; cacheControl: string | undefined }[] = [];
     
     page.on('response', (response) => {
       const url = response.url();
@@ -118,8 +118,8 @@ test.describe('Deployment Verification', () => {
     // Log cache headers for debugging
     console.log('   Asset cache headers:');
     for (const asset of assetResponses) {
-      const fileName = asset.url.split('/').pop();
-      console.log(`   - ${fileName}: ${asset.cacheControl || 'not set'}`);
+      const fileName = asset.url.split('/').pop() ?? 'unknown';
+      console.log(`   - ${fileName}: ${asset.cacheControl ?? 'not set'}`);
     }
   });
 
@@ -140,7 +140,7 @@ test.describe('Deployment Verification', () => {
     // Should load within 10 seconds (generous for cold CloudFront)
     expect(loadTime).toBeLessThan(10000);
     
-    console.log(`   Page load time: ${loadTime}ms`);
+    console.log(`   Page load time: ${String(loadTime)}ms`);
   });
 
   test('should have valid meta tags', async ({ page }) => {
@@ -172,7 +172,7 @@ test.describe('Deployment Verification', () => {
 
 test.describe('Performance Checks', () => {
   test('should have reasonable bundle sizes', async ({ page }) => {
-    const resources: Array<{ url: string; size: number }> = [];
+    const resources: { url: string; size: number }[] = [];
     
     page.on('response', async (response) => {
       const url = response.url();
@@ -190,7 +190,7 @@ test.describe('Performance Checks', () => {
     console.log('\n   Bundle sizes:');
     for (const resource of resources) {
       const sizeKB = (resource.size / 1024).toFixed(1);
-      const fileName = resource.url.split('/').pop();
+      const fileName = resource.url.split('/').pop() ?? 'unknown';
       console.log(`   - ${fileName}: ${sizeKB} KB`);
     }
     

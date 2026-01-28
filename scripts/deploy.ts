@@ -31,7 +31,7 @@ const CONFIG_FILE = join(import.meta.dirname, '../.deploy-config.json');
 
 function loadPersistedConfig(): Record<string, { distributionId: string; url: string }> {
   if (existsSync(CONFIG_FILE)) {
-    return JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
+    return JSON.parse(readFileSync(CONFIG_FILE, 'utf-8')) as Record<string, { distributionId: string; url: string }>;
   }
   return {};
 }
@@ -70,13 +70,13 @@ function run(command: string, silent = false): string {
     encoding: 'utf-8',
     stdio: silent ? 'pipe' : 'inherit',
     maxBuffer: 10 * 1024 * 1024,
-  }) as string;
+  });
 }
 
-function runJson<T>(command: string): T | null {
+function runJson(command: string): unknown {
   try {
     const output = execSync(command, { encoding: 'utf-8', stdio: 'pipe', maxBuffer: 10 * 1024 * 1024 });
-    return JSON.parse(output) as T;
+    return JSON.parse(output) as unknown;
   } catch {
     return null;
   }
@@ -141,18 +141,22 @@ function findExistingDistribution(bucket: string, profile: string): string | nul
   
   interface DistributionSummary {
     Id: string;
-    Origins: { Items: Array<{ DomainName: string }> };
+    Origins: { Items: { DomainName: string }[] };
     Comment: string;
   }
   
-  const result = runJson<{ DistributionList: { Items: DistributionSummary[] } }>(
+  interface DistributionListResponse {
+    DistributionList?: { Items?: DistributionSummary[] };
+  }
+  
+  const result = runJson(
     `aws cloudfront list-distributions --profile ${profile}`
-  );
+  ) as DistributionListResponse | null;
   
   if (!result?.DistributionList?.Items) return null;
   
   for (const dist of result.DistributionList.Items) {
-    const origins = dist.Origins?.Items || [];
+    const origins = dist.Origins.Items;
     for (const origin of origins) {
       if (origin.DomainName.includes(bucket)) {
         console.log(`✅ Found existing distribution: ${dist.Id}\n`);
@@ -172,9 +176,13 @@ function createCloudFrontDistribution(bucket: string, profile: string, region: s
   let oacId: string;
   
   // Check if OAC exists
-  const oacList = runJson<{ OriginAccessControlList: { Items: Array<{ Id: string; Name: string }> } }>(
+  interface OacListResponse {
+    OriginAccessControlList?: { Items?: { Id: string; Name: string }[] };
+  }
+  
+  const oacList = runJson(
     `aws cloudfront list-origin-access-controls --profile ${profile}`
-  );
+  ) as OacListResponse | null;
   
   const existingOac = oacList?.OriginAccessControlList?.Items?.find(o => o.Name === oacName);
   
@@ -190,18 +198,22 @@ function createCloudFrontDistribution(bucket: string, profile: string, region: s
       OriginAccessControlOriginType: 's3',
     };
     
-    const oacResult = runJson<{ OriginAccessControl: { Id: string } }>(
-      `aws cloudfront create-origin-access-control --origin-access-control-config '${JSON.stringify(oacConfig)}' --profile ${profile}`
-    );
+    interface OacCreateResponse {
+      OriginAccessControl?: { Id: string };
+    }
     
-    if (!oacResult) throw new Error('Failed to create OAC');
+    const oacResult = runJson(
+      `aws cloudfront create-origin-access-control --origin-access-control-config '${JSON.stringify(oacConfig)}' --profile ${profile}`
+    ) as OacCreateResponse | null;
+    
+    if (!oacResult?.OriginAccessControl) throw new Error('Failed to create OAC');
     oacId = oacResult.OriginAccessControl.Id;
     console.log(`   Created OAC: ${oacId}`);
   }
   
   // Create CloudFront distribution config
   const distConfig = {
-    CallerReference: `${bucket}-${Date.now()}`,
+    CallerReference: `${bucket}-${String(Date.now())}`,
     Comment: `Chronas Frontend ${env.toUpperCase()}`,
     DefaultRootObject: 'index.html',
     Origins: {
@@ -237,11 +249,15 @@ function createCloudFrontDistribution(bucket: string, profile: string, region: s
     IsIPV6Enabled: true,
   };
   
-  const distResult = runJson<{ Distribution: { Id: string; DomainName: string } }>(
-    `aws cloudfront create-distribution --distribution-config '${JSON.stringify(distConfig)}' --profile ${profile}`
-  );
+  interface DistCreateResponse {
+    Distribution?: { Id: string; DomainName: string };
+  }
   
-  if (!distResult) throw new Error('Failed to create CloudFront distribution');
+  const distResult = runJson(
+    `aws cloudfront create-distribution --distribution-config '${JSON.stringify(distConfig)}' --profile ${profile}`
+  ) as DistCreateResponse | null;
+  
+  if (!distResult?.Distribution) throw new Error('Failed to create CloudFront distribution');
   
   const distId = distResult.Distribution.Id;
   const distUrl = `https://${distResult.Distribution.DomainName}`;
@@ -252,9 +268,17 @@ function createCloudFrontDistribution(bucket: string, profile: string, region: s
   // Update S3 bucket policy to allow CloudFront access
   console.log('🔒 Updating S3 bucket policy for CloudFront...');
   
-  const accountId = runJson<{ Account: string }>(
+  interface CallerIdentityResponse {
+    Account?: string;
+  }
+  
+  const callerIdentity = runJson(
     `aws sts get-caller-identity --profile ${profile}`
-  )?.Account;
+  ) as CallerIdentityResponse | null;
+  
+  const accountId = callerIdentity?.Account;
+  
+  if (!accountId) throw new Error('Failed to get AWS account ID');
   
   const bucketPolicy = {
     Version: '2012-10-17',
@@ -288,10 +312,15 @@ function createCloudFrontDistribution(bucket: string, profile: string, region: s
 }
 
 function getDistributionUrl(distId: string, profile: string): string {
-  const result = runJson<{ Distribution: { DomainName: string } }>(
+  interface DistGetResponse {
+    Distribution?: { DomainName: string };
+  }
+  
+  const result = runJson(
     `aws cloudfront get-distribution --id ${distId} --profile ${profile}`
-  );
-  return result ? `https://${result.Distribution.DomainName}` : '';
+  ) as DistGetResponse | null;
+  
+  return result?.Distribution ? `https://${result.Distribution.DomainName}` : '';
 }
 
 function deploy(environment: string): void {
@@ -324,11 +353,11 @@ function deploy(environment: string): void {
 
   // Step 3: Check/create CloudFront distribution
   const persistedConfig = loadPersistedConfig();
-  let distributionId = persistedConfig[environment]?.distributionId || '';
-  let distributionUrl = persistedConfig[environment]?.url || '';
+  let distributionId = persistedConfig[environment]?.distributionId ?? '';
+  let distributionUrl = persistedConfig[environment]?.url ?? '';
   
   if (!distributionId) {
-    distributionId = findExistingDistribution(config.s3Bucket, config.awsProfile) || '';
+    distributionId = findExistingDistribution(config.s3Bucket, config.awsProfile) ?? '';
   }
   
   if (!distributionId) {
@@ -411,7 +440,7 @@ function deploy(environment: string): void {
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`✅ Deployment to ${environment} complete!`);
-  console.log(`${'='.repeat(60)}`);
+  console.log('='.repeat(60));
   console.log(`\n   🌐 URL: ${distributionUrl}`);
   console.log(`   📦 Bucket: s3://${config.s3Bucket}/`);
   console.log(`   ☁️  Distribution: ${distributionId}`);
