@@ -1,0 +1,29 @@
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background, #0f0f1a);
+  color: var(--color-text-primary, #ffffff);
+  overflow: auto;
+  min-height: 0; /* Important for flex children to scroll properly */
+}
+
+.content {
+  flex: 1;
+  padding: var(--spacing-md, 16px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* When used for map content, remove padding */
+.mainContent.mapView .content {
+  padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content {
+    padding: var(--spacing-sm, 8px);
+  }
+}

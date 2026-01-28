@@ -1,0 +1,95 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface, #1a1a2e);
+  color: var(--color-text-primary, #ffffff);
+  border-right: 1px solid var(--color-border, #333);
+  transition: width 0.3s ease, transform 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.open {
+  width: var(--sidebar-width, 250px);
+  min-width: var(--sidebar-width, 250px);
+}
+
+.closed {
+  width: var(--sidebar-collapsed-width, 0px);
+  min-width: var(--sidebar-collapsed-width, 0px);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md, 16px);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.section {
+  margin-bottom: var(--spacing-lg, 24px);
+}
+
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #888);
+  margin: 0 0 var(--spacing-sm, 8px) 0;
+  padding-bottom: var(--spacing-xs, 4px);
+  border-bottom: 1px solid var(--color-border, #333);
+}
+
+.placeholder {
+  color: var(--color-text-secondary, #888);
+  font-size: 0.875rem;
+  font-style: italic;
+  padding: var(--spacing-sm, 8px);
+  background-color: var(--color-background, #0f0f1a);
+  border-radius: var(--border-radius, 4px);
+}
+
+.toggleButton {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background-color: var(--color-surface, #1a1a2e);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 0 4px 4px 0;
+  color: var(--color-text-primary, #ffffff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  z-index: 10;
+}
+
+.toggleButton:hover {
+  background-color: var(--color-primary, #4a90d9);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--header-height, 60px);
+    bottom: var(--footer-height, 40px);
+    z-index: var(--z-index-sidebar, 90);
+  }
+
+  .open {
+    transform: translateX(0);
+  }
+
+  .closed {
+    transform: translateX(-100%);
+    width: var(--sidebar-width, 250px);
+  }
+}

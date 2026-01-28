@@ -1,0 +1,54 @@
+/**
+ * AppShell Layout Styles
+ * Requirements: 2.1, 2.4
+ */
+
+.shell {
+  display: grid;
+  grid-template-rows: var(--header-height, 64px) 1fr var(--footer-height, 48px);
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--color-background, #ffffff);
+}
+
+.body {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.mainContent {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Responsive: Small screens */
+@media (max-width: 767px) {
+  .shell {
+    grid-template-rows: var(--header-height-mobile, 56px) 1fr var(--footer-height-mobile, 40px);
+  }
+
+  .body {
+    position: relative;
+  }
+
+  .sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: var(--z-fixed, 300);
+  }
+
+  .mainContent {
+    width: 100%;
+  }
+}

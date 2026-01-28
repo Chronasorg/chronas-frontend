@@ -1,0 +1,78 @@
+{
+  "name": "chronas-frontend",
+  "version": "0.1.0",
+  "description": "Modern React 19 frontend shell for Chronas - Interactive Historical Map Application",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test --grep-invert deployment",
+    "test:e2e:ui": "playwright test --ui --grep-invert deployment",
+    "test:deploy": "playwright test tests/e2e/deployment.spec.ts",
+    "test:deploy:staging": "DEPLOY_ENV=staging playwright test tests/e2e/deployment.spec.ts",
+    "test:deploy:prod": "DEPLOY_ENV=production playwright test tests/e2e/deployment.spec.ts",
+    "deploy": "tsx scripts/deploy.ts",
+    "deploy:staging": "tsx scripts/deploy.ts staging",
+    "deploy:prod": "tsx scripts/deploy.ts production",
+    "typecheck": "tsc --noEmit",
+    "ci": "npm run lint && npm run test && npm run build",
+    "ci:full": "npm run lint && npm run test && npm run test:e2e && npm run build",
+    "verify": "npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^6.28.0",
+    "zustand": "^5.0.2",
+    "axios": "^1.7.9"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@playwright/test": "^1.49.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "fast-check": "^3.23.2",
+    "globals": "^15.14.0",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.6",
+    "vitest": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8"
+  },
+  "keywords": [
+    "chronas",
+    "history",
+    "map",
+    "react",
+    "vite",
+    "typescript"
+  ],
+  "author": "Chronas Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chronas/chronas-frontend.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
