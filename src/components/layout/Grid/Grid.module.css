@@ -1,0 +1,88 @@
+/**
+ * Grid component styles
+ * CSS Grid layout support
+ */
+
+.grid {
+  display: grid;
+}
+
+/* Gap variants */
+.gap-none {
+  gap: 0;
+}
+
+.gap-xs {
+  gap: var(--spacing-xs, 0.25rem);
+}
+
+.gap-sm {
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.gap-md {
+  gap: var(--spacing-md, 1rem);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg, 1.5rem);
+}
+
+.gap-xl {
+  gap: var(--spacing-xl, 2rem);
+}
+
+/* Column gap variants */
+.column-gap-none {
+  column-gap: 0;
+}
+
+.column-gap-xs {
+  column-gap: var(--spacing-xs, 0.25rem);
+}
+
+.column-gap-sm {
+  column-gap: var(--spacing-sm, 0.5rem);
+}
+
+.column-gap-md {
+  column-gap: var(--spacing-md, 1rem);
+}
+
+.column-gap-lg {
+  column-gap: var(--spacing-lg, 1.5rem);
+}
+
+.column-gap-xl {
+  column-gap: var(--spacing-xl, 2rem);
+}
+
+/* Row gap variants */
+.row-gap-none {
+  row-gap: 0;
+}
+
+.row-gap-xs {
+  row-gap: var(--spacing-xs, 0.25rem);
+}
+
+.row-gap-sm {
+  row-gap: var(--spacing-sm, 0.5rem);
+}
+
+.row-gap-md {
+  row-gap: var(--spacing-md, 1rem);
+}
+
+.row-gap-lg {
+  row-gap: var(--spacing-lg, 1.5rem);
+}
+
+.row-gap-xl {
+  row-gap: var(--spacing-xl, 2rem);
+}
+
+/* Grid item */
+.grid-item {
+  /* Default styles for grid items */
+}

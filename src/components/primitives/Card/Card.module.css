@@ -1,0 +1,123 @@
+/**
+ * Card component styles
+ * Theme-aware using CSS custom properties from variables.css
+ * Elevation shadows match Material-UI card shadows
+ */
+
+/* Base card styles */
+.card {
+  background-color: var(--chronas-back-1);
+  border: 1px solid var(--chronas-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition:
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+/* Elevation: None */
+.elevation-none {
+  box-shadow: none;
+}
+
+/* Elevation: Low */
+.elevation-low {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+/* Elevation: Medium */
+.elevation-medium {
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* Elevation: High */
+.elevation-high {
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.19),
+    0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* Clickable card */
+.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.clickable:hover {
+  transform: translateY(-2px);
+}
+
+.clickable:hover.elevation-none {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.clickable:hover.elevation-low {
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.clickable:hover.elevation-medium {
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.19),
+    0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+.clickable:hover.elevation-high {
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.25),
+    0 10px 10px rgba(0, 0, 0, 0.22);
+}
+
+.clickable:active {
+  transform: translateY(0);
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+/* Header section */
+.header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--chronas-border);
+}
+
+.title {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--chronas-fore-1);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.subtitle {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--chronas-fore-2);
+  margin-top: var(--spacing-xs);
+  line-height: 1.4;
+}
+
+/* Content section */
+.content {
+  padding: var(--spacing-md);
+}
+
+/* Actions section */
+.actions {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1px solid var(--chronas-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}

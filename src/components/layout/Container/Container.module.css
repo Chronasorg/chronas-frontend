@@ -1,0 +1,43 @@
+/**
+ * Container component styles
+ * Content width constraint and centering
+ */
+
+.container {
+  width: 100%;
+  padding-left: var(--spacing-md, 1rem);
+  padding-right: var(--spacing-md, 1rem);
+  box-sizing: border-box;
+}
+
+/* Center content horizontally */
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Max width presets */
+.max-width-sm {
+  max-width: 640px;
+}
+
+.max-width-md {
+  max-width: 768px;
+}
+
+.max-width-lg {
+  max-width: 1024px;
+}
+
+.max-width-xl {
+  max-width: 1280px;
+}
+
+.max-width-full {
+  max-width: 100%;
+}
+
+/* Fluid mode - full width with padding */
+.fluid {
+  max-width: 100%;
+}

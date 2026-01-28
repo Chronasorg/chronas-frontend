@@ -1,0 +1,139 @@
+/**
+ * Button component styles
+ * Theme-aware using CSS custom properties from variables.css
+ */
+
+/* Base button styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    opacity var(--transition-fast),
+    box-shadow var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+/* Variant: Primary */
+.variant-primary {
+  background-color: var(--chronas-highlight);
+  color: var(--chronas-back-1);
+  border: 1px solid var(--chronas-highlight);
+}
+
+.variant-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.variant-primary:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+/* Variant: Secondary */
+.variant-secondary {
+  background-color: transparent;
+  color: var(--chronas-fore-1);
+  border: 1px solid var(--chronas-fore-1);
+}
+
+.variant-secondary:hover:not(:disabled) {
+  background-color: var(--chronas-back-2);
+  border-color: var(--chronas-fore-2);
+}
+
+.variant-secondary:active:not(:disabled) {
+  background-color: var(--chronas-back-3);
+}
+
+/* Variant: Text */
+.variant-text {
+  background-color: transparent;
+  color: var(--chronas-fore-1);
+  border: 1px solid transparent;
+}
+
+.variant-text:hover:not(:disabled) {
+  background-color: var(--chronas-back-2);
+}
+
+.variant-text:active:not(:disabled) {
+  background-color: var(--chronas-back-3);
+}
+
+/* Size: Small */
+.size-small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  min-height: 28px;
+}
+
+/* Size: Medium */
+.size-medium {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  min-height: 36px;
+}
+
+/* Size: Large */
+.size-large {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  min-height: 44px;
+}
+
+/* Full width */
+.fullWidth {
+  width: 100%;
+}
+
+/* Disabled state */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state */
+.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Icon containers */
+.startIcon,
+.endIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.startIcon {
+  margin-right: var(--spacing-xs);
+}
+
+.endIcon {
+  margin-left: var(--spacing-xs);
+}
+
+/* Label */
+.label {
+  display: inline-flex;
+  align-items: center;
+}

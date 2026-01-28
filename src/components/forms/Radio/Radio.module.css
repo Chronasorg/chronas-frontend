@@ -1,0 +1,117 @@
+/**
+ * Radio component styles
+ * Theme-aware using CSS custom properties from variables.css
+ */
+
+/* Container - clickable label wrapper */
+.container {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  gap: var(--spacing-sm);
+}
+
+/* Hidden native input */
+.input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom radio visual */
+.radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--chronas-border);
+  border-radius: 50%;
+  background-color: var(--chronas-back-1);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+/* Inner dot */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: transparent;
+  transition: background-color var(--transition-fast);
+}
+
+/* Checked state */
+.input:checked + .radio {
+  border-color: var(--chronas-highlight);
+}
+
+.input:checked + .radio .dot {
+  background-color: var(--chronas-highlight);
+}
+
+/* Focus state */
+.input:focus-visible + .radio {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+/* Hover state */
+.container:hover .radio {
+  border-color: var(--chronas-fore-2);
+}
+
+.container:hover .input:checked + .radio {
+  border-color: var(--chronas-fore-2);
+}
+
+.container:hover .input:checked + .radio .dot {
+  background-color: var(--chronas-fore-2);
+}
+
+/* Label text */
+.label {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--chronas-fore-1);
+}
+
+/* Disabled state */
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.disabled .radio {
+  background-color: var(--chronas-back-2);
+}
+
+.disabled:hover .radio {
+  border-color: var(--chronas-border);
+}
+
+.disabled .input:checked + .radio {
+  border-color: var(--chronas-fore-3);
+}
+
+.disabled .input:checked + .radio .dot {
+  background-color: var(--chronas-fore-3);
+}
+
+/* RadioGroup styles */
+.group {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.direction-row {
+  flex-direction: row;
+}
+
+.direction-column {
+  flex-direction: column;
+}

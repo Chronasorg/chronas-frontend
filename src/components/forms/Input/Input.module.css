@@ -1,0 +1,125 @@
+/**
+ * Input component styles
+ * Theme-aware using CSS custom properties from variables.css
+ * Features floating label animation
+ */
+
+/* Container */
+.container {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Input wrapper for positioning */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Floating label */
+.label {
+  position: absolute;
+  left: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--chronas-fore-2);
+  pointer-events: none;
+  transition:
+    transform var(--transition-fast),
+    font-size var(--transition-fast),
+    top var(--transition-fast),
+    color var(--transition-fast);
+  background-color: var(--chronas-back-1);
+  padding: 0 var(--spacing-xs);
+}
+
+.label.floating {
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
+  font-size: var(--font-size-sm);
+  color: var(--chronas-fore-1);
+}
+
+/* Input field */
+.input {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--chronas-fore-1);
+  background-color: var(--chronas-back-1);
+  border: 1px solid var(--chronas-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-sm);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: var(--chronas-fore-3);
+  opacity: 0.7;
+}
+
+/* Focus state */
+.focused .input {
+  border-color: var(--chronas-highlight);
+  box-shadow: 0 0 0 2px rgba(173, 135, 27, 0.2);
+}
+
+.focused .label.floating {
+  color: var(--chronas-highlight);
+}
+
+/* Error state */
+.error .input {
+  border-color: var(--color-error);
+}
+
+.error .label {
+  color: var(--color-error);
+}
+
+.error.focused .input {
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+}
+
+/* Disabled state */
+.disabled .input {
+  background-color: var(--chronas-back-2);
+  color: var(--chronas-fore-3);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.disabled .label {
+  color: var(--chronas-fore-3);
+}
+
+/* Helper text */
+.helperText {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--chronas-fore-2);
+  margin-top: var(--spacing-xs);
+  padding-left: var(--spacing-sm);
+}
+
+/* Error message */
+.errorMessage {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-top: var(--spacing-xs);
+  padding-left: var(--spacing-sm);
+}

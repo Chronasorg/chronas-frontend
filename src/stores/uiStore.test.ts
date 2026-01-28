@@ -5,13 +5,16 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useUIStore, UI_STORAGE_KEY, isValidTheme, isValidLocale, defaultState, type Theme } from './uiStore';
+import { useUIStore, UI_STORAGE_KEY, isValidTheme, isValidLocale, defaultState, applyThemeToDocument, type Theme } from './uiStore';
 
 describe('uiStore', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();
     vi.clearAllMocks();
+    
+    // Reset the document data-theme attribute
+    document.documentElement.removeAttribute('data-theme');
     
     // Reset the store to default state
     useUIStore.setState({
@@ -71,6 +74,19 @@ describe('uiStore', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Invalid theme value: invalid, ignoring');
       
       consoleSpy.mockRestore();
+    });
+
+    it('should apply theme to document element via data-theme attribute', () => {
+      const { setTheme } = useUIStore.getState();
+      
+      setTheme('dark');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      
+      setTheme('luther');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('luther');
+      
+      setTheme('light');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     });
   });
 
@@ -219,6 +235,20 @@ describe('uiStore', () => {
       expect(state.sidebarOpen).toBe(true);
       expect(state.isFullscreen).toBe(false);
     });
+
+    it('should apply default theme to document element', () => {
+      const { setTheme, resetToDefaults } = useUIStore.getState();
+      
+      // Set a non-default theme
+      setTheme('dark');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      
+      // Reset to defaults
+      resetToDefaults();
+      
+      // Verify default theme is applied to document
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    });
   });
 
   describe('localStorage persistence', () => {
@@ -296,6 +326,19 @@ describe('uiStore', () => {
   describe('UI_STORAGE_KEY', () => {
     it('should be the expected value', () => {
       expect(UI_STORAGE_KEY).toBe('chs_ui_preferences');
+    });
+  });
+
+  describe('applyThemeToDocument', () => {
+    it('should set data-theme attribute on document element', () => {
+      applyThemeToDocument('dark');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      
+      applyThemeToDocument('luther');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('luther');
+      
+      applyThemeToDocument('light');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     });
   });
 });

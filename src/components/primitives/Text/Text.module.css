@@ -1,0 +1,140 @@
+/**
+ * Text component styles
+ * Theme-aware using CSS custom properties from variables.css
+ */
+
+/* Base text styles */
+.text {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-base);
+  line-height: var(--line-height-base);
+}
+
+/* Variant: h1 */
+.variant-h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01562em;
+}
+
+/* Variant: h2 */
+.variant-h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.00833em;
+}
+
+/* Variant: h3 */
+.variant-h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+  letter-spacing: 0;
+}
+
+/* Variant: h4 */
+.variant-h4 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+  letter-spacing: 0.00735em;
+}
+
+/* Variant: h5 */
+.variant-h5 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+  letter-spacing: 0;
+}
+
+/* Variant: h6 */
+.variant-h6 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+  letter-spacing: 0.0075em;
+}
+
+/* Variant: body1 */
+.variant-body1 {
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  line-height: var(--line-height-base);
+  letter-spacing: 0.00938em;
+}
+
+/* Variant: body2 */
+.variant-body2 {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  line-height: var(--line-height-base);
+  letter-spacing: 0.01071em;
+}
+
+/* Variant: caption */
+.variant-caption {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  line-height: var(--line-height-base);
+  letter-spacing: 0.03333em;
+}
+
+/* Variant: overline */
+.variant-overline {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  line-height: var(--line-height-base);
+  letter-spacing: 0.08333em;
+  text-transform: uppercase;
+}
+
+/* Color: primary */
+.color-primary {
+  color: var(--chronas-fore-1);
+}
+
+/* Color: secondary */
+.color-secondary {
+  color: var(--chronas-fore-2);
+}
+
+/* Color: error */
+.color-error {
+  color: var(--color-error);
+}
+
+/* Color: inherit */
+.color-inherit {
+  color: inherit;
+}
+
+/* Alignment: left */
+.align-left {
+  text-align: left;
+}
+
+/* Alignment: center */
+.align-center {
+  text-align: center;
+}
+
+/* Alignment: right */
+.align-right {
+  text-align: right;
+}
+
+/* Alignment: justify */
+.align-justify {
+  text-align: justify;
+}
+
+/* No wrap (truncation with ellipsis) */
+.noWrap {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

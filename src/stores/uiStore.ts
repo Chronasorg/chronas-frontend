@@ -4,11 +4,23 @@
  * Manages UI preferences state with localStorage persistence.
  * Uses Zustand for state management with persist middleware.
  *
- * Requirements: 4.2, 4.3
+ * Requirements: 1.6, 4.2, 4.3
  */
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+
+/**
+ * Applies the theme to the document element by setting the data-theme attribute.
+ * This enables CSS custom properties to be applied based on the active theme.
+ *
+ * @param theme - The theme to apply ('light', 'dark', or 'luther')
+ */
+function applyThemeToDocument(theme: Theme): void {
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+}
 
 // localStorage key for UI preferences
 const UI_STORAGE_KEY = 'chs_ui_preferences';
@@ -88,7 +100,7 @@ export const useUIStore = create<UIStore>()(
       ...defaultState,
 
       /**
-       * Sets the application theme.
+       * Sets the application theme and applies it to the document element.
        *
        * @param theme - The theme to set ('light', 'dark', or 'luther')
        */
@@ -97,6 +109,7 @@ export const useUIStore = create<UIStore>()(
           console.warn(`Invalid theme value: ${String(theme)}, ignoring`);
           return;
         }
+        applyThemeToDocument(theme);
         set({ theme });
       },
 
@@ -142,6 +155,7 @@ export const useUIStore = create<UIStore>()(
        * Resets all UI preferences to default values.
        */
       resetToDefaults: () => {
+        applyThemeToDocument(defaultState.theme);
         set(defaultState);
       },
     }),
@@ -176,6 +190,8 @@ export const useUIStore = create<UIStore>()(
           if (!isValidLocale(state.locale)) {
             state.locale = defaultState.locale;
           }
+          // Apply the theme to the document element on rehydration
+          applyThemeToDocument(state.theme);
         }
       },
     }
@@ -187,3 +203,6 @@ export { UI_STORAGE_KEY };
 
 // Export default state for testing
 export { defaultState };
+
+// Export applyThemeToDocument for testing purposes
+export { applyThemeToDocument };

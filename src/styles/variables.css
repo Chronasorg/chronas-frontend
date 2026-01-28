@@ -17,6 +17,17 @@
   --color-error: #f44336;
   --color-info: #2196f3;
 
+  /* Chronas Theme Colors - Light (default) */
+  --chronas-fore-1: #6a6a6a;
+  --chronas-fore-2: #494949;
+  --chronas-fore-3: #383B32;
+  --chronas-back-1: #ffffff;
+  --chronas-back-2: #F2F2F2;
+  --chronas-back-3: #cbcbcb;
+  --chronas-highlight: rgb(173, 135, 27);
+  --chronas-border: rgba(200, 200, 200, 1);
+  --chronas-gradient: linear-gradient(180deg, #fff 0, #F2F2F2);
+
   /* Typography */
   --font-family-base:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans',
@@ -82,6 +93,17 @@
   --color-text: #ffffff;
   --color-text-secondary: #b0b0b0;
   --color-border: #333333;
+
+  /* Chronas Theme Colors - Dark */
+  --chronas-fore-1: #F2F2F2;
+  --chronas-fore-2: #e2e2e2;
+  --chronas-fore-3: #cbcbcb;
+  --chronas-back-1: #333;
+  --chronas-back-2: #171717;
+  --chronas-back-3: #000;
+  --chronas-highlight: rgba(173, 135, 27);
+  --chronas-border: rgba(200, 200, 200, 1);
+  --chronas-gradient: linear-gradient(180deg, #333 0, #000);
 }
 
 /* Luther theme (historical/sepia) */
@@ -94,4 +116,15 @@
   --color-primary: #8b4513;
   --color-primary-dark: #6b3410;
   --color-primary-light: #a0522d;
+
+  /* Chronas Theme Colors - Luther */
+  --chronas-fore-1: #fff3d3;
+  --chronas-fore-2: #e9caab;
+  --chronas-fore-3: #e9caab;
+  --chronas-back-1: #011c31;
+  --chronas-back-2: #451c2e;
+  --chronas-back-3: #451c2e;
+  --chronas-highlight: rgba(69, 28, 46, 200);
+  --chronas-border: rgba(200, 200, 200, 1);
+  --chronas-gradient: linear-gradient(180deg, #011c31 0, #451c2e);
 }

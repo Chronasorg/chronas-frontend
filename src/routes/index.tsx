@@ -1,16 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
-import { AppShell, FeaturePlaceholder } from '../components';
+import { AppShell, FeaturePlaceholder, HomePage as HomePageComponent } from '../components';
 
-// Placeholder page components
+// Home page using the new UI components
 function HomePage() {
   return (
     <AppShell>
-      <FeaturePlaceholder
-        featureName="Interactive Map"
-        description="The main historical map interface will be migrated here."
-        migrationPriority="high"
-      />
+      <HomePageComponent />
     </AppShell>
   );
 }

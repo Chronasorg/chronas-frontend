@@ -1,0 +1,100 @@
+/**
+ * Checkbox component styles
+ * Theme-aware using CSS custom properties from variables.css
+ */
+
+/* Container - clickable label wrapper */
+.container {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  gap: var(--spacing-sm);
+}
+
+/* Hidden native input */
+.input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom checkbox visual */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--chronas-border);
+  border-radius: var(--radius-xs);
+  background-color: var(--chronas-back-1);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+/* Checked state */
+.input:checked + .checkbox {
+  background-color: var(--chronas-highlight);
+  border-color: var(--chronas-highlight);
+}
+
+/* Indeterminate state */
+.input:indeterminate + .checkbox {
+  background-color: var(--chronas-highlight);
+  border-color: var(--chronas-highlight);
+}
+
+/* Focus state */
+.input:focus-visible + .checkbox {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+/* Hover state */
+.container:hover .checkbox {
+  border-color: var(--chronas-fore-2);
+}
+
+.container:hover .input:checked + .checkbox,
+.container:hover .input:indeterminate + .checkbox {
+  background-color: var(--chronas-fore-2);
+  border-color: var(--chronas-fore-2);
+}
+
+/* Icon styling */
+.icon {
+  width: 14px;
+  height: 14px;
+  fill: var(--chronas-back-1);
+}
+
+/* Label text */
+.label {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--chronas-fore-1);
+}
+
+/* Disabled state */
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.disabled .checkbox {
+  background-color: var(--chronas-back-2);
+}
+
+.disabled:hover .checkbox {
+  border-color: var(--chronas-border);
+}
+
+.disabled .input:checked + .checkbox,
+.disabled .input:indeterminate + .checkbox {
+  background-color: var(--chronas-fore-3);
+  border-color: var(--chronas-fore-3);
+}

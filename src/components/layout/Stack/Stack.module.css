@@ -1,0 +1,106 @@
+/**
+ * Stack component styles
+ * Flexbox-based layout for arranging children in a single direction
+ */
+
+.stack {
+  display: flex;
+}
+
+/* Direction variants */
+.direction-row {
+  flex-direction: row;
+}
+
+.direction-column {
+  flex-direction: column;
+}
+
+.direction-row-reverse {
+  flex-direction: row-reverse;
+}
+
+.direction-column-reverse {
+  flex-direction: column-reverse;
+}
+
+/* Spacing variants */
+.spacing-none {
+  gap: 0;
+}
+
+.spacing-xs {
+  gap: var(--spacing-xs, 0.25rem);
+}
+
+.spacing-sm {
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.spacing-md {
+  gap: var(--spacing-md, 1rem);
+}
+
+.spacing-lg {
+  gap: var(--spacing-lg, 1.5rem);
+}
+
+.spacing-xl {
+  gap: var(--spacing-xl, 2rem);
+}
+
+/* Alignment variants */
+.align-flex-start {
+  align-items: flex-start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-flex-end {
+  align-items: flex-end;
+}
+
+.align-stretch {
+  align-items: stretch;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+/* Justification variants */
+.justify-flex-start {
+  justify-content: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-flex-end {
+  justify-content: flex-end;
+}
+
+.justify-space-between {
+  justify-content: space-between;
+}
+
+.justify-space-around {
+  justify-content: space-around;
+}
+
+.justify-space-evenly {
+  justify-content: space-evenly;
+}
+
+/* Wrap */
+.wrap {
+  flex-wrap: wrap;
+}
+
+/* Divider */
+.divider {
+  flex-shrink: 0;
+}

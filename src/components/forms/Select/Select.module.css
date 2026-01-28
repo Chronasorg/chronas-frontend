@@ -1,0 +1,168 @@
+/**
+ * Select component styles
+ * Theme-aware using CSS custom properties from variables.css
+ * Custom dropdown with keyboard navigation support
+ */
+
+/* Container */
+.container {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Label */
+.label {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--chronas-fore-1);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Trigger button */
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--chronas-fore-1);
+  background-color: var(--chronas-back-1);
+  border: 1px solid var(--chronas-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md) var(--spacing-sm);
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  width: 100%;
+  text-align: left;
+}
+
+.trigger:focus {
+  border-color: var(--chronas-highlight);
+  box-shadow: 0 0 0 2px rgba(173, 135, 27, 0.2);
+}
+
+.trigger:hover:not(:disabled) {
+  border-color: var(--chronas-fore-2);
+}
+
+/* Value and placeholder */
+.value {
+  color: var(--chronas-fore-1);
+}
+
+.placeholder {
+  color: var(--chronas-fore-3);
+  opacity: 0.7;
+}
+
+/* Arrow indicator */
+.arrow {
+  font-size: var(--font-size-xs);
+  color: var(--chronas-fore-2);
+  transition: transform var(--transition-fast);
+}
+
+.open .arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown list */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  list-style: none;
+  background-color: var(--chronas-back-1);
+  border: 1px solid var(--chronas-border);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.06);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+/* Option item */
+.option {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--chronas-fore-1);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.option:hover {
+  background-color: var(--chronas-back-2);
+}
+
+.option.selected {
+  background-color: var(--chronas-highlight);
+  color: var(--chronas-back-1);
+}
+
+.option.focused {
+  background-color: var(--chronas-back-2);
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: -2px;
+}
+
+.option.selected.focused {
+  background-color: var(--chronas-highlight);
+}
+
+.optionDisabled {
+  color: var(--chronas-fore-3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.optionDisabled:hover {
+  background-color: transparent;
+}
+
+/* Error state */
+.error .trigger {
+  border-color: var(--color-error);
+}
+
+.error .trigger:focus {
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+}
+
+.error .label {
+  color: var(--color-error);
+}
+
+/* Error message */
+.errorMessage {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-top: var(--spacing-xs);
+}
+
+/* Disabled state */
+.disabled .trigger {
+  background-color: var(--chronas-back-2);
+  color: var(--chronas-fore-3);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.disabled .label {
+  color: var(--chronas-fore-3);
+}

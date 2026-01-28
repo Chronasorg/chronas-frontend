@@ -1,0 +1,78 @@
+/**
+ * SpinnerGlobal component styles
+ * Theme-aware using CSS custom properties from variables.css
+ * Matches legacy LoadingCircle component styling
+ */
+
+/* Animation timing */
+:root {
+  --spin-speed: 1s;
+}
+
+/* Wrapper - centers the spinner */
+.wrapper {
+  overflow: visible;
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Inner container */
+.inner {
+  overflow: hidden;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Logo circle fill - theme aware */
+.logoCircle {
+  fill: var(--chronas-back-1);
+  filter: drop-shadow(0 0 2px var(--chronas-fore-1));
+}
+
+/* Rotating animation for the SVG */
+.rotate {
+  animation-name: rotate;
+  animation-duration: var(--spin-speed);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading text with blinking animation */
+.loading {
+  animation: blinkingText var(--spin-speed) infinite;
+  animation-timing-function: ease-in-out;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-lg);
+  color: var(--chronas-fore-2);
+  text-align: center;
+  margin-top: var(--spacing-md);
+}
+
+@keyframes blinkingText {
+  0% {
+    opacity: 1;
+  }
+  49% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
