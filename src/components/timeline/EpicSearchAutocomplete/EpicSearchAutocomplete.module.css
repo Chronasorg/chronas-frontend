@@ -1,0 +1,327 @@
+/**
+ * EpicSearchAutocomplete Component Styles
+ *
+ * Implements autocomplete input with dropdown results list.
+ * Uses theme CSS variables for consistent styling.
+ *
+ * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7
+ */
+
+/* Main container */
+.epicSearchAutocomplete {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  max-width: 90vw;
+  
+  /* Theme-aware background */
+  background-color: var(--chronas-back-1, #ffffff);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  /* Ensure it appears above other content */
+  z-index: 1000;
+}
+
+/* Input container */
+.inputContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--chronas-border, rgba(0, 0, 0, 0.1));
+}
+
+/* Search icon */
+.searchIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chronas-fore-2, #666666);
+  flex-shrink: 0;
+}
+
+/* Search input (Requirement 8.1) */
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  
+  /* Reset input styles */
+  border: none;
+  outline: none;
+  background: transparent;
+  
+  /* Typography */
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--chronas-fore-1, #333333);
+  
+  /* Sizing */
+  padding: 4px 0;
+}
+
+.searchInput::placeholder {
+  color: var(--chronas-fore-2, #999999);
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+/* Clear button */
+.clearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Reset button styles */
+  border: none;
+  background: transparent;
+  padding: 4px;
+  margin: 0;
+  
+  /* Styling */
+  color: var(--chronas-fore-2, #666666);
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  
+  /* Transition */
+  transition: 
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.clearButton:hover {
+  color: var(--chronas-fore-1, #333333);
+  background-color: var(--chronas-back-2, rgba(0, 0, 0, 0.05));
+}
+
+.clearButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+/* Close button */
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Reset button styles */
+  border: none;
+  background: transparent;
+  padding: 4px;
+  margin: 0;
+  margin-left: 4px;
+  
+  /* Styling */
+  color: var(--chronas-fore-2, #666666);
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  
+  /* Transition */
+  transition: 
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.closeButton:hover {
+  color: var(--chronas-fore-1, #333333);
+  background-color: var(--chronas-back-2, rgba(0, 0, 0, 0.05));
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+/* Results list (Requirement 8.3) */
+.resultsList {
+  /* Reset list styles */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  
+  /* Scrollable container */
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+.resultsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.resultsList::-webkit-scrollbar-track {
+  background: var(--chronas-back-2, #f0f0f0);
+  border-radius: 4px;
+}
+
+.resultsList::-webkit-scrollbar-thumb {
+  background: var(--chronas-fore-2, #cccccc);
+  border-radius: 4px;
+}
+
+.resultsList::-webkit-scrollbar-thumb:hover {
+  background: var(--chronas-fore-1, #999999);
+}
+
+/* Result item (Requirement 8.3) */
+.resultItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  
+  padding: 10px 12px;
+  cursor: pointer;
+  
+  /* Transition */
+  transition: background-color 150ms ease;
+}
+
+.resultItem:hover {
+  background-color: var(--chronas-back-2, rgba(0, 0, 0, 0.05));
+}
+
+.resultItem.selected {
+  background-color: var(--chronas-highlight-light, rgba(74, 144, 217, 0.1));
+}
+
+.resultItem:not(:last-child) {
+  border-bottom: 1px solid var(--chronas-border, rgba(0, 0, 0, 0.05));
+}
+
+/* Epic name (Requirement 8.3) */
+.epicName {
+  flex: 1;
+  min-width: 0;
+  
+  /* Typography */
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chronas-fore-1, #333333);
+  
+  /* Truncate long names */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Epic year (Requirement 8.3) */
+.epicYear {
+  flex-shrink: 0;
+  
+  /* Typography */
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--chronas-fore-2, #666666);
+  
+  /* Styling */
+  padding: 2px 8px;
+  background-color: var(--chronas-back-2, rgba(0, 0, 0, 0.05));
+  border-radius: 4px;
+}
+
+/* No results message */
+.noResults {
+  padding: 16px 12px;
+  text-align: center;
+  
+  /* Typography */
+  font-size: 14px;
+  color: var(--chronas-fore-2, #666666);
+  font-style: italic;
+}
+
+/* Results count indicator */
+.resultsCount {
+  padding: 8px 12px;
+  text-align: center;
+  border-top: 1px solid var(--chronas-border, rgba(0, 0, 0, 0.1));
+  
+  /* Typography */
+  font-size: 12px;
+  color: var(--chronas-fore-2, #888888);
+}
+
+/* Focus styles for accessibility */
+.resultItem:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: -2px;
+}
+
+/* Animation for results appearing */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultsList {
+  animation: slideDown 150ms ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .epicSearchAutocomplete {
+    width: 280px;
+  }
+  
+  .resultsList {
+    max-height: 250px;
+  }
+  
+  .resultItem {
+    padding: 8px 10px;
+  }
+  
+  .epicName {
+    font-size: 13px;
+  }
+  
+  .epicYear {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
+
+/* Dark theme adjustments */
+:global(.theme-dark) .epicSearchAutocomplete {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+:global(.theme-dark) .resultsList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global(.theme-dark) .resultsList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:global(.theme-dark) .resultsList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Print styles - hide search */
+@media print {
+  .epicSearchAutocomplete {
+    display: none;
+  }
+}

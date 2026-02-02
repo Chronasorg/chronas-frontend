@@ -5,6 +5,9 @@
 // Layout components
 export * from './layout';
 
+// Navigation components
+export * from './navigation';
+
 // Placeholder components
 export * from './placeholders';
 
@@ -16,3 +19,6 @@ export * from './forms';
 
 // Page components
 export * from './pages';
+
+// Timeline components
+export * from './timeline';

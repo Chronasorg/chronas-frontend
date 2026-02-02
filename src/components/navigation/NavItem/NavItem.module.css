@@ -1,0 +1,77 @@
+/**
+ * NavItem Component Styles
+ *
+ * Requirements: 3.1-3.7, 4.1-4.9, 8.2, 8.3
+ */
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  margin: 4px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--chronas-fore-1);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-item:hover:not(.nav-item--disabled) {
+  background-color: var(--chronas-back-2);
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+.nav-item--active {
+  background-color: var(--chronas-back-2);
+  color: var(--chronas-highlight);
+}
+
+.nav-item--highlighted {
+  color: var(--chronas-highlight);
+}
+
+.nav-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.nav-item__icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.nav-item__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  color: var(--chronas-back-1);
+  background-color: var(--chronas-highlight);
+  border-radius: 9px;
+  border: 1px solid var(--chronas-back-1);
+}

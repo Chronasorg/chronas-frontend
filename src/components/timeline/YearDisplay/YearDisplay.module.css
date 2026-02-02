@@ -1,0 +1,204 @@
+/**
+ * YearDisplay Component Styles
+ *
+ * Implements year display with text-shadow for readability,
+ * suggested year with arrow indicator, and edge detection positioning.
+ *
+ * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6
+ */
+
+/* Container for year display elements */
+.yearDisplayContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  
+  /* Default positioning - can be adjusted by parent */
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* Edge detection adjustment (Requirement 2.5) */
+.nearEdge {
+  /* When near right edge, align to the left */
+  align-items: flex-start;
+}
+
+/* Main year label - 28px font (Requirement 2.1) */
+.yearLabel {
+  /* Reset button styles */
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  margin: 0;
+  
+  /* Typography - 28px font as per requirements */
+  font-size: 28px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.2;
+  
+  /* Color and theming */
+  color: var(--chronas-fore-2, #494949);
+  
+  /* Text shadow for readability (Requirement 2.3) */
+  text-shadow:
+    0 0 4px var(--chronas-back-1, #ffffff),
+    0 0 8px var(--chronas-back-1, #ffffff),
+    1px 1px 2px rgba(255, 255, 255, 0.8),
+    -1px -1px 2px rgba(255, 255, 255, 0.8);
+  
+  /* Interactive styling */
+  cursor: pointer;
+  border-radius: 4px;
+  transition: 
+    color 150ms ease-in-out,
+    transform 150ms ease-in-out;
+}
+
+/* Year label hover state */
+.yearLabel:hover {
+  color: var(--chronas-highlight, #4a90d9);
+  transform: scale(1.02);
+}
+
+/* Year label focus state */
+.yearLabel:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+/* Year label active state */
+.yearLabel:active {
+  transform: scale(0.98);
+}
+
+/* Suggested year container (Requirement 4.1, 4.2) */
+.suggestedYear {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  
+  /* Initially hidden */
+  opacity: 0;
+  visibility: hidden;
+  
+  /* Fade transition - 1s as per requirement 4.4 */
+  transition: 
+    opacity 1s ease-in-out,
+    visibility 1s ease-in-out;
+  
+  /* Position above the year label */
+  margin-bottom: 4px;
+}
+
+/* Suggested year visible state */
+.suggestedYear.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Suggested year text - 18px font (Requirement 4.3) */
+.suggestedYearText {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--chronas-fore-1, #6a6a6a);
+  
+  /* Text shadow for readability */
+  text-shadow:
+    0 0 3px var(--chronas-back-1, #ffffff),
+    0 0 6px var(--chronas-back-1, #ffffff);
+}
+
+/* Arrow indicator pointing down to year label (Requirement 4.2) */
+.arrowIndicator {
+  font-size: 10px;
+  color: var(--chronas-fore-1, #6a6a6a);
+  line-height: 1;
+  
+  /* Subtle animation for the arrow */
+  animation: arrowBounce 1.5s ease-in-out infinite;
+}
+
+/* Arrow bounce animation */
+@keyframes arrowBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .yearLabel {
+  color: var(--chronas-fore-2, #e0e0e0);
+  text-shadow:
+    0 0 4px var(--chronas-back-1, #1a1a1a),
+    0 0 8px var(--chronas-back-1, #1a1a1a),
+    1px 1px 2px rgba(0, 0, 0, 0.8),
+    -1px -1px 2px rgba(0, 0, 0, 0.8);
+}
+
+[data-theme='dark'] .suggestedYearText {
+  color: var(--chronas-fore-1, #b0b0b0);
+  text-shadow:
+    0 0 3px var(--chronas-back-1, #1a1a1a),
+    0 0 6px var(--chronas-back-1, #1a1a1a);
+}
+
+[data-theme='dark'] .arrowIndicator {
+  color: var(--chronas-fore-1, #b0b0b0);
+}
+
+/* Luther theme adjustments */
+[data-theme='luther'] .yearLabel {
+  color: var(--chronas-fore-2, #fff3d3);
+  text-shadow:
+    0 0 4px var(--chronas-back-1, #2d2416),
+    0 0 8px var(--chronas-back-1, #2d2416),
+    1px 1px 2px rgba(45, 36, 22, 0.8),
+    -1px -1px 2px rgba(45, 36, 22, 0.8);
+}
+
+[data-theme='luther'] .suggestedYearText {
+  color: var(--chronas-fore-1, #d4c4a8);
+  text-shadow:
+    0 0 3px var(--chronas-back-1, #2d2416),
+    0 0 6px var(--chronas-back-1, #2d2416);
+}
+
+[data-theme='luther'] .arrowIndicator {
+  color: var(--chronas-fore-1, #d4c4a8);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .yearLabel {
+    font-size: 24px;
+    padding: 2px 6px;
+  }
+  
+  .suggestedYearText {
+    font-size: 16px;
+  }
+  
+  .arrowIndicator {
+    font-size: 8px;
+  }
+}
+
+/* Print styles - ensure visibility */
+@media print {
+  .yearLabel {
+    text-shadow: none;
+    color: #000000;
+  }
+  
+  .suggestedYear {
+    display: none;
+  }
+}

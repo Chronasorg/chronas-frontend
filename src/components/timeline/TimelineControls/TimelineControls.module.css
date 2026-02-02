@@ -1,0 +1,258 @@
+/**
+ * TimelineControls Component Styles
+ *
+ * Implements control buttons with circular backgrounds, drop-shadows,
+ * and tooltips. Positioned at left: 64px with vertical stacking.
+ *
+ * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10
+ */
+
+/* Main container - positioned at left: 64px (Requirement 6.1) */
+.timelineControls {
+  position: absolute;
+  left: 64px;
+  bottom: 16px;
+  
+  /* Vertical stacking with 8px gap (Requirement 6.2) */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  /* Ensure controls are above timeline content */
+  z-index: 10;
+  
+  /* Prevent pointer events on container, enable on buttons */
+  pointer-events: none;
+}
+
+/* Button wrapper for positioning tooltip */
+.buttonWrapper {
+  position: relative;
+  pointer-events: auto;
+}
+
+/* Control button - circular background (Requirement 6.7) */
+.controlButton {
+  /* Reset button styles */
+  border: none;
+  margin: 0;
+  padding: 0;
+  
+  /* Circular shape - 32px diameter (Requirement 6.7) */
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  
+  /* Theme-aware background color (Requirement 6.8) */
+  background-color: var(--chronas-back-1, #ffffff);
+  
+  /* Theme-aware icon color (Requirement 6.8) */
+  color: var(--chronas-fore-1, #6a6a6a);
+  
+  /* Drop-shadow for visibility (Requirement 6.9) */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+  
+  /* Center icon content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Interactive styling */
+  cursor: pointer;
+  transition: 
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* Hover state (Requirement 6.8 - highlight color) */
+.controlButton:hover:not(:disabled) {
+  background-color: var(--chronas-back-2, #F2F2F2);
+  color: var(--chronas-highlight, rgb(173, 135, 27));
+  transform: scale(1.05);
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus state for accessibility */
+.controlButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight, rgb(173, 135, 27));
+  outline-offset: 2px;
+}
+
+/* Active/pressed state */
+.controlButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Disabled state (Requirement 6.5) */
+.controlButton.disabled,
+.controlButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.controlButton.disabled:hover,
+.controlButton:disabled:hover {
+  background-color: var(--chronas-back-1, #ffffff);
+  color: var(--chronas-fore-1, #6a6a6a);
+  transform: none;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Active state for autoplay button when playing */
+.controlButton.active {
+  background-color: var(--chronas-highlight, rgb(173, 135, 27));
+  color: var(--chronas-back-1, #ffffff);
+}
+
+.controlButton.active:hover:not(:disabled) {
+  background-color: var(--chronas-highlight, rgb(173, 135, 27));
+  color: var(--chronas-back-1, #ffffff);
+  filter: brightness(1.1);
+}
+
+/* Tooltip styles (Requirement 6.10) */
+.tooltip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  
+  /* Styling */
+  background-color: var(--chronas-fore-2, #494949);
+  color: var(--chronas-back-1, #ffffff);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  
+  /* Shadow for depth */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  
+  /* Initially hidden */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  
+  /* Smooth transition */
+  transition: 
+    opacity 150ms ease,
+    visibility 150ms ease;
+}
+
+/* Tooltip arrow */
+.tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  
+  /* Arrow shape */
+  border: 5px solid transparent;
+  border-right-color: var(--chronas-fore-2, #494949);
+}
+
+/* Tooltip visible state */
+.tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .controlButton {
+  background-color: var(--chronas-back-1, #333);
+  color: var(--chronas-fore-1, #F2F2F2);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .controlButton:hover:not(:disabled) {
+  background-color: var(--chronas-back-2, #171717);
+  color: var(--chronas-highlight, rgba(173, 135, 27));
+}
+
+[data-theme='dark'] .controlButton.active {
+  background-color: var(--chronas-highlight, rgba(173, 135, 27));
+  color: var(--chronas-back-1, #333);
+}
+
+[data-theme='dark'] .tooltip {
+  background-color: var(--chronas-fore-1, #F2F2F2);
+  color: var(--chronas-back-1, #333);
+}
+
+[data-theme='dark'] .tooltip::before {
+  border-right-color: var(--chronas-fore-1, #F2F2F2);
+}
+
+/* Luther theme adjustments */
+[data-theme='luther'] .controlButton {
+  background-color: var(--chronas-back-1, #011c31);
+  color: var(--chronas-fore-1, #fff3d3);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='luther'] .controlButton:hover:not(:disabled) {
+  background-color: var(--chronas-back-2, #451c2e);
+  color: var(--chronas-highlight, rgba(69, 28, 46, 200));
+}
+
+[data-theme='luther'] .controlButton.active {
+  background-color: var(--chronas-highlight, rgba(69, 28, 46, 200));
+  color: var(--chronas-fore-1, #fff3d3);
+}
+
+[data-theme='luther'] .tooltip {
+  background-color: var(--chronas-fore-2, #e9caab);
+  color: var(--chronas-back-1, #011c31);
+}
+
+[data-theme='luther'] .tooltip::before {
+  border-right-color: var(--chronas-fore-2, #e9caab);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .timelineControls {
+    /* Move closer to edge on mobile */
+    left: 16px;
+    bottom: 12px;
+    gap: 6px;
+  }
+  
+  .controlButton {
+    /* Slightly smaller on mobile */
+    width: 28px;
+    height: 28px;
+  }
+  
+  .controlButton svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .tooltip {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+/* Print styles - hide controls */
+@media print {
+  .timelineControls {
+    display: none;
+  }
+}

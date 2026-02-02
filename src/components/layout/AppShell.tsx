@@ -1,9 +1,13 @@
 import type React from 'react';
 import { Header } from './Header';
-import { Sidebar } from './Sidebar';
 import { MainContent } from './MainContent';
 import { Footer } from './Footer';
+import { Sidebar } from '../navigation/Sidebar';
+import { MenuDrawer } from '../navigation/MenuDrawer';
+import { LayersPlaceholder, CollectionsPlaceholder } from '../placeholders';
+import { Timeline } from '../timeline/Timeline/Timeline';
 import { useUIStore } from '../../stores/uiStore';
+import { useNavigationStore } from '../../stores/navigationStore';
 import styles from './AppShell.module.css';
 
 export interface AppShellProps {
@@ -17,6 +21,7 @@ export interface AppShellProps {
  */
 export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const { drawerOpen, drawerContent, closeDrawer } = useNavigationStore();
 
   return (
     <div
@@ -31,10 +36,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
           onToggle={toggleSidebar}
         />
         
+        <MenuDrawer
+          isOpen={drawerOpen}
+          contentType={drawerContent}
+          onClose={closeDrawer}
+        >
+          {drawerContent === 'layers' && <LayersPlaceholder />}
+          {drawerContent === 'collections' && <CollectionsPlaceholder />}
+        </MenuDrawer>
+        
         <MainContent>
           {children}
         </MainContent>
       </div>
+      
+      <Timeline />
       
       <Footer />
     </div>

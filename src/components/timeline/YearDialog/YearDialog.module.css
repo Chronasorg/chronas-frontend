@@ -1,0 +1,249 @@
+/**
+ * YearDialog Component Styles
+ *
+ * Implements fullscreen overlay with dark background, centered input
+ * with large font, close button, and search icon.
+ *
+ * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 14.3, 14.4
+ */
+
+/* Fullscreen overlay (Requirement 7.1, 7.2) */
+.yearDialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  
+  /* Dark semi-transparent background (Requirement 7.2) */
+  background-color: rgba(0, 0, 0, 0.8);
+  
+  /* Center content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Above all other content */
+  z-index: 9999;
+  
+  /* Smooth fade in */
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Dialog content container */
+.dialogContent {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  max-width: 90vw;
+}
+
+/* Close button in top-right corner (Requirement 7.6) */
+.closeButton {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  
+  /* Reset button styles */
+  border: none;
+  background: transparent;
+  padding: 8px;
+  margin: 0;
+  
+  /* Styling */
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  border-radius: 50%;
+  
+  /* Transition */
+  transition: 
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.closeButton:hover {
+  color: rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.closeButton:active {
+  transform: scale(0.95);
+}
+
+/* Input container (Requirement 7.3) */
+.inputContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Year input with 60px font and letter-spacing (Requirement 7.5) */
+.yearInput {
+  /* Reset input styles */
+  border: none;
+  outline: none;
+  background: transparent;
+  
+  /* Large text styling (Requirement 7.5) */
+  font-size: 60px;
+  font-weight: 300;
+  letter-spacing: 8px;
+  text-align: center;
+  
+  /* Color */
+  color: rgba(255, 255, 255, 0.95);
+  
+  /* Size */
+  width: 300px;
+  padding: 8px 16px;
+  
+  /* Bottom border for visual indication */
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  
+  /* Transition */
+  transition: border-color 200ms ease;
+}
+
+.yearInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 4px;
+  font-size: 48px;
+}
+
+.yearInput:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Remove number input spinners */
+.yearInput::-webkit-outer-spin-button,
+.yearInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.yearInput[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Search icon button (Requirement 7.8) */
+.searchButton {
+  /* Reset button styles */
+  border: none;
+  background: transparent;
+  padding: 12px;
+  margin: 0;
+  
+  /* Styling */
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  border-radius: 50%;
+  
+  /* Transition */
+  transition: 
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.searchButton:hover {
+  color: rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.searchButton:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.searchButton:active {
+  transform: scale(0.95);
+}
+
+/* Error message */
+.errorMessage {
+  color: #ff6b6b;
+  font-size: 14px;
+  text-align: center;
+  animation: shake 300ms ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Year range hint */
+.hint {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .closeButton {
+    top: 16px;
+    right: 16px;
+  }
+  
+  .yearInput {
+    font-size: 40px;
+    letter-spacing: 4px;
+    width: 200px;
+  }
+  
+  .yearInput::placeholder {
+    font-size: 32px;
+    letter-spacing: 2px;
+  }
+  
+  .dialogContent {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .yearInput {
+    font-size: 32px;
+    letter-spacing: 2px;
+    width: 160px;
+  }
+  
+  .yearInput::placeholder {
+    font-size: 24px;
+    letter-spacing: 1px;
+  }
+  
+  .inputContainer {
+    gap: 8px;
+  }
+}
+
+/* Print styles - hide dialog */
+@media print {
+  .yearDialog {
+    display: none;
+  }
+}

@@ -1,0 +1,70 @@
+/**
+ * UserAvatar Component Styles
+ *
+ * Theme-aware user avatar using CSS custom properties.
+ * Requirements: 5.1-5.7
+ */
+
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-fast);
+}
+
+.container:hover {
+  transform: scale(1.05);
+}
+
+.container:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background-color: var(--chronas-back-2);
+  border: 2px solid var(--chronas-fore-1);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarInitial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--chronas-fore-1);
+  text-transform: uppercase;
+}
+
+.scoreBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background-color: var(--chronas-highlight);
+  color: var(--chronas-back-1);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: var(--radius-full);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

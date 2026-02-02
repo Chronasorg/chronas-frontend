@@ -1,0 +1,116 @@
+/**
+ * Timeline Component Styles
+ *
+ * Implements fixed positioning at bottom of viewport with
+ * smooth height transitions between collapsed and expanded states.
+ *
+ * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
+ */
+
+/* Main timeline container */
+.timeline {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  
+  /* Background and theming */
+  background-color: var(--chronas-back-1, #ffffff);
+  background: var(--chronas-gradient, linear-gradient(180deg, #fff 0, #F2F2F2));
+  border-top: 1px solid var(--chronas-border, rgba(200, 200, 200, 1));
+  
+  /* Z-index: above map content and main content, but below modals */
+  z-index: var(--z-timeline, 350);
+  
+  /* Height transition: 500ms ease-in-out as per requirements */
+  transition: height 500ms ease-in-out;
+  
+  /* Prevent content overflow during transition */
+  overflow: hidden;
+  
+  /* Box sizing for consistent sizing */
+  box-sizing: border-box;
+  
+  /* Ensure pointer events work */
+  pointer-events: auto;
+  
+  /* Exclude from grid layout */
+  grid-row: none;
+  grid-column: none;
+}
+
+/* Collapsed state - 120px height */
+.collapsed {
+  height: 120px;
+}
+
+/* Expanded state - 400px height */
+.expanded {
+  height: 400px;
+}
+
+/* Content wrapper */
+.content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm, 0.5rem);
+  box-sizing: border-box;
+}
+
+/* Placeholder content (temporary until sub-components are added) */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--spacing-sm, 0.5rem);
+  color: var(--chronas-fore-1, #6a6a6a);
+}
+
+/* Year display placeholder */
+.yearDisplay {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--chronas-fore-2, #494949);
+  text-shadow: 0 0 4px var(--chronas-back-1, #ffffff);
+}
+
+/* State indicator placeholder */
+.stateIndicator {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--chronas-fore-1, #6a6a6a);
+  opacity: 0.7;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 767px) {
+  .timeline {
+    /* Slightly reduced heights on mobile */
+    --timeline-collapsed-height: 100px;
+    --timeline-expanded-height: 300px;
+  }
+  
+  .collapsed {
+    height: var(--timeline-collapsed-height, 100px);
+  }
+  
+  .expanded {
+    height: var(--timeline-expanded-height, 300px);
+  }
+  
+  .yearDisplay {
+    font-size: 24px;
+  }
+}
+
+/* Print styles - hide timeline when printing */
+@media print {
+  .timeline {
+    display: none;
+  }
+}

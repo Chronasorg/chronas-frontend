@@ -1,0 +1,200 @@
+/**
+ * VisTimelineWrapper Styles
+ * Styles for the vis.js timeline wrapper component.
+ * 
+ * Requirements: 5.1, 10.1, 10.7, 10.8, 11.1, 11.2
+ */
+
+.container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: ew-resize;
+}
+
+/* Override vis.js default styles for theming */
+.container :global(.vis-timeline) {
+  border: none;
+  background-color: transparent;
+}
+
+.container :global(.vis-panel.vis-center) {
+  background-color: transparent;
+}
+
+.container :global(.vis-panel.vis-bottom) {
+  background-color: transparent;
+}
+
+/* Custom time marker styling (year marker) */
+.container :global(.vis-custom-time) {
+  background-color: #FF7F6E;
+  width: 4px;
+  cursor: default;
+  z-index: 10;
+}
+
+/* ============================================
+ * Epic Item Styling
+ * Requirements: 10.1, 10.7, 10.8
+ * ============================================ */
+
+/* Base item styling */
+.container :global(.vis-item) {
+  background-color: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--chronas-border, rgba(200, 200, 200, 0.5));
+  border-radius: 2px;
+  color: var(--chronas-fore-2, #494949);
+  font-size: 12px;
+  transition: background-color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Epic item specific styling - semi-transparent backgrounds */
+.container :global(.vis-item.epic-item) {
+  background-color: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--chronas-border, rgba(200, 200, 200, 0.5));
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Hover effects for epic items */
+.container :global(.vis-item:hover),
+.container :global(.vis-item.epic-item:hover) {
+  background-color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+/* Active/pressed state */
+.container :global(.vis-item:active),
+.container :global(.vis-item.epic-item:active) {
+  background-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Selected item styling */
+.container :global(.vis-item.vis-selected),
+.container :global(.vis-item.epic-item.vis-selected) {
+  background-color: var(--chronas-highlight, #4a90d9);
+  border-color: var(--chronas-highlight, #4a90d9);
+  color: white;
+  box-shadow: 0 2px 6px rgba(74, 144, 217, 0.4);
+}
+
+/* Range item styling */
+.container :global(.vis-item.vis-range),
+.container :global(.vis-item.epic-item.vis-range) {
+  border-radius: 3px;
+}
+
+/* Range item content */
+.container :global(.vis-item.vis-range .vis-item-content) {
+  padding: 2px 4px;
+}
+
+/* ============================================
+ * Time Axis Styling
+ * ============================================ */
+
+.container :global(.vis-time-axis .vis-text) {
+  color: var(--chronas-fore-1, #6a6a6a);
+  font-size: 11px;
+}
+
+.container :global(.vis-time-axis .vis-grid.vis-minor) {
+  border-color: var(--chronas-border, rgba(200, 200, 200, 0.3));
+}
+
+.container :global(.vis-time-axis .vis-grid.vis-major) {
+  border-color: var(--chronas-border, rgba(200, 200, 200, 0.5));
+}
+
+/* ============================================
+ * Dark Theme Adjustments
+ * ============================================ */
+
+/* When in dark theme, adjust epic item colors */
+:global([data-theme="dark"]) .container :global(.vis-item),
+:global([data-theme="dark"]) .container :global(.vis-item.epic-item) {
+  background-color: rgba(100, 100, 100, 0.35);
+  color: var(--chronas-fore-2, #e0e0e0);
+  border-color: var(--chronas-border, rgba(100, 100, 100, 0.5));
+}
+
+:global([data-theme="dark"]) .container :global(.vis-item:hover),
+:global([data-theme="dark"]) .container :global(.vis-item.epic-item:hover) {
+  background-color: rgba(120, 120, 120, 0.5);
+}
+
+:global([data-theme="dark"]) .container :global(.vis-time-axis .vis-text) {
+  color: var(--chronas-fore-1, #b0b0b0);
+}
+
+/* ============================================
+ * Luther Theme Adjustments
+ * ============================================ */
+
+:global([data-theme="luther"]) .container :global(.vis-item),
+:global([data-theme="luther"]) .container :global(.vis-item.epic-item) {
+  background-color: rgba(139, 119, 101, 0.25);
+  color: var(--chronas-fore-2, #4a3f35);
+  border-color: var(--chronas-border, rgba(139, 119, 101, 0.4));
+}
+
+:global([data-theme="luther"]) .container :global(.vis-item:hover),
+:global([data-theme="luther"]) .container :global(.vis-item.epic-item:hover) {
+  background-color: rgba(139, 119, 101, 0.4);
+}
+
+/* ============================================
+ * Tooltip Styling
+ * ============================================ */
+
+.container :global(.vis-tooltip) {
+  background-color: var(--chronas-back-1, #ffffff);
+  color: var(--chronas-fore-1, #333333);
+  border: 1px solid var(--chronas-border, #cccccc);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-width: 300px;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* ============================================
+ * Accessibility - Focus States
+ * ============================================ */
+
+.container :global(.vis-item:focus),
+.container :global(.vis-item.epic-item:focus) {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+/* ============================================
+ * Animation for Item Appearance
+ * ============================================ */
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.container :global(.vis-item.epic-item) {
+  animation: itemFadeIn 0.2s ease-out;
+}

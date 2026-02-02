@@ -1,0 +1,291 @@
+/**
+ * AutoplayMenu Component Styles
+ *
+ * Implements Paper/card component positioned above autoplay button
+ * with form inputs for slideshow configuration.
+ * Uses theme CSS variables for consistent styling.
+ *
+ * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
+ */
+
+/* Main container - Paper/card (Requirement 9.1) */
+.autoplayMenu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  max-width: 90vw;
+  
+  /* Theme-aware background */
+  background-color: var(--chronas-back-1, #ffffff);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  
+  /* Ensure it appears above other content */
+  z-index: 1000;
+  
+  /* Animation */
+  animation: slideUp 150ms ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header section */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--chronas-border, rgba(0, 0, 0, 0.1));
+}
+
+/* Title */
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--chronas-fore-1, #333333);
+}
+
+/* Close button */
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Reset button styles */
+  border: none;
+  background: transparent;
+  padding: 4px;
+  margin: 0;
+  
+  /* Styling */
+  color: var(--chronas-fore-2, #666666);
+  cursor: pointer;
+  border-radius: 50%;
+  
+  /* Transition */
+  transition: 
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.closeButton:hover {
+  color: var(--chronas-fore-1, #333333);
+  background-color: var(--chronas-back-2, rgba(0, 0, 0, 0.05));
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+/* Content section */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* Input group */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Label */
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--chronas-fore-1, #333333);
+}
+
+/* Input field (Requirements 9.2, 9.3, 9.4, 9.5) */
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  
+  /* Reset input styles */
+  border: 1px solid var(--chronas-border, rgba(0, 0, 0, 0.2));
+  border-radius: 4px;
+  background-color: var(--chronas-back-1, #ffffff);
+  
+  /* Typography */
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--chronas-fore-1, #333333);
+  
+  /* Transition */
+  transition: 
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.input:hover {
+  border-color: var(--chronas-fore-2, rgba(0, 0, 0, 0.3));
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--chronas-highlight, #4a90d9);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+}
+
+.input::placeholder {
+  color: var(--chronas-fore-2, #999999);
+}
+
+/* Remove number input spinners for cleaner look */
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Hint text */
+.hint {
+  font-size: 11px;
+  color: var(--chronas-fore-2, #888888);
+}
+
+/* Checkbox group (Requirement 9.6) */
+.checkboxGroup {
+  margin-top: 4px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--chronas-highlight, #4a90d9);
+}
+
+.checkboxText {
+  font-size: 13px;
+  color: var(--chronas-fore-1, #333333);
+  user-select: none;
+}
+
+/* Footer section */
+.footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--chronas-border, rgba(0, 0, 0, 0.1));
+}
+
+/* Start button (Requirement 9.7) */
+.startButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  
+  /* Reset button styles */
+  border: none;
+  border-radius: 6px;
+  
+  /* Styling */
+  background-color: var(--chronas-highlight, #4a90d9);
+  color: #ffffff;
+  cursor: pointer;
+  
+  /* Typography */
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  
+  /* Transition */
+  transition: 
+    background-color 150ms ease,
+    transform 100ms ease,
+    box-shadow 150ms ease;
+}
+
+.startButton:hover {
+  background-color: var(--chronas-highlight-dark, #3a7bc8);
+  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.3);
+}
+
+.startButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+.startButton:active {
+  transform: scale(0.98);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .autoplayMenu {
+    width: 260px;
+  }
+  
+  .content {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .input {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .startButton {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Dark theme adjustments */
+:global(.theme-dark) .autoplayMenu {
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+:global(.theme-dark) .input {
+  background-color: var(--chronas-back-2, #2a2a2a);
+}
+
+:global(.theme-dark) .startButton {
+  background-color: var(--chronas-highlight, #5a9fd9);
+}
+
+:global(.theme-dark) .startButton:hover {
+  background-color: var(--chronas-highlight-dark, #4a8fc9);
+}
+
+/* Print styles - hide menu */
+@media print {
+  .autoplayMenu {
+    display: none;
+  }
+}

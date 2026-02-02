@@ -9,8 +9,8 @@ export type { AppShellProps } from './AppShell';
 export { Header } from './Header';
 export type { HeaderProps } from './Header';
 
-export { Sidebar } from './Sidebar';
-export type { SidebarProps } from './Sidebar';
+// Note: Sidebar is now exported from navigation components
+// The layout/Sidebar.tsx is a placeholder that has been replaced
 
 export { MainContent } from './MainContent';
 export type { MainContentProps } from './MainContent';

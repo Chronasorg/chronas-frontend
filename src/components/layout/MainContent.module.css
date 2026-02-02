@@ -6,6 +6,8 @@
   color: var(--color-text-primary, #ffffff);
   overflow: auto;
   min-height: 0; /* Important for flex children to scroll properly */
+  /* Add padding to account for fixed timeline at bottom (120px collapsed height) */
+  padding-bottom: 120px;
 }
 
 .content {

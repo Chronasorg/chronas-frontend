@@ -1,0 +1,33 @@
+/**
+ * Logo Component Styles
+ *
+ * Requirements: 2.1, 2.2, 2.3, 2.4
+ */
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  color: var(--chronas-fore-1);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.logo:hover {
+  color: var(--chronas-highlight);
+  transform: scale(1.05);
+}
+
+.logo:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+.logo-svg {
+  width: 40px;
+  height: 40px;
+}

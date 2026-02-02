@@ -1,0 +1,130 @@
+/**
+ * Sidebar Component Styles
+ *
+ * Theme-aware sidebar using CSS custom properties.
+ * Requirements: 1.1-1.6, 7.1-7.5, 8.1-8.4
+ */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 56px;
+  background-color: var(--chronas-back-1);
+  border-right: 1px solid var(--chronas-border);
+  z-index: var(--z-fixed, 300);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-base), width var(--transition-base);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--spacing-xs);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--chronas-border);
+  margin-bottom: var(--spacing-sm);
+}
+
+.topSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.spacer {
+  flex: 1;
+  min-height: var(--spacing-lg);
+}
+
+.bottomSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding-bottom: var(--spacing-sm);
+}
+
+.avatarSection {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--chronas-border);
+}
+
+.toggleButton {
+  display: none;
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 48px;
+  background-color: var(--chronas-back-1);
+  border: 1px solid var(--chronas-border);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--chronas-fore-1);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.toggleButton:hover {
+  background-color: var(--chronas-back-2);
+}
+
+.toggleButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+/* Responsive: Mobile */
+@media (max-width: 767px) {
+  .sidebar {
+    z-index: var(--z-modal, 500);
+  }
+
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .toggleButton {
+    display: flex;
+  }
+}
+
+/* Desktop: Always visible */
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar.closed {
+    transform: translateX(0);
+  }
+}

@@ -1,6 +1,6 @@
 /**
  * AppShell Layout Styles
- * Requirements: 2.1, 2.4
+ * Requirements: 2.1, 2.4, 1.2, 6.2, 7.1-7.5
  */
 
 .shell {
@@ -17,6 +17,17 @@
   flex-direction: row;
   overflow: hidden;
   min-height: 0;
+  position: relative;
+  z-index: 1; /* Ensure body is below fixed timeline */
+}
+
+/* Account for fixed sidebar width (56px) */
+.sidebarOpen .body {
+  padding-left: 56px;
+}
+
+.sidebarClosed .body {
+  padding-left: 0;
 }
 
 .sidebar {
@@ -30,6 +41,13 @@
   height: 100%;
 }
 
+/* Responsive: Desktop - always show sidebar */
+@media (min-width: 768px) {
+  .shell .body {
+    padding-left: 56px;
+  }
+}
+
 /* Responsive: Small screens */
 @media (max-width: 767px) {
   .shell {
@@ -38,6 +56,11 @@
 
   .body {
     position: relative;
+  }
+
+  .sidebarOpen .body,
+  .sidebarClosed .body {
+    padding-left: 0;
   }
 
   .sidebar {

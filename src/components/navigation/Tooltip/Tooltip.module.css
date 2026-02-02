@@ -1,0 +1,66 @@
+/**
+ * Tooltip Component Styles
+ *
+ * Requirements: 3.5, 3.6, 8.1
+ */
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1000;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--chronas-fore-1);
+  background-color: var(--chronas-back-2);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  animation: tooltipFadeIn 0.15s ease-out forwards;
+}
+
+.tooltip--right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+}
+
+.tooltip--bottom-right {
+  left: 100%;
+  top: 100%;
+  margin-left: 4px;
+  margin-top: 4px;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.tooltip--bottom-right {
+  animation-name: tooltipFadeInBottomRight;
+}
+
+@keyframes tooltipFadeInBottomRight {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

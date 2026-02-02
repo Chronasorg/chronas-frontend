@@ -1,0 +1,87 @@
+/**
+ * MenuDrawer Component Styles
+ *
+ * Theme-aware drawer using CSS custom properties.
+ * Requirements: 6.1-6.9
+ */
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 56px; /* Positioned to the right of the sidebar */
+  bottom: 0;
+  width: 300px;
+  background-color: var(--chronas-back-1);
+  border-right: 1px solid var(--chronas-border);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-fixed, 300);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform var(--transition-base), opacity var(--transition-base), visibility var(--transition-base);
+}
+
+.drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--chronas-border);
+  background-color: var(--chronas-back-2);
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--chronas-fore-1);
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--chronas-fore-1);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.closeButton:hover {
+  background-color: var(--chronas-back-3);
+  color: var(--chronas-fore-2);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight);
+  outline-offset: 2px;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+}
+
+/* Responsive: Mobile */
+@media (max-width: 767px) {
+  .drawer {
+    left: 0;
+    width: 100%;
+    max-width: 300px;
+  }
+}
