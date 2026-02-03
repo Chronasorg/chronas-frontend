@@ -7,6 +7,11 @@
 
 import '@testing-library/jest-dom';
 
+// Mock environment variables for tests
+// These are required by the env config and API client
+process.env['VITE_API_BASE_URL'] = 'http://localhost:3000';
+process.env['VITE_ENVIRONMENT'] = 'development';
+
 // Mock localStorage for tests
 const localStorageMock = (() => {
   let store: Record<string, string> = {};

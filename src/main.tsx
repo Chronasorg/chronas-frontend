@@ -2,6 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
+// Mapbox GL CSS for map rendering (required by react-map-gl)
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const rootElement = document.getElementById('root');
 

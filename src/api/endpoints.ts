@@ -42,6 +42,12 @@ export const AREAS = {
   GET: (areaId: string) => `/areas/${areaId}`,
   UPDATE: (areaId: string) => `/areas/${areaId}`,
   DELETE: (areaId: string) => `/areas/${areaId}`,
+  /**
+   * Get area data for a specific year.
+   * Returns province data dictionary keyed by province ID.
+   * Requirements: 3.2
+   */
+  GET_BY_YEAR: (year: number) => `/areas/${String(year)}`,
 } as const;
 
 // ============================================================================

@@ -27,10 +27,22 @@
     "ci:full": "npm run lint && npm run test && npm run test:e2e && npm run build",
     "verify": "npm run lint && npm run test && npm run build"
   },
+  "overrides": {
+    "fast-xml-parser": "^5.3.4"
+  },
   "dependencies": {
+    "@deck.gl/core": "^9.2.6",
+    "@deck.gl/geo-layers": "^9.2.6",
+    "@deck.gl/layers": "^9.2.6",
+    "@deck.gl/mapbox": "^9.2.6",
+    "@deck.gl/react": "^9.2.6",
+    "@turf/turf": "^7.3.3",
     "axios": "^1.7.9",
+    "immutable": "^5.1.4",
+    "mapbox-gl": "^3.18.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-map-gl": "^8.1.0",
     "react-router-dom": "^6.28.0",
     "vis-data": "^8.0.3",
     "vis-timeline": "^8.5.0",
@@ -41,6 +53,7 @@
     "@playwright/test": "^1.49.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@types/geojson": "^7946.0.16",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",

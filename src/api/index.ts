@@ -25,6 +25,8 @@ export type {
   Metadata,
   MetadataData,
   Area,
-  AreaData,
+  AreaDataLegacy,
+  ProvinceData,
+  MapAreaData,
   HealthResponse,
 } from './types';

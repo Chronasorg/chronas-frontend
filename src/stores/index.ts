@@ -59,3 +59,23 @@ export {
   type TimelineActions,
   type TimelineStore,
 } from './timelineStore';
+
+export {
+  useMapStore,
+  isValidViewport,
+  isValidColorDimension,
+  clampLatitude,
+  normalizeLongitude,
+  clampZoom,
+  initialState as mapInitialState,
+  defaultViewport,
+  DEFAULT_FLY_TO_DURATION,
+  type ProvinceData,
+  type AreaData,
+  type ViewportState,
+  type AreaColorDimension,
+  type FlyToOptions,
+  type MapState,
+  type MapActions,
+  type MapStore,
+} from './mapStore';

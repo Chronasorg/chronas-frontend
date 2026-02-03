@@ -1,0 +1,100 @@
+/**
+ * YearNotification Component Styles
+ *
+ * Styles for the year notification badge that appears at the top center of the map.
+ *
+ * Requirements: 4.7
+ */
+
+/* Main notification container */
+.yearNotification {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  z-index: 1000;
+
+  /* Badge styling */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0 0 8px 8px;
+
+  /* Theme-aware colors using CSS variables */
+  background-color: var(--color-background-primary, #ffffff);
+  color: var(--color-text-primary, #333333);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  /* Slide-down animation */
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
+  opacity: 0;
+
+  /* Prevent text selection */
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Visible state - slides down from top */
+.yearNotification.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Year value styling */
+.yearValue {
+  font-family: var(--font-family-display, 'Cinzel Regular', serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Era indicator styling (BC/AD) */
+.yearEra {
+  font-family: var(--font-family-body, 'Noto Sans', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Dark theme adjustments */
+:global([data-theme='dark']) .yearNotification {
+  background-color: var(--color-background-primary, #333333);
+  color: var(--color-text-primary, #f2f2f2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Luther theme adjustments */
+:global([data-theme='luther']) .yearNotification {
+  background-color: var(--color-background-primary, #011c31);
+  color: var(--color-text-primary, #fff3d3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .yearNotification {
+    padding: 0.5rem 1rem;
+  }
+
+  .yearValue {
+    font-size: 1.25rem;
+  }
+
+  .yearEra {
+    font-size: 0.75rem;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .yearNotification {
+    transition: opacity 0.1s ease-out;
+  }
+
+  .yearNotification.visible {
+    transform: translateX(-50%) translateY(0);
+  }
+}

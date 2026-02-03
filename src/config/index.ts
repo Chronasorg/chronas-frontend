@@ -17,3 +17,21 @@ export {
 } from './env';
 
 export { env as default } from './env';
+
+// Map theme configuration
+export {
+  themes,
+  getThemeConfig,
+  getThemeForeColor,
+  getThemeBackColor,
+  getThemeHighlightColor,
+  languageToFont,
+  DEFAULT_FONT,
+  getFontForLocale,
+  getIconAtlasUrl,
+  getClusterIconAtlasUrl,
+  THEME_NAMES,
+  isValidThemeName,
+  type ThemeConfig,
+  type MarkerTheme,
+} from './mapTheme';

@@ -10,6 +10,10 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
+  // Optimize mapbox-gl for ESM compatibility
+  optimizeDeps: {
+    include: ['mapbox-gl'],
+  },
   server: {
     port: 5173,
     strictPort: true,

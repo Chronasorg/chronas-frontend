@@ -176,19 +176,39 @@ export interface MetadataData {
 export interface Area {
   _id: string;
   year: number;
-  data: AreaData;
+  data: AreaDataLegacy;
 }
 
 /**
- * Area data properties
+ * Area data properties (legacy format)
  */
-export interface AreaData {
+export interface AreaDataLegacy {
   ruler?: string;
   religion?: string;
   culture?: string;
   capital?: string;
   population?: number;
 }
+
+/**
+ * Province data tuple for map rendering.
+ * Index 0: ruler ID
+ * Index 1: culture ID
+ * Index 2: religion ID
+ * Index 3: capital ID (optional)
+ * Index 4: population value
+ *
+ * Requirements: 3.3
+ */
+export type ProvinceData = [string, string, string, string | null, number];
+
+/**
+ * Area data dictionary keyed by province ID.
+ * Used for map rendering with province boundaries.
+ *
+ * Requirements: 3.3
+ */
+export type MapAreaData = Record<string, ProvinceData>;
 
 // ============================================================================
 // Health Check Types
