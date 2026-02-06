@@ -18,6 +18,9 @@ export type { MainContentProps } from './MainContent';
 export { Footer } from './Footer';
 export type { FooterProps } from './Footer';
 
+export { RightDrawer } from './RightDrawer';
+export type { RightDrawerProps } from './RightDrawer';
+
 // Layout primitives
 export * from './Stack';
 export * from './Flex';

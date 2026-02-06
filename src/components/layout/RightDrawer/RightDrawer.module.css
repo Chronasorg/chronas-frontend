@@ -1,0 +1,220 @@
+/**
+ * RightDrawer Component Styles
+ *
+ * Implements the sliding panel from the right side of the screen.
+ *
+ * Requirements:
+ * - 4.1: 25% viewport width
+ * - 4.2: 300ms slide animation
+ * - 4.3: Close button in top-right corner
+ * - 4.4: Header section with title
+ * - 4.5: Scrollable content area
+ * - 4.7: Shadow on left edge
+ * - 4.9: Maintain 25% width on resize
+ */
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 25%;
+  min-width: 300px;
+  max-width: 500px;
+  background-color: var(--color-surface, #f5f5f5);
+  color: var(--color-text, #212121);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-fixed, 300);
+  
+  /* Shadow on left edge (Requirement 4.7) */
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+  
+  /* 300ms slide animation (Requirement 4.2) */
+  transition: transform 300ms ease-in-out;
+  
+  /* Start off-screen */
+  transform: translateX(100%);
+}
+
+/* Open state - slide in from right */
+.open {
+  transform: translateX(0);
+}
+
+/* Closed state - slide out to right */
+.closed {
+  transform: translateX(100%);
+}
+
+/* Header section (Requirements 4.3, 4.4) */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md, 1rem);
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  background-color: var(--color-surface, #f5f5f5);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  padding-right: var(--spacing-sm, 0.5rem);
+}
+
+/* Close button (Requirement 4.3) */
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm, 0.25rem);
+  background-color: transparent;
+  color: var(--color-text-secondary, #757575);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--transition-fast, 150ms ease),
+              color var(--transition-fast, 150ms ease);
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background-color: var(--color-border, #e0e0e0);
+  color: var(--color-text, #212121);
+}
+
+.closeButton:focus {
+  outline: 2px solid var(--color-primary, #1976d2);
+  outline-offset: 2px;
+}
+
+.closeButton:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-primary, #1976d2);
+  outline-offset: 2px;
+}
+
+/* Scrollable content area (Requirement 4.5) */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+.contentInner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Placeholder styles (temporary until content components are implemented) */
+.placeholder {
+  padding: var(--spacing-md, 1rem);
+  background-color: var(--color-background, #ffffff);
+  border-radius: var(--radius-md, 0.5rem);
+  border: 1px dashed var(--color-border, #e0e0e0);
+}
+
+.placeholder p {
+  margin: 0 0 var(--spacing-sm, 0.5rem) 0;
+}
+
+.placeholder p:last-child {
+  margin-bottom: 0;
+}
+
+.placeholderNote {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-secondary, #757575);
+  font-style: italic;
+}
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-secondary, #757575);
+  font-style: italic;
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .drawer {
+  background-color: var(--color-surface, #1e1e1e);
+  color: var(--color-text, #ffffff);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .header {
+  background-color: var(--color-surface, #1e1e1e);
+  border-bottom-color: var(--color-border, #333333);
+}
+
+[data-theme='dark'] .closeButton:hover {
+  background-color: var(--color-border, #333333);
+  color: var(--color-text, #ffffff);
+}
+
+[data-theme='dark'] .placeholder {
+  background-color: var(--color-background, #121212);
+  border-color: var(--color-border, #333333);
+}
+
+/* Luther theme adjustments */
+[data-theme='luther'] .drawer {
+  background-color: var(--color-surface, #ebe4d4);
+  color: var(--color-text, #3d3d3d);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='luther'] .header {
+  background-color: var(--color-surface, #ebe4d4);
+  border-bottom-color: var(--color-border, #d4c9b5);
+}
+
+[data-theme='luther'] .closeButton:hover {
+  background-color: var(--color-border, #d4c9b5);
+  color: var(--color-text, #3d3d3d);
+}
+
+[data-theme='luther'] .placeholder {
+  background-color: var(--color-background, #f5f0e6);
+  border-color: var(--color-border, #d4c9b5);
+}
+
+/* Responsive adjustments (Requirement 4.9) */
+@media (max-width: 1200px) {
+  .drawer {
+    width: 30%;
+  }
+}
+
+@media (max-width: 900px) {
+  .drawer {
+    width: 40%;
+  }
+}
+
+@media (max-width: 600px) {
+  .drawer {
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+  }
+}

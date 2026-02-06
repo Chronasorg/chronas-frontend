@@ -109,6 +109,7 @@ export function parsePositionFromURL(urlParam: string | null | undefined): Parti
 /**
  * Updates a query string parameter in the current URL without page reload.
  * Uses the History API to update the URL.
+ * Supports both regular URLs and hash-based routing (HashRouter).
  *
  * Requirement 3.6: THE MapStore SHALL update URL query parameters
  *
@@ -120,20 +121,54 @@ export function updateQueryStringParameter(key: string, value: string | null): v
     return;
   }
 
-  const url = new URL(window.location.href);
-
-  if (value === null) {
-    url.searchParams.delete(key);
+  const hash = window.location.hash;
+  
+  // Check if we're using hash-based routing (HashRouter)
+  if (hash.startsWith('#/')) {
+    // For HashRouter, query params are after the hash: /#/?year=1000
+    const hashContent = hash.slice(1); // Remove #
+    const queryIndex = hashContent.indexOf('?');
+    
+    let path: string;
+    let params: URLSearchParams;
+    
+    if (queryIndex !== -1) {
+      path = hashContent.slice(0, queryIndex);
+      params = new URLSearchParams(hashContent.slice(queryIndex));
+    } else {
+      path = hashContent;
+      params = new URLSearchParams();
+    }
+    
+    if (value === null) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    
+    const paramsString = params.toString();
+    const newHash = paramsString ? `#${path}?${paramsString}` : `#${path}`;
+    
+    // Update URL without reload using History API
+    window.history.replaceState({}, '', `${window.location.pathname}${newHash}`);
   } else {
-    url.searchParams.set(key, value);
-  }
+    // Regular URL handling
+    const url = new URL(window.location.href);
 
-  // Update URL without reload using History API
-  window.history.replaceState({}, '', url.toString());
+    if (value === null) {
+      url.searchParams.delete(key);
+    } else {
+      url.searchParams.set(key, value);
+    }
+
+    // Update URL without reload using History API
+    window.history.replaceState({}, '', url.toString());
+  }
 }
 
 /**
  * Gets a query string parameter from the current URL.
+ * Supports both regular URLs and hash-based routing (HashRouter).
  *
  * @param key - The query parameter key
  * @returns The parameter value or null if not found
@@ -143,8 +178,28 @@ export function getQueryStringParameter(key: string): string | null {
     return null;
   }
 
+  // First try regular URL search params
   const url = new URL(window.location.href);
-  return url.searchParams.get(key);
+  const regularParam = url.searchParams.get(key);
+  if (regularParam !== null) {
+    return regularParam;
+  }
+
+  // For HashRouter, query params are after the hash: /#/?year=1000
+  // Extract the hash portion and parse it
+  const hash = window.location.hash;
+  if (hash) {
+    // Remove the leading # and find the query string
+    const hashContent = hash.slice(1); // Remove #
+    const queryIndex = hashContent.indexOf('?');
+    if (queryIndex !== -1) {
+      const queryString = hashContent.slice(queryIndex);
+      const hashParams = new URLSearchParams(queryString);
+      return hashParams.get(key);
+    }
+  }
+
+  return null;
 }
 
 /**

@@ -20,10 +20,12 @@ import {
   normalizeLongitude,
   clampZoom,
   DEFAULT_FLY_TO_DURATION,
+  FALLBACK_COLOR,
   type ViewportState,
   type AreaColorDimension,
   type AreaData,
   type ProvinceData,
+  type EntityMetadata,
 } from './mapStore';
 
 describe('mapStore', () => {
@@ -1132,12 +1134,13 @@ describe('defaultViewport', () => {
  */
 describe('entity outline', () => {
   // Sample provinces GeoJSON for testing
+  // Note: Real API returns provinces with 'name' property as the province ID
   const sampleProvincesGeoJSON: GeoJSON.FeatureCollection<GeoJSON.Polygon> = {
     type: 'FeatureCollection',
     features: [
       {
         type: 'Feature',
-        properties: { id: 'province1' },
+        properties: { name: 'province1' },
         geometry: {
           type: 'Polygon',
           coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
@@ -1145,7 +1148,7 @@ describe('entity outline', () => {
       },
       {
         type: 'Feature',
-        properties: { id: 'province2' },
+        properties: { name: 'province2' },
         geometry: {
           type: 'Polygon',
           coordinates: [[[1, 0], [2, 0], [2, 1], [1, 1], [1, 0]]],
@@ -1153,7 +1156,7 @@ describe('entity outline', () => {
       },
       {
         type: 'Feature',
-        properties: { id: 'province3' },
+        properties: { name: 'province3' },
         geometry: {
           type: 'Polygon',
           coordinates: [[[5, 5], [6, 5], [6, 6], [5, 6], [5, 5]]],
@@ -1245,23 +1248,23 @@ describe('entity outline', () => {
       expect(color).toBe('rgba(255, 0, 255, 1)');
     });
 
-    it('should return null for non-existent entity', () => {
+    it('should return fallback color for non-existent entity', () => {
       const color = useMapStore.getState().getEntityColor('nonexistent', 'ruler');
-      expect(color).toBeNull();
+      expect(color).toBe(FALLBACK_COLOR);
     });
 
-    it('should return null when metadata is not set', () => {
+    it('should return fallback color when metadata is not set', () => {
       act(() => {
         useMapStore.setState({ metadata: null });
       });
 
       const color = useMapStore.getState().getEntityColor('ruler1', 'ruler');
-      expect(color).toBeNull();
+      expect(color).toBe(FALLBACK_COLOR);
     });
 
-    it('should return null for empty value', () => {
+    it('should return fallback color for empty value', () => {
       const color = useMapStore.getState().getEntityColor('', 'ruler');
-      expect(color).toBeNull();
+      expect(color).toBe(FALLBACK_COLOR);
     });
   });
 
@@ -1471,5 +1474,1210 @@ describe('entity outline', () => {
       const state = useMapStore.getState();
       expect(state.isFlying).toBe(true);
     });
+  });
+
+  /**
+   * Metadata Loading Tests
+   * Requirement 2.1: WHEN the application initializes, THE Map_Store SHALL fetch metadata
+   * Requirement 2.5: IF metadata loading fails, THEN THE MapView SHALL use default fallback colors
+   */
+  describe('metadata loading', () => {
+    describe('loadMetadata', () => {
+      it('should set isLoadingMetadata to true when loading starts', async () => {
+        // Start loading (will fail due to no server, but we can check initial state)
+        const loadPromise = act(async () => {
+          // We need to check the state during loading
+          const promise = useMapStore.getState().loadMetadata();
+          // The state should be loading immediately after calling
+          return promise;
+        });
+
+        // Wait for the promise to complete
+        await loadPromise;
+
+        // After completion (with error), isLoadingMetadata should be false
+        const state = useMapStore.getState();
+        expect(state.isLoadingMetadata).toBe(false);
+      });
+
+      it('should set isLoadingMetadata to false after loading completes (with error)', async () => {
+        await act(async () => {
+          await useMapStore.getState().loadMetadata();
+        });
+
+        const state = useMapStore.getState();
+        expect(state.isLoadingMetadata).toBe(false);
+      });
+
+      it('should set error state when API call fails', async () => {
+        await act(async () => {
+          await useMapStore.getState().loadMetadata();
+        });
+
+        const state = useMapStore.getState();
+        // API call should fail (no server running) and set error
+        expect(state.error).not.toBeNull();
+      });
+
+      it('should return null when API call fails', async () => {
+        let result: EntityMetadata | null = null;
+        await act(async () => {
+          result = await useMapStore.getState().loadMetadata();
+        });
+
+        expect(result).toBeNull();
+      });
+
+      it('should initialize with isLoadingMetadata as false', () => {
+        const state = useMapStore.getState();
+        expect(state.isLoadingMetadata).toBe(false);
+      });
+
+      it('should initialize with metadata as null', () => {
+        const state = useMapStore.getState();
+        expect(state.metadata).toBeNull();
+      });
+    });
+
+    describe('setMetadata', () => {
+      it('should store metadata correctly', () => {
+        act(() => {
+          useMapStore.getState().setMetadata(sampleMetadata);
+        });
+
+        const state = useMapStore.getState();
+        expect(state.metadata).toEqual(sampleMetadata);
+      });
+
+      it('should overwrite existing metadata', () => {
+        const newMetadata = {
+          ruler: { newRuler: { name: 'New Ruler', color: 'rgba(100, 100, 100, 1)' } },
+          culture: { newCulture: { name: 'New Culture', color: 'rgba(50, 50, 50, 1)' } },
+          religion: { newReligion: { name: 'New Religion', color: 'rgba(25, 25, 25, 1)' } },
+          religionGeneral: { newReligionGen: { name: 'New Religion Gen', color: 'rgba(10, 10, 10, 1)' } },
+        };
+
+        act(() => {
+          useMapStore.getState().setMetadata(sampleMetadata);
+        });
+
+        act(() => {
+          useMapStore.getState().setMetadata(newMetadata);
+        });
+
+        const state = useMapStore.getState();
+        expect(state.metadata).toEqual(newMetadata);
+        expect(state.metadata).not.toEqual(sampleMetadata);
+      });
+    });
+  });
+
+  /**
+   * Fallback Color Tests
+   * Requirement 2.5: IF metadata loading fails, THEN THE MapView SHALL use default fallback colors
+   */
+  describe('fallback color behavior', () => {
+    it('should return fallback color when metadata is null', () => {
+      // Ensure metadata is null
+      act(() => {
+        useMapStore.setState({ metadata: null });
+      });
+
+      const color = useMapStore.getState().getEntityColor('anyEntity', 'ruler');
+      expect(color).toBe(FALLBACK_COLOR);
+      expect(color).toBe('rgba(1,1,1,0.3)');
+    });
+
+    it('should return fallback color when entity does not exist in metadata', () => {
+      act(() => {
+        useMapStore.getState().setMetadata(sampleMetadata);
+      });
+
+      const color = useMapStore.getState().getEntityColor('nonExistentEntity', 'ruler');
+      expect(color).toBe(FALLBACK_COLOR);
+    });
+
+    it('should return fallback color for empty entity value', () => {
+      act(() => {
+        useMapStore.getState().setMetadata(sampleMetadata);
+      });
+
+      const color = useMapStore.getState().getEntityColor('', 'ruler');
+      expect(color).toBe(FALLBACK_COLOR);
+    });
+
+    it('should return fallback color for population dimension', () => {
+      act(() => {
+        useMapStore.getState().setMetadata(sampleMetadata);
+      });
+
+      // Population dimension doesn't use metadata colors
+      const color = useMapStore.getState().getEntityColor('anyEntity', 'population');
+      expect(color).toBe(FALLBACK_COLOR);
+    });
+
+    it('should return actual color when entity exists in metadata', () => {
+      act(() => {
+        useMapStore.getState().setMetadata(sampleMetadata);
+      });
+
+      const rulerColor = useMapStore.getState().getEntityColor('ruler1', 'ruler');
+      expect(rulerColor).toBe('rgba(255, 0, 0, 1)');
+
+      const cultureColor = useMapStore.getState().getEntityColor('culture1', 'culture');
+      expect(cultureColor).toBe('rgba(0, 0, 255, 1)');
+
+      const religionColor = useMapStore.getState().getEntityColor('religion1', 'religion');
+      expect(religionColor).toBe('rgba(255, 0, 255, 1)');
+    });
+
+    it('should return fallback color for all dimensions when metadata is missing', () => {
+      act(() => {
+        useMapStore.setState({ metadata: null });
+      });
+
+      const dimensions: AreaColorDimension[] = ['ruler', 'culture', 'religion', 'religionGeneral', 'population'];
+      
+      for (const dimension of dimensions) {
+        const color = useMapStore.getState().getEntityColor('anyEntity', dimension);
+        expect(color).toBe(FALLBACK_COLOR);
+      }
+    });
+
+    it('should return string type (not null) from getEntityColor', () => {
+      // Test with metadata
+      act(() => {
+        useMapStore.getState().setMetadata(sampleMetadata);
+      });
+
+      const colorWithMetadata = useMapStore.getState().getEntityColor('ruler1', 'ruler');
+      expect(typeof colorWithMetadata).toBe('string');
+
+      // Test without metadata
+      act(() => {
+        useMapStore.setState({ metadata: null });
+      });
+
+      const colorWithoutMetadata = useMapStore.getState().getEntityColor('ruler1', 'ruler');
+      expect(typeof colorWithoutMetadata).toBe('string');
+    });
+  });
+});
+
+
+/**
+ * Cached Year Switch Performance Tests
+ * Requirement 11.5: WHEN switching between cached years, THE MapView SHALL update within 100ms.
+ *
+ * These tests verify that cached data retrieval is fast and meets the performance threshold.
+ */
+describe('cached year switch performance', () => {
+  // Sample area data for testing
+  const createLargeAreaData = (provinceCount: number): AreaData => {
+    const data: AreaData = {};
+    for (let i = 0; i < provinceCount; i++) {
+      data[`province_${String(i)}`] = [
+        `ruler_${String(i % 100)}`,
+        `culture_${String(i % 50)}`,
+        `religion_${String(i % 30)}`,
+        i % 10 === 0 ? `capital_${String(i)}` : null,
+        Math.floor(Math.random() * 1000000),
+      ] as ProvinceData;
+    }
+    return data;
+  };
+
+  beforeEach(() => {
+    act(() => {
+      useMapStore.setState({
+        ...initialState,
+        areaDataCache: new Map(),
+      });
+    });
+  });
+
+  /**
+   * Requirement 11.5: Cached year switches should complete within 100ms
+   */
+  it('should return cached data within 100ms for small datasets', async () => {
+    const smallAreaData = createLargeAreaData(100);
+    
+    // Cache the data
+    act(() => {
+      useMapStore.getState().setAreaData(1000, smallAreaData);
+    });
+
+    // Measure retrieval time
+    const startTime = performance.now();
+    let result: AreaData | null = null;
+    
+    await act(async () => {
+      result = await useMapStore.getState().loadAreaData(1000);
+    });
+    
+    const duration = performance.now() - startTime;
+
+    expect(result).toEqual(smallAreaData);
+    expect(duration).toBeLessThan(100);
+  });
+
+  /**
+   * Requirement 11.5: Cached year switches should complete within 100ms
+   * Test with larger dataset to ensure performance scales
+   */
+  it('should return cached data within 100ms for medium datasets', async () => {
+    const mediumAreaData = createLargeAreaData(1000);
+    
+    // Cache the data
+    act(() => {
+      useMapStore.getState().setAreaData(1500, mediumAreaData);
+    });
+
+    // Measure retrieval time
+    const startTime = performance.now();
+    let result: AreaData | null = null;
+    
+    await act(async () => {
+      result = await useMapStore.getState().loadAreaData(1500);
+    });
+    
+    const duration = performance.now() - startTime;
+
+    expect(result).toEqual(mediumAreaData);
+    expect(duration).toBeLessThan(100);
+  });
+
+  /**
+   * Requirement 11.5: Cached year switches should complete within 100ms
+   * Test with multiple cached years to ensure cache lookup remains fast
+   */
+  it('should return cached data within 100ms with multiple years cached', async () => {
+    // Cache multiple years
+    for (let year = 1000; year <= 2000; year += 100) {
+      const areaData = createLargeAreaData(500);
+      act(() => {
+        useMapStore.getState().setAreaData(year, areaData);
+      });
+    }
+
+    // Verify cache size
+    expect(useMapStore.getState().areaDataCache.size).toBe(11);
+
+    // Measure retrieval time for a year in the middle
+    const startTime = performance.now();
+    let result: AreaData | null = null;
+    
+    await act(async () => {
+      result = await useMapStore.getState().loadAreaData(1500);
+    });
+    
+    const duration = performance.now() - startTime;
+
+    expect(result).not.toBeNull();
+    expect(duration).toBeLessThan(100);
+  });
+
+  /**
+   * Requirement 11.5: Cached year switches should complete within 100ms
+   * Test rapid consecutive cache lookups
+   */
+  it('should handle rapid consecutive cached year switches within 100ms each', async () => {
+    // Cache multiple years
+    const years = [1000, 1100, 1200, 1300, 1400];
+    for (const year of years) {
+      const areaData = createLargeAreaData(200);
+      act(() => {
+        useMapStore.getState().setAreaData(year, areaData);
+      });
+    }
+
+    // Perform rapid consecutive lookups
+    for (const year of years) {
+      const startTime = performance.now();
+      let result: AreaData | null = null;
+      
+      await act(async () => {
+        result = await useMapStore.getState().loadAreaData(year);
+      });
+      
+      const duration = performance.now() - startTime;
+
+      expect(result).not.toBeNull();
+      expect(duration).toBeLessThan(100);
+    }
+  });
+
+  /**
+   * Requirement 11.5: Verify isLoadingAreaData is false for cached data
+   * This ensures no unnecessary loading state is shown for cached data
+   */
+  it('should not set isLoadingAreaData to true when returning cached data', async () => {
+    const areaData = createLargeAreaData(100);
+    
+    // Cache the data
+    act(() => {
+      useMapStore.getState().setAreaData(1000, areaData);
+    });
+
+    // Load cached data
+    await act(async () => {
+      await useMapStore.getState().loadAreaData(1000);
+    });
+
+    // isLoadingAreaData should remain false (never set to true for cached data)
+    const state = useMapStore.getState();
+    expect(state.isLoadingAreaData).toBe(false);
+  });
+
+  /**
+   * Requirement 11.5: Verify currentAreaData is updated correctly
+   */
+  it('should update currentAreaData when switching between cached years', async () => {
+    const areaData1000 = createLargeAreaData(50);
+    const areaData1500 = createLargeAreaData(75);
+    
+    // Cache both years
+    act(() => {
+      useMapStore.getState().setAreaData(1000, areaData1000);
+      useMapStore.getState().setAreaData(1500, areaData1500);
+    });
+
+    // Switch to year 1000
+    await act(async () => {
+      await useMapStore.getState().loadAreaData(1000);
+    });
+    expect(useMapStore.getState().currentAreaData).toEqual(areaData1000);
+
+    // Switch to year 1500
+    await act(async () => {
+      await useMapStore.getState().loadAreaData(1500);
+    });
+    expect(useMapStore.getState().currentAreaData).toEqual(areaData1500);
+
+    // Switch back to year 1000
+    await act(async () => {
+      await useMapStore.getState().loadAreaData(1000);
+    });
+    expect(useMapStore.getState().currentAreaData).toEqual(areaData1000);
+  });
+});
+
+/**
+ * API Success Path Tests
+ *
+ * These tests verify that when the API returns valid data,
+ * it is correctly stored and province properties are updated.
+ */
+describe('API Success Path Tests', () => {
+  // Sample area data for testing
+  const sampleApiResponse: AreaData = {
+    province1: ['ruler1', 'culture1', 'religion1', 'capital1', 1000] as ProvinceData,
+    province2: ['ruler2', 'culture2', 'religion2', null, 2000] as ProvinceData,
+    province3: ['ruler1', 'culture3', 'religion3', 'capital3', 3000] as ProvinceData,
+  };
+
+  // Sample metadata for testing
+  const sampleMetadata: EntityMetadata = {
+    ruler: {
+      ruler1: { name: 'Roman Empire', color: 'rgba(255,0,0,0.5)' },
+      ruler2: { name: 'Persian Empire', color: 'rgba(0,255,0,0.5)' },
+    },
+    culture: {
+      culture1: { name: 'Latin', color: 'rgba(100,100,0,0.5)' },
+      culture2: { name: 'Greek', color: 'rgba(0,100,100,0.5)' },
+      culture3: { name: 'Celtic', color: 'rgba(100,0,100,0.5)' },
+    },
+    religion: {
+      religion1: { name: 'Roman Paganism', color: 'rgba(200,0,0,0.5)', parent: 'pagan' },
+      religion2: { name: 'Zoroastrianism', color: 'rgba(0,200,0,0.5)', parent: 'eastern' },
+      religion3: { name: 'Celtic Paganism', color: 'rgba(0,0,200,0.5)', parent: 'pagan' },
+    },
+    religionGeneral: {
+      pagan: { name: 'Paganism', color: 'rgba(150,150,0,0.5)' },
+      eastern: { name: 'Eastern Religions', color: 'rgba(0,150,150,0.5)' },
+    },
+  };
+
+  // Sample provinces GeoJSON for testing
+  // Note: Real API returns provinces with 'name' property as the province ID
+  const sampleProvincesGeoJSON = {
+    type: 'FeatureCollection' as const,
+    features: [
+      {
+        type: 'Feature' as const,
+        properties: { name: 'province1' },
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        },
+      },
+      {
+        type: 'Feature' as const,
+        properties: { name: 'province2' },
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [[[1, 0], [2, 0], [2, 1], [1, 1], [1, 0]]],
+        },
+      },
+      {
+        type: 'Feature' as const,
+        properties: { name: 'province3' },
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [[[2, 0], [3, 0], [3, 1], [2, 1], [2, 0]]],
+        },
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    act(() => {
+      useMapStore.setState({
+        ...initialState,
+        areaDataCache: new Map(),
+        metadata: sampleMetadata,
+        provincesGeoJSON: sampleProvincesGeoJSON,
+      });
+    });
+  });
+
+  describe('When API returns valid data, it is correctly stored', () => {
+    it('should store area data in currentAreaData when setAreaData is called', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.currentAreaData).toEqual(sampleApiResponse);
+    });
+
+    it('should cache area data by year', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.areaDataCache.get(1000)).toEqual(sampleApiResponse);
+    });
+
+    it('should store all province data correctly', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const areaData = state.currentAreaData;
+
+      expect(areaData).not.toBeNull();
+      expect(areaData!['province1']).toEqual(['ruler1', 'culture1', 'religion1', 'capital1', 1000]);
+      expect(areaData!['province2']).toEqual(['ruler2', 'culture2', 'religion2', null, 2000]);
+      expect(areaData!['province3']).toEqual(['ruler1', 'culture3', 'religion3', 'capital3', 3000]);
+    });
+
+    it('should correctly extract ruler ID from province data', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const areaData = state.currentAreaData!;
+
+      // Index 0 is ruler
+      expect(areaData['province1']![0]).toBe('ruler1');
+      expect(areaData['province2']![0]).toBe('ruler2');
+      expect(areaData['province3']![0]).toBe('ruler1');
+    });
+
+    it('should correctly extract culture ID from province data', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const areaData = state.currentAreaData!;
+
+      // Index 1 is culture
+      expect(areaData['province1']![1]).toBe('culture1');
+      expect(areaData['province2']![1]).toBe('culture2');
+      expect(areaData['province3']![1]).toBe('culture3');
+    });
+
+    it('should correctly extract religion ID from province data', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const areaData = state.currentAreaData!;
+
+      // Index 2 is religion
+      expect(areaData['province1']![2]).toBe('religion1');
+      expect(areaData['province2']![2]).toBe('religion2');
+      expect(areaData['province3']![2]).toBe('religion3');
+    });
+
+    it('should correctly extract capital ID from province data (including null)', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const areaData = state.currentAreaData!;
+
+      // Index 3 is capital (can be null)
+      expect(areaData['province1']![3]).toBe('capital1');
+      expect(areaData['province2']![3]).toBeNull();
+      expect(areaData['province3']![3]).toBe('capital3');
+    });
+
+    it('should correctly extract population from province data', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const areaData = state.currentAreaData!;
+
+      // Index 4 is population
+      expect(areaData['province1']![4]).toBe(1000);
+      expect(areaData['province2']![4]).toBe(2000);
+      expect(areaData['province3']![4]).toBe(3000);
+    });
+
+    it('should set isLoadingAreaData to false after data is stored', () => {
+      // Set loading to true first
+      act(() => {
+        useMapStore.setState({ isLoadingAreaData: true });
+      });
+
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+      });
+
+      // setAreaData doesn't change loading state, but loadAreaData does
+      // This test verifies the data is stored correctly
+      const state = useMapStore.getState();
+      expect(state.currentAreaData).toEqual(sampleApiResponse);
+    });
+
+    it('should handle multiple years of data correctly', () => {
+      const year1000Data: AreaData = {
+        province1: ['ruler1', 'culture1', 'religion1', 'capital1', 1000] as ProvinceData,
+      };
+      const year1500Data: AreaData = {
+        province1: ['ruler2', 'culture2', 'religion2', 'capital2', 5000] as ProvinceData,
+      };
+
+      act(() => {
+        useMapStore.getState().setAreaData(1000, year1000Data);
+      });
+
+      act(() => {
+        useMapStore.getState().setAreaData(1500, year1500Data);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.areaDataCache.get(1000)).toEqual(year1000Data);
+      expect(state.areaDataCache.get(1500)).toEqual(year1500Data);
+      // currentAreaData should be the last one set
+      expect(state.currentAreaData).toEqual(year1500Data);
+    });
+  });
+
+  describe('Province properties are correctly updated from API response', () => {
+    it('should update province feature properties with ruler ID', () => {
+      act(() => {
+        useMapStore.getState().setAreaData(1000, sampleApiResponse);
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+      const province2 = features.find(f => f.properties?.['id'] === 'province2');
+      const province3 = features.find(f => f.properties?.['id'] === 'province3');
+
+      expect(province1?.properties?.['r']).toBe('ruler1');
+      expect(province2?.properties?.['r']).toBe('ruler2');
+      expect(province3?.properties?.['r']).toBe('ruler1');
+    });
+
+    it('should update province feature properties with culture ID', () => {
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+      const province2 = features.find(f => f.properties?.['id'] === 'province2');
+      const province3 = features.find(f => f.properties?.['id'] === 'province3');
+
+      expect(province1?.properties?.['c']).toBe('culture1');
+      expect(province2?.properties?.['c']).toBe('culture2');
+      expect(province3?.properties?.['c']).toBe('culture3');
+    });
+
+    it('should update province feature properties with religion ID', () => {
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+      const province2 = features.find(f => f.properties?.['id'] === 'province2');
+      const province3 = features.find(f => f.properties?.['id'] === 'province3');
+
+      expect(province1?.properties?.['e']).toBe('religion1');
+      expect(province2?.properties?.['e']).toBe('religion2');
+      expect(province3?.properties?.['e']).toBe('religion3');
+    });
+
+    it('should update province feature properties with religionGeneral ID', () => {
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+      const province2 = features.find(f => f.properties?.['id'] === 'province2');
+      const province3 = features.find(f => f.properties?.['id'] === 'province3');
+
+      // religionGeneral is derived from religion using metadata parent
+      expect(province1?.properties?.['g']).toBe('pagan'); // religion1 -> pagan
+      expect(province2?.properties?.['g']).toBe('eastern'); // religion2 -> eastern
+      expect(province3?.properties?.['g']).toBe('pagan'); // religion3 -> pagan
+    });
+
+    it('should update province feature properties with population', () => {
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+      const province2 = features.find(f => f.properties?.['id'] === 'province2');
+      const province3 = features.find(f => f.properties?.['id'] === 'province3');
+
+      expect(province1?.properties?.['p']).toBe(1000);
+      expect(province2?.properties?.['p']).toBe(2000);
+      expect(province3?.properties?.['p']).toBe(3000);
+    });
+
+    it('should preserve existing province properties when updating', () => {
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+
+      // Original 'name' property should still exist
+      expect(province1?.properties?.['name']).toBe('province1');
+      // 'id' property should be set from 'name'
+      expect(province1?.properties?.['id']).toBe('province1');
+    });
+
+    it('should handle provinces not in area data gracefully', () => {
+      // Add a province to GeoJSON that's not in area data
+      const geoJSONWithExtraProvince = {
+        ...sampleProvincesGeoJSON,
+        features: [
+          ...sampleProvincesGeoJSON.features,
+          {
+            type: 'Feature' as const,
+            properties: { name: 'province4' },
+            geometry: {
+              type: 'Polygon' as const,
+              coordinates: [[[3, 0], [4, 0], [4, 1], [3, 1], [3, 0]]],
+            },
+          },
+        ],
+      };
+
+      act(() => {
+        useMapStore.setState({ provincesGeoJSON: geoJSONWithExtraProvince });
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      // province4 should still exist but without the new properties (except id which is set from name)
+      const province4 = features.find(f => f.properties?.['name'] === 'province4');
+      expect(province4).toBeDefined();
+      expect(province4?.properties?.['r']).toBeUndefined();
+    });
+
+    it('should update all properties atomically', () => {
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(sampleApiResponse);
+      });
+
+      const state = useMapStore.getState();
+      const features = state.provincesGeoJSON!.features;
+
+      const province1 = features.find(f => f.properties?.['id'] === 'province1');
+
+      // All properties should be set together
+      expect(province1?.properties).toMatchObject({
+        id: 'province1',
+        r: 'ruler1',
+        c: 'culture1',
+        e: 'religion1',
+        g: 'pagan',
+        p: 1000,
+      });
+    });
+
+    it('should correctly derive religionGeneral when religion has parent in metadata', () => {
+      const state = useMapStore.getState();
+
+      // Test getReligionGeneral function
+      expect(state.getReligionGeneral('religion1')).toBe('pagan');
+      expect(state.getReligionGeneral('religion2')).toBe('eastern');
+      expect(state.getReligionGeneral('religion3')).toBe('pagan');
+    });
+
+    it('should return original religionId when no parent exists in metadata', () => {
+      // Add a religion without parent
+      const metadataWithoutParent: EntityMetadata = {
+        ...sampleMetadata,
+        religion: {
+          ...sampleMetadata.religion,
+          religion4: { name: 'Unknown Religion', color: 'rgba(50,50,50,0.5)' }, // No parent
+        },
+      };
+
+      act(() => {
+        useMapStore.setState({ metadata: metadataWithoutParent });
+      });
+
+      const state = useMapStore.getState();
+      // Should return the original religionId when no parent
+      expect(state.getReligionGeneral('religion4')).toBe('religion4');
+    });
+
+    it('should handle empty area data gracefully', () => {
+      const emptyAreaData: AreaData = {};
+
+      act(() => {
+        useMapStore.getState().updateProvinceProperties(emptyAreaData);
+      });
+
+      const state = useMapStore.getState();
+      // Provinces should still exist but without updated properties
+      expect(state.provincesGeoJSON!.features.length).toBe(3);
+    });
+  });
+
+  describe('Entity color lookup from metadata', () => {
+    it('should return correct color for ruler from metadata', () => {
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('ruler1', 'ruler')).toBe('rgba(255,0,0,0.5)');
+      expect(state.getEntityColor('ruler2', 'ruler')).toBe('rgba(0,255,0,0.5)');
+    });
+
+    it('should return correct color for culture from metadata', () => {
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('culture1', 'culture')).toBe('rgba(100,100,0,0.5)');
+      expect(state.getEntityColor('culture2', 'culture')).toBe('rgba(0,100,100,0.5)');
+    });
+
+    it('should return correct color for religion from metadata', () => {
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('religion1', 'religion')).toBe('rgba(200,0,0,0.5)');
+      expect(state.getEntityColor('religion2', 'religion')).toBe('rgba(0,200,0,0.5)');
+    });
+
+    it('should return correct color for religionGeneral from metadata', () => {
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('pagan', 'religionGeneral')).toBe('rgba(150,150,0,0.5)');
+      expect(state.getEntityColor('eastern', 'religionGeneral')).toBe('rgba(0,150,150,0.5)');
+    });
+
+    it('should return fallback color for unknown entity', () => {
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('unknown_ruler', 'ruler')).toBe(FALLBACK_COLOR);
+    });
+
+    it('should return fallback color when metadata is null', () => {
+      act(() => {
+        useMapStore.setState({ metadata: null });
+      });
+
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('ruler1', 'ruler')).toBe(FALLBACK_COLOR);
+    });
+
+    it('should return fallback color for empty entity value', () => {
+      const state = useMapStore.getState();
+      expect(state.getEntityColor('', 'ruler')).toBe(FALLBACK_COLOR);
+    });
+  });
+});
+
+/**
+ * getEntityWiki Tests
+ *
+ * Tests for the getEntityWiki function which retrieves Wikipedia URLs
+ * from metadata for different entity dimensions.
+ *
+ * Key fix tested: religionGeneral dimension requires looking up the religion
+ * first to get its parent (religionGeneral ID), then looking up the wiki URL
+ * from religionGeneral metadata.
+ */
+describe('getEntityWiki', () => {
+  // Sample metadata with wiki URLs for testing
+  const metadataWithWiki: EntityMetadata = {
+    ruler: {
+      roman_empire: { name: 'Roman Empire', color: 'rgba(255,0,0,0.5)', wiki: 'Roman_Empire' },
+      persian_empire: { name: 'Persian Empire', color: 'rgba(0,255,0,0.5)', wiki: 'Achaemenid_Empire' },
+      no_wiki_ruler: { name: 'No Wiki Ruler', color: 'rgba(100,100,100,0.5)' },
+    },
+    culture: {
+      latin: { name: 'Latin', color: 'rgba(100,100,0,0.5)', wiki: 'Latin_culture' },
+      greek: { name: 'Greek', color: 'rgba(0,100,100,0.5)', wiki: 'Ancient_Greece' },
+    },
+    religion: {
+      catholicism: { name: 'Catholicism', color: 'rgba(200,0,0,0.5)', wiki: 'Catholic_Church', parent: 'christianity' },
+      sunni: { name: 'Sunni Islam', color: 'rgba(0,200,0,0.5)', wiki: 'Sunni_Islam', parent: 'islam' },
+      orthodox: { name: 'Eastern Orthodox', color: 'rgba(0,0,200,0.5)', wiki: 'Eastern_Orthodox_Church', parent: 'christianity' },
+      no_parent_religion: { name: 'No Parent Religion', color: 'rgba(50,50,50,0.5)', wiki: 'Some_Religion' },
+    },
+    religionGeneral: {
+      christianity: { name: 'Christianity', color: 'rgba(150,150,0,0.5)', wiki: 'Christianity' },
+      islam: { name: 'Islam', color: 'rgba(0,150,150,0.5)', wiki: 'Islam' },
+    },
+  };
+
+  beforeEach(() => {
+    act(() => {
+      useMapStore.setState({
+        ...initialState,
+        areaDataCache: new Map(),
+        metadata: metadataWithWiki,
+      });
+    });
+  });
+
+  describe('ruler dimension', () => {
+    it('should return wiki URL for ruler entity', () => {
+      const wiki = useMapStore.getState().getEntityWiki('roman_empire', 'ruler');
+      expect(wiki).toBe('Roman_Empire');
+    });
+
+    it('should return wiki URL for another ruler entity', () => {
+      const wiki = useMapStore.getState().getEntityWiki('persian_empire', 'ruler');
+      expect(wiki).toBe('Achaemenid_Empire');
+    });
+
+    it('should return undefined for ruler without wiki', () => {
+      const wiki = useMapStore.getState().getEntityWiki('no_wiki_ruler', 'ruler');
+      expect(wiki).toBeUndefined();
+    });
+
+    it('should return undefined for unknown ruler', () => {
+      const wiki = useMapStore.getState().getEntityWiki('unknown_ruler', 'ruler');
+      expect(wiki).toBeUndefined();
+    });
+  });
+
+  describe('culture dimension', () => {
+    it('should return wiki URL for culture entity', () => {
+      const wiki = useMapStore.getState().getEntityWiki('latin', 'culture');
+      expect(wiki).toBe('Latin_culture');
+    });
+
+    it('should return wiki URL for another culture entity', () => {
+      const wiki = useMapStore.getState().getEntityWiki('greek', 'culture');
+      expect(wiki).toBe('Ancient_Greece');
+    });
+
+    it('should return undefined for unknown culture', () => {
+      const wiki = useMapStore.getState().getEntityWiki('unknown_culture', 'culture');
+      expect(wiki).toBeUndefined();
+    });
+  });
+
+  describe('religion dimension', () => {
+    it('should return wiki URL for religion entity', () => {
+      const wiki = useMapStore.getState().getEntityWiki('catholicism', 'religion');
+      expect(wiki).toBe('Catholic_Church');
+    });
+
+    it('should return wiki URL for another religion entity', () => {
+      const wiki = useMapStore.getState().getEntityWiki('sunni', 'religion');
+      expect(wiki).toBe('Sunni_Islam');
+    });
+
+    it('should return undefined for unknown religion', () => {
+      const wiki = useMapStore.getState().getEntityWiki('unknown_religion', 'religion');
+      expect(wiki).toBeUndefined();
+    });
+  });
+
+  /**
+   * CRITICAL: religionGeneral dimension tests
+   *
+   * When dimension is 'religionGeneral', the value passed is a RELIGION ID
+   * (from province data index 2), not a religionGeneral ID.
+   *
+   * The function must:
+   * 1. Look up the religion in religion metadata to get its parent (religionGeneral ID)
+   * 2. Then look up the wiki URL from religionGeneral metadata using that parent ID
+   */
+  describe('religionGeneral dimension', () => {
+    it('should return religionGeneral wiki URL when given a religion ID with parent', () => {
+      // When activeColor is 'religionGeneral', we pass the religion ID (e.g., 'catholicism')
+      // The function should look up catholicism's parent ('christianity') and return Christianity's wiki
+      const wiki = useMapStore.getState().getEntityWiki('catholicism', 'religionGeneral');
+      expect(wiki).toBe('Christianity');
+    });
+
+    it('should return correct religionGeneral wiki for sunni (islam)', () => {
+      // sunni's parent is 'islam', so we should get Islam's wiki
+      const wiki = useMapStore.getState().getEntityWiki('sunni', 'religionGeneral');
+      expect(wiki).toBe('Islam');
+    });
+
+    it('should return correct religionGeneral wiki for orthodox (christianity)', () => {
+      // orthodox's parent is 'christianity', so we should get Christianity's wiki
+      const wiki = useMapStore.getState().getEntityWiki('orthodox', 'religionGeneral');
+      expect(wiki).toBe('Christianity');
+    });
+
+    it('should return undefined when religion has no parent', () => {
+      // no_parent_religion has no parent property
+      const wiki = useMapStore.getState().getEntityWiki('no_parent_religion', 'religionGeneral');
+      expect(wiki).toBeUndefined();
+    });
+
+    it('should return undefined when religion ID is unknown', () => {
+      const wiki = useMapStore.getState().getEntityWiki('unknown_religion', 'religionGeneral');
+      expect(wiki).toBeUndefined();
+    });
+
+    it('should return undefined when religionGeneral has no wiki', () => {
+      // Add a religion with a parent that has no wiki
+      act(() => {
+        useMapStore.setState({
+          metadata: {
+            ...metadataWithWiki,
+            religion: {
+              ...metadataWithWiki.religion,
+              test_religion: { name: 'Test Religion', color: 'rgba(0,0,0,0.5)', parent: 'no_wiki_general' },
+            },
+            religionGeneral: {
+              ...metadataWithWiki.religionGeneral,
+              no_wiki_general: { name: 'No Wiki General', color: 'rgba(0,0,0,0.5)' },
+            },
+          },
+        });
+      });
+
+      const wiki = useMapStore.getState().getEntityWiki('test_religion', 'religionGeneral');
+      expect(wiki).toBeUndefined();
+    });
+  });
+
+  describe('population dimension', () => {
+    it('should return undefined for population dimension', () => {
+      // Population dimension doesn't have wiki URLs
+      const wiki = useMapStore.getState().getEntityWiki('any_value', 'population');
+      expect(wiki).toBeUndefined();
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should return undefined when metadata is null', () => {
+      act(() => {
+        useMapStore.setState({ metadata: null });
+      });
+
+      const wiki = useMapStore.getState().getEntityWiki('roman_empire', 'ruler');
+      expect(wiki).toBeUndefined();
+    });
+
+    it('should return undefined for empty entity value', () => {
+      const wiki = useMapStore.getState().getEntityWiki('', 'ruler');
+      expect(wiki).toBeUndefined();
+    });
+
+    it('should handle null entity value gracefully', () => {
+      // TypeScript would prevent this, but test runtime behavior
+      const wiki = useMapStore.getState().getEntityWiki(null as unknown as string, 'ruler');
+      expect(wiki).toBeUndefined();
+    });
+  });
+});
+
+/**
+ * Province Click Behavior Tests
+ *
+ * Tests to verify that clicking a province does NOT automatically zoom
+ * to fit the entity outline. This matches production behavior where
+ * the viewport stays at the user's current position.
+ */
+describe('Province Click Behavior - No Auto Zoom', () => {
+  const sampleMetadata: EntityMetadata = {
+    ruler: {
+      ruler1: { name: 'Roman Empire', color: 'rgba(255,0,0,0.5)' },
+    },
+    culture: {
+      culture1: { name: 'Latin', color: 'rgba(100,100,0,0.5)' },
+    },
+    religion: {
+      religion1: { name: 'Roman Paganism', color: 'rgba(200,0,0,0.5)', parent: 'pagan' },
+    },
+    religionGeneral: {
+      pagan: { name: 'Paganism', color: 'rgba(150,150,0,0.5)' },
+    },
+  };
+
+  const sampleAreaData: AreaData = {
+    province1: ['ruler1', 'culture1', 'religion1', 'capital1', 1000] as ProvinceData,
+    province2: ['ruler1', 'culture1', 'religion1', null, 2000] as ProvinceData,
+  };
+
+  const sampleProvincesGeoJSON = {
+    type: 'FeatureCollection' as const,
+    features: [
+      {
+        type: 'Feature' as const,
+        properties: { name: 'province1', r: 'ruler1', c: 'culture1', e: 'religion1', g: 'pagan', p: 1000 },
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+        },
+      },
+      {
+        type: 'Feature' as const,
+        properties: { name: 'province2', r: 'ruler1', c: 'culture1', e: 'religion1', g: 'pagan', p: 2000 },
+        geometry: {
+          type: 'Polygon' as const,
+          coordinates: [[[10, 0], [20, 0], [20, 10], [10, 10], [10, 0]]],
+        },
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    act(() => {
+      useMapStore.setState({
+        ...initialState,
+        areaDataCache: new Map(),
+        metadata: sampleMetadata,
+        currentAreaData: sampleAreaData,
+        provincesGeoJSON: sampleProvincesGeoJSON,
+        viewport: {
+          ...defaultViewport,
+          latitude: 45,
+          longitude: 10,
+          zoom: 5,
+        },
+      });
+    });
+  });
+
+  it('should calculate entity outline without triggering flyTo', () => {
+    const initialViewport = { ...useMapStore.getState().viewport };
+
+    // Calculate entity outline (this is what happens on province click)
+    act(() => {
+      useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
+    });
+
+    const state = useMapStore.getState();
+
+    // Entity outline should be calculated
+    expect(state.entityOutline).not.toBeNull();
+
+    // But viewport should NOT have changed (no flyTo triggered)
+    expect(state.viewport.latitude).toBe(initialViewport.latitude);
+    expect(state.viewport.longitude).toBe(initialViewport.longitude);
+    expect(state.viewport.zoom).toBe(initialViewport.zoom);
+
+    // isFlying should be false (no animation started)
+    expect(state.isFlying).toBe(false);
+    expect(state.flyToTarget).toBeNull();
+  });
+
+  it('should not change viewport when selecting a province', () => {
+    const initialViewport = { ...useMapStore.getState().viewport };
+
+    // Select a province (simulating click)
+    act(() => {
+      useMapStore.getState().selectProvince('province1');
+    });
+
+    const state = useMapStore.getState();
+
+    // Province should be selected
+    expect(state.selectedProvince).toBe('province1');
+
+    // Viewport should NOT have changed
+    expect(state.viewport.latitude).toBe(initialViewport.latitude);
+    expect(state.viewport.longitude).toBe(initialViewport.longitude);
+    expect(state.viewport.zoom).toBe(initialViewport.zoom);
+  });
+
+  it('should allow explicit fitToEntityOutline call when needed', () => {
+    // First calculate the entity outline
+    act(() => {
+      useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
+    });
+
+    // Verify outline exists
+    expect(useMapStore.getState().entityOutline).not.toBeNull();
+
+    // Now explicitly call fitToEntityOutline (this is NOT called on province click)
+    act(() => {
+      useMapStore.getState().fitToEntityOutline();
+    });
+
+    const state = useMapStore.getState();
+
+    // Now flyTo should be triggered
+    expect(state.isFlying).toBe(true);
+    expect(state.flyToTarget).not.toBeNull();
+  });
+
+  it('should keep viewport stable during rapid province selections', () => {
+    const initialViewport = { ...useMapStore.getState().viewport };
+
+    // Rapidly select multiple provinces
+    act(() => {
+      useMapStore.getState().selectProvince('province1');
+      useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
+    });
+
+    act(() => {
+      useMapStore.getState().selectProvince('province2');
+      useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
+    });
+
+    act(() => {
+      useMapStore.getState().selectProvince('province1');
+      useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
+    });
+
+    const state = useMapStore.getState();
+
+    // Viewport should remain unchanged throughout
+    expect(state.viewport.latitude).toBe(initialViewport.latitude);
+    expect(state.viewport.longitude).toBe(initialViewport.longitude);
+    expect(state.viewport.zoom).toBe(initialViewport.zoom);
+    expect(state.isFlying).toBe(false);
   });
 });

@@ -5,6 +5,7 @@
  */
 
 export { formatScore } from './formatScore';
+export { formatPopulation } from './formatUtils';
 
 // Year utilities for timeline
 export {
@@ -38,3 +39,12 @@ export {
   isValidProvinceData,
   PROVINCE_DATA_INDEX,
 } from './mapUtils';
+
+// URL state utilities for drawer state synchronization
+export {
+  parseURLState,
+  updateURLState,
+  clearURLParams,
+  hasDrawerParams,
+  type URLState,
+} from './urlStateUtils';

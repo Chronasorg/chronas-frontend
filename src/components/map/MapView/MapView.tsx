@@ -5,20 +5,63 @@
  * using react-map-gl with Mapbox GL JS.
  *
  * Requirements: 1.1, 1.3, 1.4, 2.3, 2.8, 3.1, 3.4, 3.6, 6.1, 7.1, 7.2, 7.3, 7.4, 7.6, 12.5, 12.6, 13.2, 13.3, 15.1, 15.2, 15.3
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.3 (Province data visualization)
+ * Requirements: 9.5, 11.2 (Performance optimizations - debouncing and request cancellation)
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer } from 'react-map-gl/mapbox';
-import type { FeatureCollection, Feature, Point } from 'geojson';
-import { useMapStore } from '../../../stores/mapStore';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/mapbox';
+import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'geojson';
+import { useMapStore, FALLBACK_COLOR, type AreaColorDimension, type LabelFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { getThemeConfig } from '../../../config/mapTheme';
 import { updateYearInURL } from '../../../utils/mapUtils';
+import { updateURLState } from '../../../utils/urlStateUtils';
+import type { Marker } from '../../../api/types';
+import { ProvinceTooltip, type ProvinceFeatureProperties } from '../ProvinceTooltip/ProvinceTooltip';
 import styles from './MapView.module.css';
+
+/**
+ * Mapbox GL expression type for data-driven styling.
+ * Using ExpressionSpecification from mapbox-gl for proper typing.
+ */
+type MapboxExpression = [string, ...unknown[]];
 
 // Mapbox access token - should be set via environment variable
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+/**
+ * Debounce delay for year changes in milliseconds.
+ * Requirement 11.2: THE MapView SHALL debounce year change events to prevent excessive API calls
+ */
+export const YEAR_CHANGE_DEBOUNCE_MS = 300;
+
+/**
+ * Custom hook for debouncing a value.
+ * Requirement 11.2: Add debounce to year change handler (300ms)
+ *
+ * @param value - The value to debounce
+ * @param delay - The debounce delay in milliseconds
+ * @returns The debounced value
+ */
+export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    // Set up the timeout to update the debounced value
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    // Clean up the timeout if value changes before delay completes
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 /**
  * Props for the MapView component
@@ -58,6 +101,162 @@ export const SIDEBAR_WIDTH_CLOSED = 56;
 export const RIGHT_DRAWER_WIDTH_PERCENT = 25;
 
 /**
+ * Province layer configuration for each color dimension.
+ * Requirement 3.1, 3.2, 3.3, 3.4: Province coloring by dimension
+ */
+export interface ProvinceLayerConfig {
+  /** Layer ID */
+  id: string;
+  /** Property name in GeoJSON feature (r, c, e, g, p) */
+  property: string;
+  /** Color dimension this layer represents */
+  dimension: AreaColorDimension;
+}
+
+/**
+ * Province layer configurations for all dimensions.
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 4.1, 4.3
+ */
+export const PROVINCE_LAYERS: ProvinceLayerConfig[] = [
+  { id: 'ruler-fill', property: 'r', dimension: 'ruler' },
+  { id: 'culture-fill', property: 'c', dimension: 'culture' },
+  { id: 'religion-fill', property: 'e', dimension: 'religion' },
+  { id: 'religionGeneral-fill', property: 'g', dimension: 'religionGeneral' },
+  { id: 'population-fill', property: 'p', dimension: 'population' },
+];
+
+/**
+ * Default population fill color for population dimension.
+ * Requirement 3.5: Population opacity interpolation
+ */
+export const POPULATION_FILL_COLOR = '#4a90d9';
+
+/**
+ * Population opacity range for interpolation.
+ * Requirement 3.5: Opacity range [0.3, 0.8]
+ */
+export const POPULATION_OPACITY_MIN = 0.3;
+export const POPULATION_OPACITY_MAX = 0.8;
+
+/**
+ * Default fill opacity for categorical layers.
+ */
+export const DEFAULT_FILL_OPACITY = 0.7;
+
+/**
+ * Marker icon configuration for each marker type.
+ * Requirement 5.5: THE MapView SHALL use appropriate icons for each marker type
+ */
+export const MARKER_ICONS: Record<string, string> = {
+  battle: 'castle', // Mapbox Maki icon for battles
+  city: 'town-hall', // Mapbox Maki icon for cities
+  capital: 'star', // Mapbox Maki icon for capitals
+  person: 'monument', // Mapbox Maki icon for persons
+  event: 'information', // Mapbox Maki icon for events
+  other: 'marker', // Default marker icon
+};
+
+/**
+ * Default marker icon for unknown types.
+ */
+export const DEFAULT_MARKER_ICON = 'marker';
+
+/**
+ * Marker icon size.
+ */
+export const MARKER_ICON_SIZE = 1.0;
+
+/**
+ * Marker icon colors by type.
+ * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
+ */
+export const MARKER_COLORS: Record<string, string> = {
+  battle: '#e74c3c', // Red for battles
+  city: '#3498db', // Blue for cities
+  capital: '#f1c40f', // Gold for capitals
+  person: '#9b59b6', // Purple for persons
+  event: '#2ecc71', // Green for events
+  other: '#95a5a6', // Gray for other
+};
+
+/**
+ * Builds a Mapbox GL match expression for categorical coloring.
+ * Requirement 4.3: Data-driven styling with categorical stops
+ *
+ * @param property - The property name to match against
+ * @param colorMap - Map of entity ID to color string
+ * @param fallback - Fallback color when no match
+ * @returns Mapbox GL match expression
+ */
+export function buildColorMatchExpression(
+  property: string,
+  colorMap: Record<string, string>,
+  fallback: string = FALLBACK_COLOR
+): MapboxExpression | string {
+  const entries = Object.entries(colorMap);
+  
+  if (entries.length === 0) {
+    return fallback;
+  }
+  
+  // Build match expression: ['match', ['get', property], id1, color1, id2, color2, ..., fallback]
+  const matchExpr: [string, ...unknown[]] = ['match', ['get', property]];
+  
+  for (const [id, color] of entries) {
+    matchExpr.push(id, color);
+  }
+  
+  matchExpr.push(fallback);
+  
+  return matchExpr;
+}
+
+/**
+ * Builds a Mapbox GL interpolate expression for population opacity.
+ * Requirement 3.5: Population opacity interpolation [0.3, 0.8]
+ *
+ * @param maxPopulation - Maximum population value for scaling
+ * @returns Mapbox GL interpolate expression
+ */
+export function buildPopulationOpacityExpression(maxPopulation: number): MapboxExpression {
+  // Ensure maxPopulation is at least 1 to avoid division issues
+  const safeMax = Math.max(1, maxPopulation);
+  
+  return [
+    'interpolate',
+    ['linear'],
+    ['get', 'p'],
+    0, POPULATION_OPACITY_MIN,
+    safeMax, POPULATION_OPACITY_MAX,
+  ];
+}
+
+/**
+ * Calculates the maximum population from provinces GeoJSON.
+ * Requirement 3.5: Calculate max population from area data
+ *
+ * @param geojson - Provinces GeoJSON feature collection
+ * @returns Maximum population value
+ */
+export function calculateMaxPopulation(
+  geojson: FeatureCollection<Polygon | MultiPolygon> | null
+): number {
+  if (!geojson?.features) {
+    return 1;
+  }
+  
+  let maxPop = 0;
+  for (const feature of geojson.features) {
+    const population = feature.properties?.['p'] as number | undefined;
+    if (typeof population === 'number' && population > maxPop) {
+      maxPop = population;
+    }
+  }
+  
+  return Math.max(1, maxPop);
+}
+
+/**
  * Checks if WebGL is supported in the current browser.
  * Requirement 13.2: THE MapView SHALL check for WebGL support on mount
  *
@@ -71,6 +270,54 @@ export function checkWebGLSupport(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Converts markers array to GeoJSON FeatureCollection.
+ * Requirement 5.2: THE MapView SHALL display markers as icons on the map using a GeoJSON point source
+ *
+ * @param markers - Array of markers to convert
+ * @returns GeoJSON FeatureCollection of Point features
+ */
+export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
+  return {
+    type: 'FeatureCollection',
+    features: markers.map((marker) => ({
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: marker.coo,
+      },
+      properties: {
+        id: marker._id,
+        name: marker.name,
+        type: marker.type,
+        year: marker.year,
+        wiki: marker.wiki ?? null,
+        description: marker.data?.description ?? null,
+      },
+    })),
+  };
+}
+
+/**
+ * Builds a Mapbox GL match expression for marker icon colors.
+ * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
+ *
+ * @returns Mapbox GL match expression for marker colors
+ */
+export function buildMarkerColorExpression(): MapboxExpression {
+  return [
+    'match',
+    ['get', 'type'],
+    'battle', MARKER_COLORS['battle'],
+    'city', MARKER_COLORS['city'],
+    'capital', MARKER_COLORS['capital'],
+    'person', MARKER_COLORS['person'],
+    'event', MARKER_COLORS['event'],
+    'other', MARKER_COLORS['other'],
+    MARKER_COLORS['other'], // default
+  ];
 }
 
 /**
@@ -91,6 +338,7 @@ export function checkWebGLSupport(): boolean {
  */
 export function MapView({ className, isBlurred = false }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [webGLSupported, setWebGLSupported] = useState(true);
   
@@ -98,8 +346,16 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   // Requirement 7.3, 7.4: Province hover highlighting and info display
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   
+  // Cursor position for tooltip positioning
+  // Requirement 1.1: Tooltip appears at cursor position
+  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  
   // Track previous year to detect changes
   const prevYearRef = useRef<number | null>(null);
+  
+  // Selected marker state for popup display
+  // Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
+  const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
 
   // Get state from stores
   const viewport = useMapStore((state) => state.viewport);
@@ -107,13 +363,337 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const flyToTarget = useMapStore((state) => state.flyToTarget);
   const clearFlyTo = useMapStore((state) => state.clearFlyTo);
   const loadAreaData = useMapStore((state) => state.loadAreaData);
+  const loadMarkers = useMapStore((state) => state.loadMarkers);
+  const getFilteredMarkers = useMapStore((state) => state.getFilteredMarkers);
   const selectProvince = useMapStore((state) => state.selectProvince);
+  const layerVisibility = useMapStore((state) => state.layerVisibility);
+  const metadata = useMapStore((state) => state.metadata);
+  const provincesGeoJSON = useMapStore((state) => state.provincesGeoJSON);
+  const markers = useMapStore((state) => state.markers);
+  const markerFilters = useMapStore((state) => state.markerFilters);
+  const labelData = useMapStore((state) => state.labelData);
+  const calculateLabels = useMapStore((state) => state.calculateLabels);
+  const activeColor = useMapStore((state) => state.activeColor);
+  // Entity outline state for highlighting selected entity territory
+  // Requirement 8.4, 8.5, 8.6: Entity outline display
+  const entityOutline = useMapStore((state) => state.entityOutline);
+  const entityOutlineColor = useMapStore((state) => state.entityOutlineColor);
+  // Entity outline calculation
+  // Requirement 8.1: Calculate entity outline for display
+  const calculateEntityOutline = useMapStore((state) => state.calculateEntityOutline);
+  // Note: fitToEntityOutline is available in mapStore but not used here.
+  // Production behavior: clicking a province does NOT zoom to entity bounds.
+  // Hovered province state for tooltip display
+  // Requirement 1.1, 1.7: Province hover tooltip
+  const hoveredProvinceId = useMapStore((state) => state.hoveredProvinceId);
+  const setHoveredProvince = useMapStore((state) => state.setHoveredProvince);
+  // Hovered marker state for marker highlight
+  // Requirement 5.1, 5.2, 5.3: Marker hover highlight
+  const hoveredMarkerId = useMapStore((state) => state.hoveredMarkerId);
+  const setHoveredMarker = useMapStore((state) => state.setHoveredMarker);
+  const getEntityWiki = useMapStore((state) => state.getEntityWiki);
   const theme = useUIStore((state) => state.theme);
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
+  const openRightDrawer = useUIStore((state) => state.openRightDrawer);
+  // Right drawer state for width adjustment
+  // Requirement 2.2: WHEN the RightDrawer opens, THE MapView SHALL reduce its width by 25%
+  const rightDrawerOpen = useUIStore((state) => state.rightDrawerOpen);
+  // Track previous right drawer state to detect changes
+  const prevRightDrawerOpenRef = useRef<boolean>(rightDrawerOpen);
   const selectedYear = useTimelineStore((state) => state.selectedYear);
+
+  // Get cancel functions for request cancellation
+  // Requirement 9.5, 11.2: Cancel in-flight requests on new year change
+  const cancelAreaDataRequest = useMapStore((state) => state.cancelAreaDataRequest);
+  const cancelMarkersRequest = useMapStore((state) => state.cancelMarkersRequest);
+
+  // Get error state for error display
+  // Requirement 12.1, 12.2, 12.3: Error handling UI
+  const error = useMapStore((state) => state.error);
+  const setError = useMapStore((state) => state.setError);
+  const isLoadingAreaData = useMapStore((state) => state.isLoadingAreaData);
+  const currentAreaData = useMapStore((state) => state.currentAreaData);
 
   // Get theme configuration
   const themeConfig = getThemeConfig(theme);
+
+  // Debounce the selected year to prevent excessive API calls during rapid timeline navigation
+  // Requirement 11.2: THE MapView SHALL debounce year change events (300ms)
+  const debouncedYear = useDebounce(selectedYear, YEAR_CHANGE_DEBOUNCE_MS);
+
+  /**
+   * Memoized color match expressions for each dimension.
+   * Requirement 4.3: Data-driven styling with categorical stops
+   */
+  const colorExpressions = useMemo(() => {
+    if (!metadata) {
+      return {
+        ruler: FALLBACK_COLOR,
+        culture: FALLBACK_COLOR,
+        religion: FALLBACK_COLOR,
+        religionGeneral: FALLBACK_COLOR,
+      };
+    }
+
+    // Build color maps from metadata
+    const rulerColors: Record<string, string> = {};
+    const cultureColors: Record<string, string> = {};
+    const religionColors: Record<string, string> = {};
+    const religionGeneralColors: Record<string, string> = {};
+
+    for (const [id, entry] of Object.entries(metadata.ruler)) {
+      if (entry.color) rulerColors[id] = entry.color;
+    }
+    for (const [id, entry] of Object.entries(metadata.culture)) {
+      if (entry.color) cultureColors[id] = entry.color;
+    }
+    for (const [id, entry] of Object.entries(metadata.religion)) {
+      if (entry.color) religionColors[id] = entry.color;
+    }
+    for (const [id, entry] of Object.entries(metadata.religionGeneral)) {
+      if (entry.color) religionGeneralColors[id] = entry.color;
+    }
+
+    return {
+      ruler: buildColorMatchExpression('r', rulerColors),
+      culture: buildColorMatchExpression('c', cultureColors),
+      religion: buildColorMatchExpression('e', religionColors),
+      religionGeneral: buildColorMatchExpression('g', religionGeneralColors),
+    };
+  }, [metadata]);
+
+  /**
+   * Memoized max population for opacity interpolation.
+   * Requirement 3.5: Calculate max population from area data
+   */
+  const maxPopulation = useMemo(() => {
+    return calculateMaxPopulation(provincesGeoJSON);
+  }, [provincesGeoJSON]);
+
+  /**
+   * Memoized population opacity expression.
+   * Requirement 3.5: Population opacity interpolation [0.3, 0.8]
+   */
+  const populationOpacityExpr = useMemo(() => {
+    return buildPopulationOpacityExpression(maxPopulation);
+  }, [maxPopulation]);
+
+  /**
+   * Empty GeoJSON for provinces source when no data is available.
+   */
+  const emptyProvincesGeoJSON: FeatureCollection<Polygon | MultiPolygon> = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: [],
+  }), []);
+
+  /**
+   * Empty GeoJSON for labels source when no data is available.
+   * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
+   */
+  const emptyLabelsGeoJSON: LabelFeatureCollection = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: [],
+  }), []);
+
+  /**
+   * Empty GeoJSON for entity outline source when no outline is available.
+   * Requirement 8.4, 8.5, 8.6: Entity outline display
+   */
+  const emptyOutlineGeoJSON: FeatureCollection<Polygon | MultiPolygon> = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: [],
+  }), []);
+
+  /**
+   * Memoized entity outline GeoJSON with color property.
+   * Requirement 8.4: THE MapView SHALL display the entity outline as a highlighted border using the entity's metadata color
+   * Requirement 8.5: WHEN the selected province changes, THE MapView SHALL update the entity outline accordingly
+   * Requirement 8.6: WHEN no province is selected, THE MapView SHALL clear the entity outline
+   */
+  const outlineGeoJSON = useMemo((): FeatureCollection<Polygon | MultiPolygon> => {
+    if (!entityOutline) return emptyOutlineGeoJSON;
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        ...entityOutline,
+        properties: {
+          ...entityOutline.properties,
+          color: entityOutlineColor ?? FALLBACK_COLOR,
+        },
+      }],
+    };
+  }, [entityOutline, entityOutlineColor, emptyOutlineGeoJSON]);
+
+  /**
+   * Memoized filtered markers as GeoJSON.
+   * Requirement 5.2: THE MapView SHALL display markers as icons on the map using a GeoJSON point source
+   * Requirement 6.4: WHEN markers are fetched, THE MapView SHALL apply the current filter
+   */
+  const markersGeoJSON = useMemo(() => {
+    const filteredMarkers = getFilteredMarkers();
+    return markersToGeoJSON(filteredMarkers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- markers and markerFilters trigger re-computation via getFilteredMarkers
+  }, [markers, markerFilters, getFilteredMarkers]);
+
+  /**
+   * Memoized marker color expression.
+   * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
+   */
+  const markerColorExpr = useMemo(() => {
+    return buildMarkerColorExpression();
+  }, []);
+
+  /**
+   * Memoized marker radius expression for hover state.
+   * Requirement 5.1: WHEN the user hovers over a marker, THE Marker SHALL increase in size by 50% (from 8px to 12px radius)
+   * Requirement 5.4: WHEN the user moves the cursor away from a marker, THE Marker SHALL return to its original size within 100ms
+   */
+  const markerRadiusExpr = useMemo((): MapboxExpression | number => {
+    if (!hoveredMarkerId) {
+      return 8; // Default radius
+    }
+    // Data-driven styling: 12px for hovered marker, 8px for others
+    return [
+      'case',
+      ['==', ['get', 'id'], hoveredMarkerId],
+      12, // Hovered marker size (50% larger)
+      8,  // Default marker size
+    ];
+  }, [hoveredMarkerId]);
+
+  /**
+   * Memoized marker stroke width expression for hover state.
+   * Requirement 5.2: WHEN the user hovers over a marker, THE Marker SHALL display a highlight stroke using the theme's highlightColor
+   * Requirement 5.5: WHEN the user moves the cursor away from a marker, THE Marker SHALL remove the highlight stroke
+   */
+  const markerStrokeWidthExpr = useMemo((): MapboxExpression | number => {
+    if (!hoveredMarkerId) {
+      return 2; // Default stroke width
+    }
+    // Data-driven styling: 3px for hovered marker, 2px for others
+    return [
+      'case',
+      ['==', ['get', 'id'], hoveredMarkerId],
+      3, // Hovered marker stroke width
+      2, // Default stroke width
+    ];
+  }, [hoveredMarkerId]);
+
+  /**
+   * Memoized marker stroke color expression for hover state.
+   * Requirement 5.2: WHEN the user hovers over a marker, THE Marker SHALL display a highlight stroke using the theme's highlightColor
+   */
+  const markerStrokeColorExpr = useMemo((): MapboxExpression | string => {
+    if (!hoveredMarkerId) {
+      return '#ffffff'; // Default stroke color
+    }
+    // Data-driven styling: highlight color for hovered marker, white for others
+    return [
+      'case',
+      ['==', ['get', 'id'], hoveredMarkerId],
+      themeConfig.highlightColors[0], // Hovered marker highlight stroke
+      '#ffffff', // Default stroke color
+    ];
+  }, [hoveredMarkerId, themeConfig.highlightColors]);
+
+  /**
+   * Memoized tooltip feature properties from currentAreaData.
+   * Requirement 1.2, 1.3, 1.4, 1.5, 1.6: Tooltip displays entity info from area data
+   */
+  const tooltipFeatureProps = useMemo((): ProvinceFeatureProperties | null => {
+    if (!hoveredProvinceId || !currentAreaData) {
+      return null;
+    }
+    
+    const provinceData = currentAreaData[hoveredProvinceId];
+    if (!provinceData) {
+      return null;
+    }
+    
+    // ProvinceData format: [ruler, culture, religion, capital, population]
+    // Index 0: ruler ID, Index 1: culture ID, Index 2: religion ID, Index 3: capital, Index 4: population
+    const [ruler, culture, religion, , population] = provinceData;
+    
+    // Get religionGeneral from metadata if available
+    let religionGeneral = religion;
+    const religionEntry = metadata?.religion[religion];
+    if (religionEntry?.parent) {
+      religionGeneral = religionEntry.parent;
+    }
+    
+    return {
+      id: hoveredProvinceId,
+      r: ruler,
+      c: culture,
+      e: religion,
+      g: religionGeneral,
+      p: population,
+    };
+  }, [hoveredProvinceId, currentAreaData, metadata]);
+
+  /**
+   * Handles retry action for failed data loading.
+   * Requirement 12.3: Add retry button
+   */
+  const handleRetry = useCallback(() => {
+    // Clear the error state
+    setError(null);
+    
+    // Cancel any in-flight requests
+    cancelAreaDataRequest();
+    cancelMarkersRequest();
+    
+    // Retry loading data for the current year
+    void loadAreaData(debouncedYear);
+    void loadMarkers(debouncedYear);
+  }, [setError, cancelAreaDataRequest, cancelMarkersRequest, loadAreaData, loadMarkers, debouncedYear]);
+
+  /**
+   * Handles dismissing the error message.
+   * Requirement 12.4: Error state should be clearable
+   */
+  const handleDismissError = useCallback(() => {
+    setError(null);
+  }, [setError]);
+
+  /**
+   * Determines if "no data available" message should be shown.
+   * Requirement 12.2: Display "No data available" for missing years
+   */
+  const showNoDataMessage = useMemo(() => {
+    // Show no data message if:
+    // 1. Not loading
+    // 2. No error
+    // 3. No current area data
+    // 4. Map is loaded
+    return !isLoadingAreaData && !error && !currentAreaData && isLoaded;
+  }, [isLoadingAreaData, error, currentAreaData, isLoaded]);
+
+  /**
+   * Gets a user-friendly error message.
+   * Requirement 12.1: Display connection error message
+   */
+  const getErrorMessage = useCallback((err: Error): string => {
+    const message = err.message.toLowerCase();
+    
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+      return 'Unable to connect to the server. Please check your internet connection and try again.';
+    }
+    
+    if (message.includes('timeout')) {
+      return 'The request timed out. Please try again.';
+    }
+    
+    if (message.includes('404') || message.includes('not found')) {
+      return 'The requested data was not found. This year may not have historical data available.';
+    }
+    
+    if (message.includes('500') || message.includes('server')) {
+      return 'A server error occurred. Please try again later.';
+    }
+    
+    return err.message || 'An unexpected error occurred. Please try again.';
+  }, []);
 
   // Check WebGL support on mount
   // Requirement 13.2: THE MapView SHALL check for WebGL support on mount
@@ -163,27 +743,46 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    * THE MapView SHALL fetch new area data from the chronas-api
    * Requirement 3.4: THE MapStore SHALL subscribe to Timeline_Store selectedYear changes
    * Requirement 3.6: WHEN the year changes, THE MapView SHALL update the URL query parameter 'year'
+   * Requirement 5.1: WHEN the selectedYear changes, THE MapView SHALL fetch markers
+   * Requirement 9.5: Cancel in-flight requests on new year change
+   * Requirement 11.2: THE MapView SHALL debounce year change events (300ms)
    */
   useEffect(() => {
-    // Skip initial render (prevYearRef is null)
+    // Handle initial render - load data for the initial year
     if (prevYearRef.current === null) {
-      prevYearRef.current = selectedYear;
+      prevYearRef.current = debouncedYear;
       // Update URL with initial year
-      updateYearInURL(selectedYear);
+      updateYearInURL(debouncedYear);
+      
+      // Load initial data for the default year
+      void loadAreaData(debouncedYear);
+      void loadMarkers(debouncedYear);
       return;
     }
 
-    // Only trigger if year actually changed
-    if (prevYearRef.current !== selectedYear) {
-      prevYearRef.current = selectedYear;
+    // Only trigger if debounced year actually changed
+    if (prevYearRef.current !== debouncedYear) {
+      // Cancel any in-flight requests before starting new ones
+      // Requirement 9.5, 11.2: Cancel in-flight requests on new year change
+      cancelAreaDataRequest();
+      cancelMarkersRequest();
+      
+      prevYearRef.current = debouncedYear;
       
       // Update URL year parameter
-      updateYearInURL(selectedYear);
+      updateYearInURL(debouncedYear);
       
       // Trigger area data fetch for the new year
-      void loadAreaData(selectedYear);
+      void loadAreaData(debouncedYear);
+      
+      // Trigger markers fetch for the new year
+      // Requirement 5.1: WHEN the selectedYear changes, THE MapView SHALL fetch markers
+      void loadMarkers(debouncedYear);
+      
+      // Clear selected marker when year changes
+      setSelectedMarker(null);
     }
-  }, [selectedYear, loadAreaData]);
+  }, [debouncedYear, loadAreaData, loadMarkers, cancelAreaDataRequest, cancelMarkersRequest]);
 
   // Handle flyTo animations
   // Requirement 2.6: THE MapStore SHALL provide a flyTo action
@@ -213,6 +812,43 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       mapRef.current.flyTo(flyToOptions);
     }
   }, [flyToTarget]);
+
+  /**
+   * Update province properties when provincesGeoJSON becomes available after area data is loaded.
+   * This handles the race condition where loadAreaData completes before loadMetadata.
+   * Requirement 4.2: WHEN area data changes, THE MapView SHALL update the province feature properties
+   */
+  const updateProvinceProperties = useMapStore((state) => state.updateProvinceProperties);
+  
+  useEffect(() => {
+    // If we have both provincesGeoJSON and currentAreaData, ensure properties are updated
+    // This handles the case where loadAreaData completed before loadMetadata
+    if (provincesGeoJSON && currentAreaData) {
+      // Check if properties need to be updated by looking at the first feature
+      const firstFeature = provincesGeoJSON.features[0];
+      const hasProperties = firstFeature?.properties?.['r'] !== undefined;
+      
+      if (!hasProperties) {
+        // Properties haven't been set yet, update them now
+        updateProvinceProperties(currentAreaData);
+      }
+    }
+  }, [provincesGeoJSON, currentAreaData, updateProvinceProperties]);
+
+  /**
+   * Recalculate labels when activeColor dimension changes or when required data becomes available.
+   * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
+   * Requirement 7.2, 7.3, 7.4: Labels for ruler, culture, religion at territory centroids
+   * 
+   * Note: calculateLabels requires provincesGeoJSON, currentAreaData, AND metadata to be available.
+   * We include all three in the dependency array to ensure labels are recalculated when any of them
+   * becomes available (e.g., after metadata loads or after province properties are updated).
+   */
+  useEffect(() => {
+    if (provincesGeoJSON && currentAreaData && metadata && activeColor !== 'population') {
+      calculateLabels(activeColor);
+    }
+  }, [activeColor, provincesGeoJSON, currentAreaData, metadata, calculateLabels]);
 
   /**
    * Handles viewport changes from user interaction.
@@ -250,11 +886,40 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   }, [flyToTarget, clearFlyTo]);
 
   /**
-   * Handles mouse hover over map features (provinces).
+   * Resize map when right drawer opens/closes to recalibrate coordinate system.
+   * This fixes the issue where hover detection returns wrong provinces after
+   * the map container size changes due to the right drawer opening.
+   */
+  useEffect(() => {
+    // Only trigger on actual state change, not initial render
+    if (prevRightDrawerOpenRef.current !== rightDrawerOpen) {
+      prevRightDrawerOpenRef.current = rightDrawerOpen;
+      
+      // Wait for the CSS transition to complete (300ms) then resize the map
+      const timeoutId = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      }, 350); // Slightly longer than the 300ms CSS transition
+      
+      return () => { clearTimeout(timeoutId); };
+    }
+    return undefined;
+  }, [rightDrawerOpen]);
+
+  /**
+   * Handles mouse hover over map features (provinces and markers).
    * Requirement 7.3: WHEN the user hovers over a province, THE MapView SHALL highlight the province
    * Requirement 7.4: WHEN the user hovers over a province, THE MapView SHALL update the area-hover source
+   * Requirement 1.1: WHEN the user hovers over a province, THE Tooltip SHALL appear within 100ms at the cursor position
+   * Requirement 5.1, 5.2, 5.3: Marker hover highlight with size increase and highlight stroke
    */
   const handleMouseMove = useCallback((event: MapMouseEvent) => {
+    // Update cursor position for tooltip positioning
+    // Use clientX/clientY for viewport-relative positioning with position: fixed
+    // This ensures the tooltip follows the cursor regardless of container position changes
+    setCursorPosition({ x: event.originalEvent.clientX, y: event.originalEvent.clientY });
+    
     // Check if we have features under the cursor
     const features = event.features;
     
@@ -262,10 +927,32 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       const feature = features[0];
       if (!feature) {
         setHoverInfo(null);
+        setHoveredProvince(null);
+        setHoveredMarker(null);
         return;
       }
       
       const properties = feature.properties ?? {};
+      const layerId = feature.layer?.id;
+      
+      // Check if hovering over a marker
+      // Requirement 5.1, 5.2, 5.3: Marker hover highlight
+      if (layerId === 'markers-layer') {
+        const markerId = properties['id'] as string | undefined;
+        if (markerId) {
+          // Set hovered marker for highlight effect
+          setHoveredMarker(markerId);
+          // Clear province hover when over marker
+          setHoveredProvince(null);
+          setHoverInfo(null);
+          // Requirement 5.3: Cursor changes to pointer on marker hover
+          // Note: Cursor is handled via CSS and map's cursor property
+          return;
+        }
+      }
+      
+      // Clear marker hover when not over a marker
+      setHoveredMarker(null);
       
       // Extract province ID from feature properties
       // Province ID is typically stored in 'id' or 'provinceId' property
@@ -279,24 +966,38 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         feature: properties as Record<string, unknown>,
         provinceId: provinceId,
       });
+      
+      // Update hoveredProvinceId in mapStore for tooltip display
+      // Requirement 1.1, 1.7: Province hover triggers tooltip
+      setHoveredProvince(provinceId ?? null);
     } else {
       // No features under cursor, clear hover state
       setHoverInfo(null);
+      setHoveredProvince(null);
+      setHoveredMarker(null);
     }
-  }, []);
+  }, [setHoveredProvince, setHoveredMarker]);
 
   /**
    * Handles mouse leave from the map.
    * Requirement 7.6: WHEN the mouse leaves a province, THE MapView SHALL clear the area-hover source
+   * Requirement 1.7: WHEN the user moves the cursor away from a province, THE Tooltip SHALL disappear within 50ms
+   * Requirement 5.4, 5.5: WHEN the user moves the cursor away from a marker, THE Marker SHALL return to original state
    */
   const handleMouseLeave = useCallback(() => {
     setHoverInfo(null);
-  }, []);
+    setHoveredProvince(null);
+    setHoveredMarker(null);
+  }, [setHoveredProvince, setHoveredMarker]);
 
   /**
-   * Handles click on map features (provinces).
+   * Handles click on map features (provinces and markers).
    * Requirement 7.1: WHEN the user clicks on a province, THE MapView SHALL select that province
    * Requirement 7.2: WHEN a province is selected, THE MapStore SHALL store the selected province ID
+   * Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
+   * Requirement 2.1: WHEN a province is clicked, THE RightDrawer SHALL open
+   * Requirement 2.3: WHEN a province is clicked, THE System SHALL update the URL query parameters
+   * Requirement 3.9: WHEN a province click opens the RightDrawer, THE System SHALL close any existing marker popup
    */
   const handleClick = useCallback((event: MapMouseEvent) => {
     // Check if we have features under the cursor
@@ -309,6 +1010,33 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       }
       
       const properties = feature.properties ?? {};
+      const layerId = feature.layer?.id;
+      
+      // Check if clicked on a marker
+      // Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
+      // Requirement 3.1: WHEN a marker is clicked, THE RightDrawer SHALL open with marker details
+      // Requirement 3.2: WHEN a marker is clicked, THE System SHALL update the URL query parameters
+      if (layerId === 'markers-layer') {
+        const markerId = properties['id'] as string | undefined;
+        if (markerId) {
+          // Find the marker in the markers array
+          const clickedMarker = markers.find((m) => m._id === markerId);
+          if (clickedMarker) {
+            // Close any existing marker popup
+            setSelectedMarker(null);
+            
+            // Open right drawer with marker content
+            openRightDrawer({
+              type: 'marker',
+              marker: clickedMarker,
+            });
+            
+            // Update URL state with marker type and ID
+            updateURLState({ type: 'marker', value: markerId });
+            return;
+          }
+        }
+      }
       
       // Extract province ID from feature properties
       const provinceId = (properties['id'] as string | undefined) ?? 
@@ -318,9 +1046,80 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       if (provinceId) {
         // Update selected province in store
         selectProvince(provinceId);
+        
+        // Requirement 3.9: Close any existing marker popup when province is clicked
+        setSelectedMarker(null);
+        
+        // Get province data from currentAreaData for the drawer
+        const provinceData = currentAreaData?.[provinceId];
+        
+        // Requirement 8.1: Calculate entity outline for the selected province's entity
+        // Note: We calculate the outline for display but do NOT automatically zoom to it.
+        // This matches production behavior where clicking a province shows the entity outline
+        // but keeps the viewport at the user's current position.
+        if (provinceData) {
+          // Get the entity value based on active color dimension
+          // For religionGeneral, we use index 2 (religion) because we need the religion ID
+          // to look up its parent (religionGeneral ID) in the metadata
+          const entityValue = provinceData[activeColor === 'ruler' ? 0 : 
+                                           activeColor === 'culture' ? 1 : 
+                                           activeColor === 'religion' ? 2 :
+                                           activeColor === 'religionGeneral' ? 2 : 0];
+          
+          // Calculate entity outline for the current dimension (for display only, no zoom)
+          if (entityValue && activeColor !== 'population') {
+            calculateEntityOutline(entityValue, activeColor);
+            // Note: We intentionally do NOT call fitToEntityOutline here.
+            // Production behavior: clicking a province does not zoom to entity bounds.
+            // The entity outline is displayed but the viewport stays where the user clicked.
+          }
+        }
+        
+        // Requirement 2.1: Open right drawer with province content
+        // Requirement 2.3: Update URL with type=area&value={provinceName}
+        if (provinceData) {
+          // Get the entity value based on active color dimension
+          // For religionGeneral, we use index 2 (religion) because we need the religion ID
+          // to look up its parent (religionGeneral ID) in the metadata
+          const entityValue = provinceData[activeColor === 'ruler' ? 0 : 
+                                           activeColor === 'culture' ? 1 : 
+                                           activeColor === 'religion' ? 2 :
+                                           activeColor === 'religionGeneral' ? 2 : 0];
+          
+          // Get wiki URL from metadata for the active entity
+          // Production uses metadata[dimension][entityValue][2] for wiki URL
+          const metadataWiki = activeColor !== 'population' && entityValue 
+            ? getEntityWiki(entityValue, activeColor)
+            : undefined;
+          
+          // Build wiki URL: prefer metadata wiki, fallback to province name
+          const wikiUrl = metadataWiki 
+            ? `https://en.wikipedia.org/wiki/${encodeURIComponent(metadataWiki.replace(/ /g, '_'))}`
+            : `https://en.wikipedia.org/wiki/${encodeURIComponent(provinceId.replace(/ /g, '_'))}`;
+          
+          openRightDrawer({
+            type: 'area',
+            provinceId,
+            provinceName: provinceId,
+            wikiUrl,
+          });
+          
+          // Update URL state
+          updateURLState({ type: 'area', value: provinceId });
+        } else {
+          // Even without province data, open drawer with basic info
+          openRightDrawer({
+            type: 'area',
+            provinceId,
+            provinceName: provinceId,
+          });
+          
+          // Update URL state
+          updateURLState({ type: 'area', value: provinceId });
+        }
       }
     }
-  }, [selectProvince]);
+  }, [selectProvince, markers, currentAreaData, openRightDrawer, activeColor, calculateEntityOutline, getEntityWiki]);
 
   /**
    * Generate GeoJSON for the area-hover source based on hovered feature.
@@ -396,15 +1195,25 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    */
   const leftOffset = sidebarOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
 
+  /**
+   * Calculate right offset for right drawer.
+   * Requirement 2.2: WHEN the RightDrawer opens, THE MapView SHALL reduce its width by 25%
+   * Requirement 2.8: WHEN the RightDrawer closes, THE MapView SHALL expand to full width
+   */
+  const rightOffset = rightDrawerOpen ? `${String(RIGHT_DRAWER_WIDTH_PERCENT)}%` : '0';
+
   return (
     <div 
+      ref={containerRef}
       className={containerClassName} 
       data-theme={theme}
       data-sidebar-open={sidebarOpen}
+      data-right-drawer-open={rightDrawerOpen}
       style={{
         left: `${String(leftOffset)}px`,
+        right: rightOffset,
         // Requirement 15.4: THE MapView SHALL animate layout transitions
-        transition: 'left 300ms cubic-bezier(0.4, 0, 0.2, 1), width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'left 300ms cubic-bezier(0.4, 0, 0.2, 1), right 300ms cubic-bezier(0.4, 0, 0.2, 1), width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       {/* Loading indicator */}
@@ -412,6 +1221,59 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         <div className={styles['loading']}>
           <div className={styles['spinner']} />
           <p>Loading map...</p>
+        </div>
+      )}
+
+      {/* Error display overlay */}
+      {/* Requirement 12.1: Display connection error message */}
+      {/* Requirement 12.2: Display "No data available" for missing years */}
+      {/* Requirement 12.3: Add retry button */}
+      {error && (
+        <div className={styles['errorOverlay']} data-theme={theme}>
+          <svg 
+            className={styles['errorIcon']} 
+            viewBox="0 0 24 24" 
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+          <h3 className={styles['errorTitle']}>Error Loading Data</h3>
+          <p className={styles['errorMessage']}>{getErrorMessage(error)}</p>
+          <div className={styles['errorActions']}>
+            <button 
+              className={styles['retryButton']} 
+              onClick={handleRetry}
+              disabled={isLoadingAreaData}
+            >
+              {isLoadingAreaData ? 'Retrying...' : 'Retry'}
+            </button>
+            <button 
+              className={styles['dismissButton']} 
+              onClick={handleDismissError}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* No data available message */}
+      {/* Requirement 12.2: Display "No data available" for missing years */}
+      {showNoDataMessage && (
+        <div className={styles['noDataMessage']} data-theme={theme}>
+          <svg 
+            className={styles['noDataIcon']} 
+            viewBox="0 0 24 24" 
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+          </svg>
+          <h3 className={styles['noDataTitle']}>No Data Available</h3>
+          <p className={styles['noDataText']}>
+            Historical data is not available for year {debouncedYear}.
+          </p>
         </div>
       )}
 
@@ -438,10 +1300,101 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        interactiveLayerIds={['area-fill', 'provinces-fill']}
+        interactiveLayerIds={['area-fill', 'provinces-fill', 'ruler-fill', 'culture-fill', 'religion-fill', 'religionGeneral-fill', 'population-fill', 'markers-layer']}
         attributionControl={false}
         reuseMaps
+        // Requirement 5.3: WHEN the user hovers over a marker, THE Cursor SHALL change to a pointer
+        {...(hoveredMarkerId ? { cursor: 'pointer' } : {})}
       >
+        {/* Provinces GeoJSON source */}
+        {/* Requirement 4.1: THE MapView SHALL maintain a 'provinces' GeoJSON source */}
+        <Source 
+          id="provinces" 
+          type="geojson" 
+          data={provincesGeoJSON ?? emptyProvincesGeoJSON}
+        >
+          {/* Ruler fill layer */}
+          {/* Requirement 3.1: Color provinces using ruler metadata colors based on 'r' property */}
+          <Layer
+            id="ruler-fill"
+            type="fill"
+            layout={{
+              visibility: layerVisibility.ruler ? 'visible' : 'none',
+            }}
+            paint={{
+              'fill-color': colorExpressions.ruler,
+              'fill-opacity': DEFAULT_FILL_OPACITY,
+            }}
+          />
+
+          {/* Culture fill layer */}
+          {/* Requirement 3.2: Color provinces using culture metadata colors based on 'c' property */}
+          <Layer
+            id="culture-fill"
+            type="fill"
+            layout={{
+              visibility: layerVisibility.culture ? 'visible' : 'none',
+            }}
+            paint={{
+              'fill-color': colorExpressions.culture,
+              'fill-opacity': DEFAULT_FILL_OPACITY,
+            }}
+          />
+
+          {/* Religion fill layer */}
+          {/* Requirement 3.3: Color provinces using religion metadata colors based on 'e' property */}
+          <Layer
+            id="religion-fill"
+            type="fill"
+            layout={{
+              visibility: layerVisibility.religion ? 'visible' : 'none',
+            }}
+            paint={{
+              'fill-color': colorExpressions.religion,
+              'fill-opacity': DEFAULT_FILL_OPACITY,
+            }}
+          />
+
+          {/* Religion General fill layer */}
+          {/* Requirement 3.4: Color provinces using religionGeneral metadata colors based on 'g' property */}
+          <Layer
+            id="religionGeneral-fill"
+            type="fill"
+            layout={{
+              visibility: layerVisibility.religionGeneral ? 'visible' : 'none',
+            }}
+            paint={{
+              'fill-color': colorExpressions.religionGeneral,
+              'fill-opacity': DEFAULT_FILL_OPACITY,
+            }}
+          />
+
+          {/* Population fill layer */}
+          {/* Requirement 3.5: Color provinces using interpolated opacity based on 'p' property */}
+          <Layer
+            id="population-fill"
+            type="fill"
+            layout={{
+              visibility: layerVisibility.population ? 'visible' : 'none',
+            }}
+            paint={{
+              'fill-color': POPULATION_FILL_COLOR,
+              'fill-opacity': populationOpacityExpr,
+            }}
+          />
+
+          {/* Province outline layer for all dimensions */}
+          <Layer
+            id="provinces-outline"
+            type="line"
+            paint={{
+              'line-color': themeConfig.foreColors[0],
+              'line-width': 0.5,
+              'line-opacity': 0.3,
+            }}
+          />
+        </Source>
+
         {/* Area hover highlight source and layer */}
         {/* Requirement 7.3, 7.4: Province hover highlighting */}
         <Source id="area-hover" type="geojson" data={getHoverGeoJSON()}>
@@ -457,7 +1410,143 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             }}
           />
         </Source>
+
+        {/* Markers GeoJSON source and layer */}
+        {/* Requirement 5.2: THE MapView SHALL display markers as icons on the map using a GeoJSON point source */}
+        {/* Requirement 5.3: THE MapView SHALL support marker types: battles, cities, capitals, people */}
+        {/* Requirement 5.5: THE MapView SHALL use appropriate icons for each marker type */}
+        {/* Requirement 5.1, 5.2: Marker hover highlight with size increase and highlight stroke */}
+        <Source id="markers" type="geojson" data={markersGeoJSON}>
+          <Layer
+            id="markers-layer"
+            type="circle"
+            paint={{
+              'circle-radius': markerRadiusExpr,
+              'circle-color': markerColorExpr,
+              'circle-opacity': 0.9,
+              'circle-stroke-width': markerStrokeWidthExpr,
+              'circle-stroke-color': markerStrokeColorExpr,
+              // Requirement 5.4: Marker returns to original size within 100ms
+              'circle-radius-transition': { duration: 100 },
+              'circle-stroke-width-transition': { duration: 100 },
+              'circle-stroke-color-transition': { duration: 100 },
+            }}
+          />
+          {/* Marker label layer */}
+          <Layer
+            id="markers-label"
+            type="symbol"
+            layout={{
+              'text-field': ['get', 'name'],
+              'text-size': 10,
+              'text-offset': [0, 1.5],
+              'text-anchor': 'top',
+              'text-optional': true,
+            }}
+            paint={{
+              'text-color': themeConfig.foreColors[0],
+              'text-halo-color': themeConfig.backColors[0],
+              'text-halo-width': 1,
+            }}
+          />
+        </Source>
+
+        {/* Area labels GeoJSON source and layer */}
+        {/* Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension */}
+        {/* Requirement 7.2: WHEN the activeColor dimension is 'ruler', display ruler names at territory centroids */}
+        {/* Requirement 7.3: WHEN the activeColor dimension is 'culture', display culture names at territory centroids */}
+        {/* Requirement 7.4: WHEN the activeColor dimension is 'religion', display religion names at territory centroids */}
+        <Source id="area-labels" type="geojson" data={labelData ?? emptyLabelsGeoJSON}>
+          <Layer
+            id="area-labels-layer"
+            type="symbol"
+            layout={{
+              'text-field': ['get', 'name'],
+              'text-size': ['get', 'fontSize'],
+              'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+              'text-anchor': 'center',
+              'text-allow-overlap': false,
+              'text-ignore-placement': false,
+              'text-optional': true,
+              'text-transform': 'uppercase',
+            }}
+            paint={{
+              'text-color': '#333333',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2,
+            }}
+          />
+        </Source>
+
+        {/* Entity outline GeoJSON source and layer */}
+        {/* Requirement 8.4: THE MapView SHALL display the entity outline as a highlighted border using the entity's metadata color */}
+        {/* Requirement 8.5: WHEN the selected province changes, THE MapView SHALL update the entity outline accordingly */}
+        {/* Requirement 8.6: WHEN no province is selected, THE MapView SHALL clear the entity outline */}
+        <Source id="entity-outline" type="geojson" data={outlineGeoJSON}>
+          <Layer
+            id="entity-outline-layer"
+            type="line"
+            paint={{
+              'line-color': ['get', 'color'],
+              'line-width': 3,
+              'line-opacity': 0.8,
+            }}
+          />
+        </Source>
+
+        {/* Marker popup */}
+        {/* Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details */}
+        {selectedMarker && (
+          <Popup
+            longitude={selectedMarker.coo[0]}
+            latitude={selectedMarker.coo[1]}
+            onClose={() => { setSelectedMarker(null); }}
+            closeOnClick={false}
+            anchor="bottom"
+            className={styles['markerPopup'] ?? ''}
+          >
+            <div className={styles['markerPopupContent']}>
+              <h3 className={styles['markerPopupTitle']}>{selectedMarker.name}</h3>
+              <p className={styles['markerPopupType']}>
+                <strong>Type:</strong> {selectedMarker.type}
+              </p>
+              <p className={styles['markerPopupYear']}>
+                <strong>Year:</strong> {selectedMarker.year}
+              </p>
+              {selectedMarker.data?.description && (
+                <p className={styles['markerPopupDescription']}>
+                  {selectedMarker.data.description}
+                </p>
+              )}
+              {selectedMarker.wiki && (
+                <a
+                  href={selectedMarker.wiki}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles['markerPopupLink']}
+                >
+                  Learn more
+                </a>
+              )}
+            </div>
+          </Popup>
+        )}
       </Map>
+
+      {/* Province hover tooltip */}
+      {/* Requirement 1.1: WHEN the user hovers over a province, THE Tooltip SHALL appear within 100ms at the cursor position */}
+      {/* Requirement 1.2, 1.3, 1.4, 1.5: Show entity info with color chips and icons */}
+      {/* Requirement 1.6: Show province name and formatted population */}
+      {/* Requirement 1.7: WHEN the user moves the cursor away, THE Tooltip SHALL disappear within 50ms */}
+      {tooltipFeatureProps && metadata && (
+        <ProvinceTooltip
+          feature={tooltipFeatureProps}
+          metadata={metadata}
+          activeColor={activeColor}
+          theme={theme}
+          position={cursorPosition}
+        />
+      )}
 
       {/* Theme-based overlay for styling */}
       <div

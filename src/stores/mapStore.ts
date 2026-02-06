@@ -9,10 +9,10 @@
 
 import { create } from 'zustand';
 import * as turf from '@turf/turf';
-import type { Feature, Polygon, MultiPolygon, FeatureCollection } from 'geojson';
+import type { Feature, Polygon, MultiPolygon, FeatureCollection, Point } from 'geojson';
 import { apiClient } from '../api/client';
-import { AREAS } from '../api/endpoints';
-import type { MapAreaData } from '../api/types';
+import { AREAS, METADATA, MARKERS } from '../api/endpoints';
+import type { MapAreaData, Marker, MarkerFilterState, MarkerType } from '../api/types';
 
 /**
  * Area data for a single province
@@ -97,6 +97,10 @@ export interface MapState {
   viewport: ViewportState;
   /** Active color dimension for area coloring */
   activeColor: AreaColorDimension;
+  /** Active label dimension for entity labels - Requirement 6.4, 6.5 */
+  activeLabel: AreaColorDimension;
+  /** Whether color and label dimensions are locked together - Requirement 6.4, 6.5 */
+  colorLabelLocked: boolean;
   /** Previous active color dimension (for tracking changes) - Requirement 5.3 */
   previousActiveColor: AreaColorDimension | null;
   /** Layer visibility state for each color dimension - Requirement 5.4 */
@@ -115,6 +119,10 @@ export interface MapState {
   selectedProvince: string | null;
   /** Selected province data - Requirement 7.2 */
   selectedProvinceData: ProvinceData | null;
+  /** Hovered province ID for tooltip display - Requirement 5.1 */
+  hoveredProvinceId: string | null;
+  /** Hovered marker ID for highlight - Requirement 5.1 */
+  hoveredMarkerId: string | null;
   /** Error state for display - Requirement 13.4 */
   error: Error | null;
   /** Entity outline polygon - Requirement 8.1, 8.2, 8.5 */
@@ -123,8 +131,22 @@ export interface MapState {
   entityOutlineColor: string | null;
   /** Provinces GeoJSON for entity outline calculation */
   provincesGeoJSON: FeatureCollection<Polygon | MultiPolygon> | null;
-  /** Metadata for entity colors */
+  /** Metadata for entity colors - Requirement 2.2 */
   metadata: EntityMetadata | null;
+  /** Whether metadata is currently being loaded - Requirement 2.1 */
+  isLoadingMetadata: boolean;
+  /** Historical markers for the current year - Requirement 5.1 */
+  markers: Marker[];
+  /** Whether markers are currently being loaded - Requirement 5.1 */
+  isLoadingMarkers: boolean;
+  /** Marker filter state for toggling visibility by type - Requirement 6.3 */
+  markerFilters: MarkerFilterState;
+  /** Label data for entity labels on the map - Requirement 7.1 */
+  labelData: LabelFeatureCollection | null;
+  /** AbortController for cancelling in-flight area data requests - Requirement 9.5, 11.2 */
+  areaDataAbortController: AbortController | null;
+  /** AbortController for cancelling in-flight marker requests - Requirement 9.5, 11.2 */
+  markersAbortController: AbortController | null;
 }
 
 /**
@@ -146,7 +168,32 @@ export interface MetadataEntry {
   name: string;
   /** Color value (rgba string) */
   color: string;
+  /** Optional: Wikipedia URL for the entity */
+  wiki?: string;
+  /** Optional: parent category for religionGeneral mapping */
+  parent?: string;
 }
+
+/**
+ * Label feature properties for entity labels on the map.
+ * Requirement 7.1, 7.5, 7.6: Labels display entity names at territory centroids
+ */
+export interface LabelFeatureProperties {
+  /** Entity display name */
+  name: string;
+  /** Font size based on territory area */
+  fontSize: number;
+  /** Entity ID */
+  entityId: string;
+  /** Dimension type */
+  dimension: AreaColorDimension;
+}
+
+/**
+ * GeoJSON FeatureCollection for label data.
+ * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
+ */
+export type LabelFeatureCollection = FeatureCollection<Point, LabelFeatureProperties>;
 
 /**
  * Map actions interface
@@ -290,14 +337,146 @@ export interface MapActions {
   setMetadata: (metadata: EntityMetadata) => void;
 
   /**
+   * Updates province feature properties from area data.
+   * Requirement 1.3: WHEN area data is fetched, THE MapView SHALL update the provinces GeoJSON source
+   * Requirement 4.2: WHEN area data changes, THE MapView SHALL update the province feature properties
+   *
+   * Updates properties:
+   * - r: ruler ID (from area data index 0)
+   * - c: culture ID (from area data index 1)
+   * - e: religion ID (from area data index 2)
+   * - g: religionGeneral ID (derived from religion using metadata)
+   * - p: population value (from area data index 4)
+   *
+   * @param areaData - The area data dictionary keyed by province ID
+   */
+  updateProvinceProperties: (areaData: AreaData) => void;
+
+  /**
+   * Gets the religionGeneral ID for a given religion ID.
+   * Uses metadata to look up the parent category.
+   *
+   * @param religionId - The religion ID
+   * @returns The religionGeneral ID or the original religionId if not found
+   */
+  getReligionGeneral: (religionId: string) => string;
+
+  /**
+   * Loads metadata from the API.
+   * Requirement 2.1: WHEN the application initializes, THE Map_Store SHALL fetch metadata
+   * from the Chronas_API endpoint `/v1/metadata`.
+   * Requirement 2.2: WHEN metadata is loaded, THE Map_Store SHALL store color mappings.
+   *
+   * @returns Promise that resolves with the metadata or null on error
+   */
+  loadMetadata: () => Promise<EntityMetadata | null>;
+
+  /**
    * Gets the color for an entity value from metadata.
    * Requirement 8.4: THE MapView SHALL color the entity outline using the metadata color.
+   * Requirement 2.5: IF metadata loading fails, THEN THE MapView SHALL use default fallback colors.
    *
    * @param value - The entity value
    * @param dimension - The dimension (ruler, culture, religion, religionGeneral)
-   * @returns The color string or null if not found
+   * @returns The color string or fallback color if not found
    */
-  getEntityColor: (value: string, dimension: AreaColorDimension) => string | null;
+  getEntityColor: (value: string, dimension: AreaColorDimension) => string;
+
+  /**
+   * Gets the wiki URL for an entity value from metadata.
+   * Used to display the correct Wikipedia article in the right drawer.
+   *
+   * @param value - The entity value (e.g., ruler ID)
+   * @param dimension - The dimension (ruler, culture, religion, religionGeneral)
+   * @returns The wiki URL or undefined if not found
+   */
+  getEntityWiki: (value: string, dimension: AreaColorDimension) => string | undefined;
+
+  /**
+   * Loads markers from the API for a specific year.
+   * Requirement 5.1: WHEN the selectedYear changes, THE MapView SHALL fetch markers
+   * from the Chronas_API endpoint `/v1/markers?year={year}`.
+   *
+   * @param year - The year to load markers for
+   * @returns Promise that resolves with the markers array or empty array on error
+   */
+  loadMarkers: (year: number) => Promise<Marker[]>;
+
+  /**
+   * Sets the marker filter state for a specific marker type.
+   * Requirement 6.3: THE Map_Store SHALL maintain the current marker filter state.
+   *
+   * @param type - The marker type to filter
+   * @param enabled - Whether the marker type should be visible
+   */
+  setMarkerFilter: (type: MarkerType, enabled: boolean) => void;
+
+  /**
+   * Gets the filtered markers based on current filter state.
+   * Requirement 6.4: WHEN markers are fetched, THE MapView SHALL apply the current filter.
+   *
+   * @returns Array of markers that pass the current filter
+   */
+  getFilteredMarkers: () => Marker[];
+
+  /**
+   * Calculates labels for the active color dimension.
+   * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
+   * Requirement 7.5: THE MapView SHALL calculate label positions by finding the centroid of merged province polygons
+   * Requirement 7.6: THE MapView SHALL use appropriate font sizing based on the entity's territory size
+   *
+   * Groups provinces by entity value, merges their polygons, calculates centroids,
+   * and determines font sizes based on territory area.
+   *
+   * @param dimension - The color dimension to calculate labels for
+   */
+  calculateLabels: (dimension: AreaColorDimension) => void;
+
+  /**
+   * Cancels any in-flight area data request.
+   * Requirement 9.5: THE API_Client SHALL support request cancellation for in-flight requests
+   * Requirement 11.2: THE MapView SHALL debounce year change events
+   */
+  cancelAreaDataRequest: () => void;
+
+  /**
+   * Cancels any in-flight markers request.
+   * Requirement 9.5: THE API_Client SHALL support request cancellation for in-flight requests
+   */
+  cancelMarkersRequest: () => void;
+
+  /**
+   * Sets the active label dimension for entity labels.
+   * Requirement 6.4, 6.5: Layer toggle controls for label dimension.
+   *
+   * @param dimension - The label dimension to activate (cannot be 'population')
+   */
+  setActiveLabel: (dimension: AreaColorDimension) => void;
+
+  /**
+   * Sets whether color and label dimensions are locked together.
+   * Requirement 6.4: When locked, changing color also changes label.
+   * Requirement 6.5: When unlocked, color and label can be changed independently.
+   *
+   * @param locked - Whether to lock color and label together
+   */
+  setColorLabelLocked: (locked: boolean) => void;
+
+  /**
+   * Sets the hovered province ID for tooltip display.
+   * Requirement 5.1: Province hover triggers tooltip display.
+   *
+   * @param provinceId - The province ID or null to clear
+   */
+  setHoveredProvince: (provinceId: string | null) => void;
+
+  /**
+   * Sets the hovered marker ID for highlight.
+   * Requirement 5.1: Marker hover triggers highlight.
+   *
+   * @param markerId - The marker ID or null to clear
+   */
+  setHoveredMarker: (markerId: string | null) => void;
 }
 
 /**
@@ -329,6 +508,12 @@ export const defaultViewport: ViewportState = {
 export const DEFAULT_FLY_TO_DURATION = 2000;
 
 /**
+ * Fallback color for entities when metadata is not available.
+ * Requirement 2.5: IF metadata loading fails, THEN THE MapView SHALL use default fallback colors.
+ */
+export const FALLBACK_COLOR = 'rgba(1,1,1,0.3)';
+
+/**
  * Default layer visibility state.
  * Only the active color dimension layer is visible.
  * Requirement 5.4: setActiveColor action toggles layer visibility
@@ -342,11 +527,33 @@ export const defaultLayerVisibility: LayerVisibility = {
 };
 
 /**
+ * Default marker filter state.
+ * All marker types are visible by default.
+ * Requirement 6.3: THE Map_Store SHALL maintain the current marker filter state.
+ */
+export const defaultMarkerFilters: MarkerFilterState = {
+  battle: true,
+  city: true,
+  capital: true,
+  person: true,
+  event: true,
+  other: true,
+};
+
+/**
+ * Performance threshold for cached year switches in milliseconds.
+ * Requirement 11.5: WHEN switching between cached years, THE MapView SHALL update within 100ms.
+ */
+export const CACHED_SWITCH_THRESHOLD_MS = 100;
+
+/**
  * Initial map state
  */
 export const initialState: MapState = {
   viewport: { ...defaultViewport },
   activeColor: 'ruler',
+  activeLabel: 'ruler',
+  colorLabelLocked: true,
   previousActiveColor: null,
   layerVisibility: { ...defaultLayerVisibility },
   isFlying: false,
@@ -356,11 +563,20 @@ export const initialState: MapState = {
   isLoadingAreaData: false,
   selectedProvince: null,
   selectedProvinceData: null,
+  hoveredProvinceId: null,
+  hoveredMarkerId: null,
   error: null,
   entityOutline: null,
   entityOutlineColor: null,
   provincesGeoJSON: null,
   metadata: null,
+  isLoadingMetadata: false,
+  markers: [],
+  isLoadingMarkers: false,
+  markerFilters: { ...defaultMarkerFilters },
+  labelData: null,
+  areaDataAbortController: null,
+  markersAbortController: null,
 };
 
 /**
@@ -462,6 +678,41 @@ export function normalizeLongitude(lng: number): number {
 export function clampZoom(zoom: number, minZoom = 0, maxZoom = 22): number {
   if (!Number.isFinite(zoom)) return defaultViewport.zoom;
   return Math.max(minZoom, Math.min(maxZoom, zoom));
+}
+
+/**
+ * Font size calculation constants for label sizing.
+ * Requirement 7.6: THE MapView SHALL use appropriate font sizing based on the entity's territory size
+ */
+export const LABEL_FONT_SIZE_MIN = 8;
+export const LABEL_FONT_SIZE_MAX = 24;
+export const LABEL_AREA_MIN = 1e9;  // 1,000 km² in square meters
+export const LABEL_AREA_MAX = 1e12; // 1,000,000 km² in square meters
+
+/**
+ * Calculates font size for entity labels based on territory area.
+ * Requirement 7.6: THE MapView SHALL use appropriate font sizing based on the entity's territory size
+ *
+ * Uses logarithmic scaling to map area to font size:
+ * - Small territories (< 1,000 km²): 8px
+ * - Large territories (> 1,000,000 km²): 24px
+ *
+ * @param area - Territory area in square meters
+ * @returns Font size in pixels
+ */
+export function calculateFontSize(area: number): number {
+  // Clamp area to valid range
+  const clampedArea = Math.max(LABEL_AREA_MIN, Math.min(LABEL_AREA_MAX, area));
+  
+  // Use logarithmic scaling for better distribution
+  const normalized = Math.log10(clampedArea);
+  const minLog = Math.log10(LABEL_AREA_MIN);
+  const maxLog = Math.log10(LABEL_AREA_MAX);
+  
+  // Linear interpolation in log space
+  const ratio = (normalized - minLog) / (maxLog - minLog);
+  
+  return LABEL_FONT_SIZE_MIN + (LABEL_FONT_SIZE_MAX - LABEL_FONT_SIZE_MIN) * ratio;
 }
 
 /**
@@ -626,12 +877,17 @@ export const useMapStore = create<MapStore>((set, get) => ({
    * to avoid redundant API calls.
    * Requirement 3.1: WHEN the selectedYear changes, fetch new area data.
    * Requirement 3.2: Fetch from /areas/{year} endpoint.
+   * Requirement 9.5: THE API_Client SHALL support request cancellation.
+   * Requirement 11.2: Cancel in-flight requests on new year change.
+   * Requirement 11.5: Cached data returns within 100ms.
    * Requirement 13.1: Log errors with details.
    *
    * @param year - The year to load area data for
    * @returns Promise that resolves with the area data or null
    */
   loadAreaData: async (year: number): Promise<AreaData | null> => {
+    const startTime = performance.now();
+    
     // Validate year is a finite number
     if (!Number.isFinite(year)) {
       console.warn(`loadAreaData: Invalid year "${String(year)}"`);
@@ -640,26 +896,56 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
     const state = get();
 
+    // Cancel any in-flight request - Requirement 9.5, 11.2
+    if (state.areaDataAbortController) {
+      state.areaDataAbortController.abort();
+    }
+
     // Check cache first - Requirement 12.2
     const cachedData = state.areaDataCache.get(year);
     if (cachedData) {
       // Return cached data without making API call
-      set({ currentAreaData: cachedData, isLoadingAreaData: false });
+      const duration = performance.now() - startTime;
+      
+      // Performance logging for debugging - Requirement 11.5
+      // Cached year switches should complete within 100ms
+      if (duration > CACHED_SWITCH_THRESHOLD_MS) {
+        console.warn(
+          `[Performance Warning] Cached year ${String(year)} switch exceeded ${String(CACHED_SWITCH_THRESHOLD_MS)}ms threshold: ${duration.toFixed(2)}ms. ` +
+          `Cache size: ${String(state.areaDataCache.size)} entries, ` +
+          `Province count: ${String(Object.keys(cachedData).length)}`
+        );
+      } else {
+        console.debug(
+          `[Performance] Cached year ${String(year)} returned in ${duration.toFixed(2)}ms ` +
+          `(threshold: ${String(CACHED_SWITCH_THRESHOLD_MS)}ms, cache size: ${String(state.areaDataCache.size)})`
+        );
+      }
+      
+      set({ currentAreaData: cachedData, isLoadingAreaData: false, areaDataAbortController: null });
+      
+      // Update province properties with the cached area data
+      // Requirement 4.2: WHEN area data changes, THE MapView SHALL update the province feature properties
+      get().updateProvinceProperties(cachedData);
+      
       return cachedData;
     }
 
+    // Create new abort controller for this request - Requirement 9.5
+    const abortController = new AbortController();
+
     // Data not in cache, set loading state and fetch from API
-    set({ isLoadingAreaData: true, error: null });
+    set({ isLoadingAreaData: true, error: null, areaDataAbortController: abortController });
 
     try {
       // Fetch from /areas/{year} endpoint - Requirement 3.2
       const endpoint = AREAS.GET_BY_YEAR(year);
-      const data = await apiClient.get<MapAreaData>(endpoint);
+      const data = await apiClient.get<MapAreaData>(endpoint, { signal: abortController.signal });
 
       // Validate response is an object (dictionary of province data)
       if (typeof data !== 'object') {
         console.warn(`loadAreaData: Invalid response format for year ${String(year)}`);
-        set({ isLoadingAreaData: false });
+        set({ isLoadingAreaData: false, areaDataAbortController: null });
         return null;
       }
 
@@ -667,6 +953,12 @@ export const useMapStore = create<MapStore>((set, get) => ({
       const areaData = data as AreaData;
 
       // Cache the response - Requirement 12.2
+      const duration = performance.now() - startTime;
+      console.debug(
+        `[Performance] Year ${String(year)} fetched from API in ${duration.toFixed(2)}ms ` +
+        `(province count: ${String(Object.keys(areaData).length)})`
+      );
+      
       set((state) => {
         const newCache = new Map(state.areaDataCache);
         newCache.set(year, areaData);
@@ -675,11 +967,23 @@ export const useMapStore = create<MapStore>((set, get) => ({
           areaDataCache: newCache,
           currentAreaData: areaData,
           isLoadingAreaData: false,
+          areaDataAbortController: null,
         };
       });
 
+      // Update province properties with the new area data
+      // Requirement 4.2: WHEN area data changes, THE MapView SHALL update the province feature properties
+      get().updateProvinceProperties(areaData);
+
       return areaData;
     } catch (error) {
+      // Check if request was aborted - Requirement 9.5
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.debug(`[Performance] Request for year ${String(year)} was cancelled`);
+        // Don't update state for aborted requests - let the new request handle it
+        return null;
+      }
+      
       // Requirement 13.1: Log error with details
       const axiosError = error as {
         response?: {
@@ -704,6 +1008,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
       set({
         error: errorInstance,
         isLoadingAreaData: false,
+        areaDataAbortController: null,
       });
 
       return null;
@@ -841,7 +1146,10 @@ export const useMapStore = create<MapStore>((set, get) => ({
     const matchingFeatures: Feature<Polygon | MultiPolygon>[] = [];
 
     for (const feature of state.provincesGeoJSON.features) {
-      const provinceId = feature.properties?.['id'] as string | undefined;
+      // Province ID is stored in the 'name' property of the GeoJSON feature
+      // After updateProvinceProperties runs, 'id' is also set
+      const provinceId = (feature.properties?.['id'] as string | undefined) ?? 
+                         (feature.properties?.['name'] as string | undefined);
       if (!provinceId) continue;
 
       const provinceData = state.currentAreaData[provinceId];
@@ -1021,18 +1329,114 @@ export const useMapStore = create<MapStore>((set, get) => ({
   },
 
   /**
+   * Loads metadata from the API.
+   * Requirement 2.1: WHEN the application initializes, THE Map_Store SHALL fetch metadata
+   * from the Chronas_API endpoint `/v1/metadata`.
+   * Requirement 2.2: WHEN metadata is loaded, THE Map_Store SHALL store color mappings.
+   *
+   * @returns Promise that resolves with the metadata or null on error
+   */
+  loadMetadata: async (): Promise<EntityMetadata | null> => {
+    set({ isLoadingMetadata: true });
+
+    try {
+      // Fetch combined metadata including provinces GeoJSON and entity colors
+      const data = await apiClient.get<Record<string, unknown>>(METADATA.GET_INIT);
+
+      // Extract provinces GeoJSON if available
+      const provincesData = data['provinces'] as FeatureCollection<Polygon | MultiPolygon> | undefined;
+      
+      // Extract entity metadata
+      const rulerData = data['ruler'] as Record<string, [string, string, string?, string?]> | undefined;
+      const cultureData = data['culture'] as Record<string, [string, string, string?, string?]> | undefined;
+      const religionData = data['religion'] as Record<string, [string, string, string?, string?, string?]> | undefined;
+      const religionGeneralData = data['religionGeneral'] as Record<string, [string, string, string?, string?]> | undefined;
+
+      // Convert array format to MetadataEntry format
+      // Original format: [name, color, wiki?, icon?, parent?]
+      const convertToMetadataEntry = (
+        record: Record<string, [string, string, string?, string?, string?]> | undefined,
+        hasParent = false
+      ): Record<string, MetadataEntry> => {
+        if (!record) return {};
+        const result: Record<string, MetadataEntry> = {};
+        for (const [key, value] of Object.entries(record)) {
+          if (Array.isArray(value) && value.length >= 2) {
+            result[key] = {
+              name: value[0] || key,
+              color: value[1] || FALLBACK_COLOR,
+              ...(value[2] ? { wiki: value[2] } : {}),
+              ...(hasParent && value[3] ? { parent: value[3] } : {}),
+            };
+          }
+        }
+        return result;
+      };
+
+      // Build EntityMetadata from the response
+      const metadata: EntityMetadata = {
+        ruler: convertToMetadataEntry(rulerData),
+        culture: convertToMetadataEntry(cultureData),
+        religion: convertToMetadataEntry(religionData, true),
+        religionGeneral: convertToMetadataEntry(religionGeneralData),
+      };
+
+      // Set provinces GeoJSON if available
+      if (provincesData?.features) {
+        set({ provincesGeoJSON: provincesData });
+      }
+
+      set({
+        metadata,
+        isLoadingMetadata: false,
+      });
+
+      return metadata;
+    } catch (error) {
+      // Log error with details
+      const axiosError = error as {
+        response?: {
+          status?: number;
+          statusText?: string;
+          data?: unknown;
+        };
+        message?: string;
+      };
+
+      console.error('API ERROR: Failed to load metadata:', error);
+      console.error('Error details:', {
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: METADATA.GET_INIT,
+      });
+
+      // Store error state
+      const errorInstance =
+        error instanceof Error ? error : new Error('Failed to load metadata');
+      set({
+        error: errorInstance,
+        isLoadingMetadata: false,
+      });
+
+      return null;
+    }
+  },
+
+  /**
    * Gets the color for an entity value from metadata.
    * Requirement 8.4: THE MapView SHALL color the entity outline using the metadata color.
+   * Requirement 2.5: IF metadata loading fails, THEN THE MapView SHALL use default fallback colors.
    *
    * @param value - The entity value
    * @param dimension - The dimension (ruler, culture, religion, religionGeneral)
-   * @returns The color string or null if not found
+   * @returns The color string or fallback color if not found
    */
-  getEntityColor: (value: string, dimension: AreaColorDimension): string | null => {
+  getEntityColor: (value: string, dimension: AreaColorDimension): string => {
     const state = get();
 
     if (!state.metadata || !value) {
-      return null;
+      return FALLBACK_COLOR;
     }
 
     // Map dimension to metadata key
@@ -1051,10 +1455,500 @@ export const useMapStore = create<MapStore>((set, get) => ({
         metadataKey = 'religionGeneral';
         break;
       default:
-        return null;
+        return FALLBACK_COLOR;
     }
 
-    const entry = state.metadata[metadataKey][value];
-    return entry?.color ?? null;
+    const dimensionMetadata = state.metadata[metadataKey];
+    const entry = dimensionMetadata[value];
+    return entry?.color ?? FALLBACK_COLOR;
+  },
+
+  /**
+   * Gets the wiki URL for an entity value from metadata.
+   * Used to display the correct Wikipedia article in the right drawer.
+   *
+   * For religionGeneral dimension, the value is a religion ID (from province data),
+   * so we need to look up the religion's parent (religionGeneral ID) first,
+   * then get the wiki from religionGeneral metadata.
+   *
+   * @param value - The entity value (e.g., ruler ID, or religion ID for religionGeneral)
+   * @param dimension - The dimension (ruler, culture, religion, religionGeneral)
+   * @returns The wiki URL or undefined if not found
+   */
+  getEntityWiki: (value: string, dimension: AreaColorDimension): string | undefined => {
+    const state = get();
+
+    if (!state.metadata || !value) {
+      return undefined;
+    }
+
+    // Special handling for religionGeneral:
+    // The value passed is a religion ID (from province data index 2),
+    // but we need to look up the wiki from religionGeneral metadata.
+    // Production code: metadata[activeAreaDim][(metadata.religion[activeprovinceValue] || [])[3]][2]
+    if (dimension === 'religionGeneral') {
+      // First, look up the religion to get its parent (religionGeneral ID)
+      const religionEntry = state.metadata.religion[value];
+      const religionGeneralId = religionEntry?.parent;
+      
+      if (!religionGeneralId) {
+        return undefined;
+      }
+      
+      // Then look up the wiki from religionGeneral metadata
+      const religionGeneralEntry = state.metadata.religionGeneral[religionGeneralId];
+      return religionGeneralEntry?.wiki;
+    }
+
+    // Map dimension to metadata key for other dimensions
+    let metadataKey: keyof EntityMetadata;
+    switch (dimension) {
+      case 'ruler':
+        metadataKey = 'ruler';
+        break;
+      case 'culture':
+        metadataKey = 'culture';
+        break;
+      case 'religion':
+        metadataKey = 'religion';
+        break;
+      default:
+        return undefined;
+    }
+
+    const dimensionMetadata = state.metadata[metadataKey];
+    const entry = dimensionMetadata[value];
+    return entry?.wiki;
+  },
+
+  /**
+   * Gets the religionGeneral ID for a given religion ID.
+   * Uses metadata to look up the parent category.
+   *
+   * @param religionId - The religion ID
+   * @returns The religionGeneral ID or the original religionId if not found
+   */
+  getReligionGeneral: (religionId: string): string => {
+    const state = get();
+
+    if (!religionId || !state.metadata) {
+      return religionId;
+    }
+
+    // Look up the religion in metadata to find its parent (religionGeneral)
+    const religionEntry = state.metadata.religion[religionId];
+    if (religionEntry?.parent) {
+      return religionEntry.parent;
+    }
+
+    // If no parent found, check if the religionId itself is a religionGeneral
+    if (state.metadata.religionGeneral[religionId]) {
+      return religionId;
+    }
+
+    // Fallback: return the original religionId
+    return religionId;
+  },
+
+  /**
+   * Updates province feature properties from area data.
+   * Requirement 1.3: WHEN area data is fetched, THE MapView SHALL update the provinces GeoJSON source
+   * Requirement 4.2: WHEN area data changes, THE MapView SHALL update the province feature properties
+   *
+   * @param areaData - The area data dictionary keyed by province ID
+   */
+  updateProvinceProperties: (areaData: AreaData) => {
+    const state = get();
+
+    if (!state.provincesGeoJSON) {
+      console.warn('updateProvinceProperties: No provinces GeoJSON available');
+      return;
+    }
+
+    // Create updated features with new properties
+    const updatedFeatures = state.provincesGeoJSON.features.map((feature) => {
+      // Province ID is stored in the 'name' property of the GeoJSON feature
+      const provinceId = feature.properties?.['name'] as string | undefined;
+      
+      if (!provinceId) {
+        return feature;
+      }
+
+      const data = areaData[provinceId];
+      
+      if (!data || !Array.isArray(data)) {
+        return feature;
+      }
+
+      // Extract values from area data tuple
+      // [ruler, culture, religion, capital, population]
+      const ruler = data[0];
+      const culture = data[1];
+      const religion = data[2];
+      const population = data[4];
+
+      // Calculate religionGeneral from religion using metadata
+      const religionGeneral = get().getReligionGeneral(religion);
+
+      // Return feature with updated properties
+      // Also set 'id' property to match provinceId for layer interactions
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          id: provinceId,
+          r: ruler,
+          c: culture,
+          e: religion,
+          g: religionGeneral,
+          p: population,
+        },
+      };
+    });
+
+    // Update the provincesGeoJSON with new features
+    set({
+      provincesGeoJSON: {
+        ...state.provincesGeoJSON,
+        features: updatedFeatures,
+      },
+    });
+  },
+
+  /**
+   * Loads markers from the API for a specific year.
+   * Requirement 5.1: WHEN the selectedYear changes, THE MapView SHALL fetch markers
+   * from the Chronas_API endpoint `/v1/markers?year={year}`.
+   * Requirement 9.5: THE API_Client SHALL support request cancellation.
+   *
+   * @param year - The year to load markers for
+   * @returns Promise that resolves with the markers array or empty array on error
+   */
+  loadMarkers: async (year: number): Promise<Marker[]> => {
+    // Validate year is a finite number
+    if (!Number.isFinite(year)) {
+      console.warn(`loadMarkers: Invalid year "${String(year)}"`);
+      return [];
+    }
+
+    const state = get();
+
+    // Cancel any in-flight request - Requirement 9.5
+    if (state.markersAbortController) {
+      state.markersAbortController.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+
+    set({ isLoadingMarkers: true, markersAbortController: abortController });
+
+    try {
+      // Fetch from /v1/markers?year={year} endpoint - Requirement 5.1
+      const endpoint = MARKERS.GET_BY_YEAR(year);
+      const data = await apiClient.get<Marker[]>(endpoint, { signal: abortController.signal });
+
+      // Validate response is an array
+      if (!Array.isArray(data)) {
+        console.warn(`loadMarkers: Invalid response format for year ${String(year)}`);
+        set({ isLoadingMarkers: false, markersAbortController: null });
+        return [];
+      }
+
+      // Store markers in state
+      set({
+        markers: data,
+        isLoadingMarkers: false,
+        markersAbortController: null,
+      });
+
+      return data;
+    } catch (error) {
+      // Check if request was aborted - Requirement 9.5
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.debug(`[Performance] Markers request for year ${String(year)} was cancelled`);
+        // Don't update state for aborted requests
+        return [];
+      }
+
+      // Log error with details
+      const axiosError = error as {
+        response?: {
+          status?: number;
+          statusText?: string;
+          data?: unknown;
+        };
+        message?: string;
+      };
+
+      console.error(`API ERROR: Failed to load markers for year ${String(year)}:`, error);
+      console.error('Error details:', {
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        url: MARKERS.GET_BY_YEAR(year),
+      });
+
+      // Store error state
+      const errorInstance =
+        error instanceof Error ? error : new Error(`Failed to load markers for year ${String(year)}`);
+      set({
+        error: errorInstance,
+        isLoadingMarkers: false,
+        markersAbortController: null,
+      });
+
+      return [];
+    }
+  },
+
+  /**
+   * Sets the marker filter state for a specific marker type.
+   * Requirement 6.3: THE Map_Store SHALL maintain the current marker filter state.
+   *
+   * @param type - The marker type to filter
+   * @param enabled - Whether the marker type should be visible
+   */
+  setMarkerFilter: (type: MarkerType, enabled: boolean) => {
+    // Validate type is a valid marker type
+    const validTypes: MarkerType[] = ['battle', 'city', 'capital', 'person', 'event', 'other'];
+    if (!validTypes.includes(type)) {
+      console.warn(`setMarkerFilter: Invalid marker type "${type}"`);
+      return;
+    }
+
+    set((state) => ({
+      markerFilters: {
+        ...state.markerFilters,
+        [type]: enabled,
+      },
+    }));
+  },
+
+  /**
+   * Gets the filtered markers based on current filter state.
+   * Requirement 6.4: WHEN markers are fetched, THE MapView SHALL apply the current filter.
+   *
+   * @returns Array of markers that pass the current filter
+   */
+  getFilteredMarkers: (): Marker[] => {
+    const state = get();
+    const { markers, markerFilters } = state;
+
+    // Filter markers based on current filter state
+    return markers.filter((marker) => {
+      const markerType = marker.type;
+      return markerFilters[markerType];
+    });
+  },
+
+  /**
+   * Calculates labels for the active color dimension.
+   * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
+   * Requirement 7.5: THE MapView SHALL calculate label positions by finding the centroid of merged province polygons
+   * Requirement 7.6: THE MapView SHALL use appropriate font sizing based on the entity's territory size
+   *
+   * PERFORMANCE OPTIMIZATION: Instead of using expensive turf.union to merge all provinces,
+   * we calculate a weighted centroid based on individual province centroids and areas.
+   * This is much faster while still producing good label positions.
+   *
+   * @param dimension - The color dimension to calculate labels for
+   */
+  calculateLabels: (dimension: AreaColorDimension) => {
+    const state = get();
+
+    // Validate inputs
+    if (!state.provincesGeoJSON || !state.currentAreaData || !state.metadata) {
+      set({ labelData: null });
+      return;
+    }
+
+    // Population dimension doesn't have entity labels
+    if (dimension === 'population') {
+      set({ labelData: null });
+      return;
+    }
+
+    // Get dimension index for looking up values
+    const dimensionIndex = DIMENSION_INDEX[dimension];
+
+    // Group province data by entity value (store centroid and area for weighted calculation)
+    interface ProvinceData {
+      centroid: [number, number];
+      area: number;
+    }
+    const entityData = new Map<string, ProvinceData[]>();
+
+    for (const feature of state.provincesGeoJSON.features) {
+      // Province ID is stored in the 'name' property of the GeoJSON feature
+      // After updateProvinceProperties runs, 'id' is also set
+      const provinceId = (feature.properties?.['id'] as string | undefined) ?? 
+                         (feature.properties?.['name'] as string | undefined);
+      if (!provinceId) continue;
+
+      const data = state.currentAreaData[provinceId];
+      if (!data || !Array.isArray(data)) continue;
+
+      let entityValue = data[dimensionIndex] as string | undefined;
+      if (!entityValue) continue;
+
+      // For religionGeneral, we need to look up the parent category
+      if (dimension === 'religionGeneral') {
+        entityValue = get().getReligionGeneral(entityValue);
+      }
+
+      // Calculate centroid and area for this province
+      try {
+        const centroid = turf.centroid(feature);
+        const area = turf.area(feature);
+        
+        const provinceData: ProvinceData = {
+          centroid: centroid.geometry.coordinates as [number, number],
+          area,
+        };
+
+        const existing = entityData.get(entityValue);
+        if (existing) {
+          existing.push(provinceData);
+        } else {
+          entityData.set(entityValue, [provinceData]);
+        }
+      } catch {
+        // Skip provinces that fail to process
+        continue;
+      }
+    }
+
+    // Calculate labels for each entity using weighted centroid
+    const labelFeatures: Feature<Point, LabelFeatureProperties>[] = [];
+
+    for (const [entityId, provinces] of entityData) {
+      try {
+        // Calculate weighted centroid (weighted by area)
+        let totalArea = 0;
+        let weightedLng = 0;
+        let weightedLat = 0;
+
+        for (const province of provinces) {
+          totalArea += province.area;
+          weightedLng += province.centroid[0] * province.area;
+          weightedLat += province.centroid[1] * province.area;
+        }
+
+        if (totalArea === 0) continue;
+
+        const centroidLng = weightedLng / totalArea;
+        const centroidLat = weightedLat / totalArea;
+
+        // Calculate font size based on total area
+        const fontSize = calculateFontSize(totalArea);
+
+        // Get entity name from metadata
+        const metadataKey = dimension === 'religionGeneral' ? 'religionGeneral' : dimension;
+        const dimensionMetadata = state.metadata[metadataKey];
+        const entityName = dimensionMetadata[entityId]?.name ?? entityId;
+
+        labelFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [centroidLng, centroidLat],
+          },
+          properties: {
+            name: entityName,
+            fontSize,
+            entityId,
+            dimension,
+          },
+        });
+      } catch (error) {
+        // Skip entities that fail to process
+        console.warn(`calculateLabels: Failed to process entity ${entityId}`, error);
+      }
+    }
+
+    set({
+      labelData: {
+        type: 'FeatureCollection',
+        features: labelFeatures,
+      },
+    });
+  },
+
+  /**
+   * Cancels any in-flight area data request.
+   * Requirement 9.5: THE API_Client SHALL support request cancellation for in-flight requests
+   * Requirement 11.2: THE MapView SHALL debounce year change events
+   */
+  cancelAreaDataRequest: () => {
+    const state = get();
+    if (state.areaDataAbortController) {
+      state.areaDataAbortController.abort();
+      set({ areaDataAbortController: null });
+    }
+  },
+
+  /**
+   * Cancels any in-flight markers request.
+   * Requirement 9.5: THE API_Client SHALL support request cancellation for in-flight requests
+   */
+  cancelMarkersRequest: () => {
+    const state = get();
+    if (state.markersAbortController) {
+      state.markersAbortController.abort();
+      set({ markersAbortController: null });
+    }
+  },
+
+  /**
+   * Sets the active label dimension for entity labels.
+   * Requirement 6.4, 6.5: Layer toggle controls for label dimension.
+   *
+   * @param dimension - The label dimension to activate (cannot be 'population')
+   */
+  setActiveLabel: (dimension: AreaColorDimension) => {
+    // Population cannot be used for labels
+    if (dimension === 'population') {
+      console.warn('setActiveLabel: Population dimension cannot be used for labels');
+      return;
+    }
+
+    if (!isValidColorDimension(dimension)) {
+      console.warn(`setActiveLabel: Invalid dimension "${String(dimension)}"`);
+      return;
+    }
+
+    set({ activeLabel: dimension });
+  },
+
+  /**
+   * Sets whether color and label dimensions are locked together.
+   * Requirement 6.4: When locked, changing color also changes label.
+   * Requirement 6.5: When unlocked, color and label can be changed independently.
+   *
+   * @param locked - Whether to lock color and label together
+   */
+  setColorLabelLocked: (locked: boolean) => {
+    set({ colorLabelLocked: locked });
+  },
+
+  /**
+   * Sets the hovered province ID for tooltip display.
+   * Requirement 5.1: Province hover triggers tooltip display.
+   *
+   * @param provinceId - The province ID or null to clear
+   */
+  setHoveredProvince: (provinceId: string | null) => {
+    set({ hoveredProvinceId: provinceId });
+  },
+
+  /**
+   * Sets the hovered marker ID for highlight.
+   * Requirement 5.1: Marker hover triggers highlight.
+   *
+   * @param markerId - The marker ID or null to clear
+   */
+  setHoveredMarker: (markerId: string | null) => {
+    set({ hoveredMarkerId: markerId });
   },
 }));

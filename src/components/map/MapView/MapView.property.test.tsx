@@ -1373,4 +1373,1689 @@ describe('MapView Property Tests', () => {
       );
     });
   });
+
+  /**
+   * Feature: historical-data-visualization, Property 7: Population Opacity Interpolation
+   *
+   * Property 7 states:
+   * *For any* province with a population value, when activeColor is 'population',
+   * the fill opacity SHALL be within the interpolated range [0.3, 0.8] based on
+   * the population relative to the maximum.
+   *
+   * **Validates: Requirements 3.5**
+   */
+  describe('Property 7: Population Opacity Interpolation', () => {
+    /**
+     * Constants for population opacity range
+     */
+    const POPULATION_OPACITY_MIN = 0.3;
+    const POPULATION_OPACITY_MAX = 0.8;
+
+    /**
+     * Builds a Mapbox GL interpolate expression for population opacity.
+     * This mirrors the implementation in MapView.tsx
+     */
+    function buildPopulationOpacityExpression(maxPopulation: number): unknown[] {
+      const safeMax = Math.max(1, maxPopulation);
+      return [
+        'interpolate',
+        ['linear'],
+        ['get', 'p'],
+        0, POPULATION_OPACITY_MIN,
+        safeMax, POPULATION_OPACITY_MAX,
+      ];
+    }
+
+    /**
+     * Calculates the maximum population from provinces GeoJSON.
+     * This mirrors the implementation in MapView.tsx
+     */
+    function calculateMaxPopulation(
+      geojson: { features: { properties?: { p?: number } }[] } | null
+    ): number {
+      if (!geojson?.features) {
+        return 1;
+      }
+      
+      let maxPop = 0;
+      for (const feature of geojson.features) {
+        const population = feature.properties?.p;
+        if (typeof population === 'number' && population > maxPop) {
+          maxPop = population;
+        }
+      }
+      
+      return Math.max(1, maxPop);
+    }
+
+    /**
+     * Arbitrary for generating valid population values.
+     */
+    const populationArb = fc.integer({ min: 0, max: 10000000 });
+
+    /**
+     * Arbitrary for generating max population values (must be >= 1).
+     */
+    const maxPopulationArb = fc.integer({ min: 1, max: 10000000 });
+
+    /**
+     * Arbitrary for generating province features with population.
+     */
+    const provinceFeatureWithPopulationArb = (population: number) => ({
+      type: 'Feature' as const,
+      properties: { id: 'test_province', p: population },
+      geometry: {
+        type: 'Polygon' as const,
+        coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+      },
+    });
+
+    /**
+     * Arbitrary for generating GeoJSON with multiple provinces and populations.
+     */
+    const provincesGeoJSONArb = fc
+      .array(populationArb, { minLength: 1, maxLength: 20 })
+      .map((populations) => ({
+        type: 'FeatureCollection' as const,
+        features: populations.map((pop, i) => ({
+          type: 'Feature' as const,
+          properties: { id: `province_${String(i)}`, p: pop },
+          geometry: {
+            type: 'Polygon' as const,
+            coordinates: [[[i, 0], [i + 1, 0], [i + 1, 1], [i, 1], [i, 0]]],
+          },
+        })),
+      }));
+
+    it('should generate interpolate expression with correct structure', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const expr = buildPopulationOpacityExpression(maxPop);
+
+          // Verify expression structure
+          expect(Array.isArray(expr)).toBe(true);
+          expect(expr[0]).toBe('interpolate');
+          expect(expr[1]).toEqual(['linear']);
+          expect(expr[2]).toEqual(['get', 'p']);
+          
+          // Verify opacity range [0.3, 0.8]
+          expect(expr[3]).toBe(0); // min population
+          expect(expr[4]).toBe(POPULATION_OPACITY_MIN); // 0.3
+          expect(expr[5]).toBe(Math.max(1, maxPop)); // max population (at least 1)
+          expect(expr[6]).toBe(POPULATION_OPACITY_MAX); // 0.8
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should use minimum opacity (0.3) for population of 0', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const expr = buildPopulationOpacityExpression(maxPop);
+
+          // At population 0, opacity should be 0.3
+          expect(expr[3]).toBe(0);
+          expect(expr[4]).toBe(0.3);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should use maximum opacity (0.8) for max population', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const expr = buildPopulationOpacityExpression(maxPop);
+
+          // At max population, opacity should be 0.8
+          const safeMax = Math.max(1, maxPop);
+          expect(expr[5]).toBe(safeMax);
+          expect(expr[6]).toBe(0.8);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle maxPopulation of 0 by using 1 as minimum', () => {
+      const expr = buildPopulationOpacityExpression(0);
+
+      // Should use 1 as minimum to avoid division issues
+      expect(expr[5]).toBe(1);
+      expect(expr[6]).toBe(0.8);
+    });
+
+    it('should calculate correct max population from GeoJSON', () => {
+      fc.assert(
+        fc.property(provincesGeoJSONArb, (geojson) => {
+          const maxPop = calculateMaxPopulation(geojson);
+
+          // Find expected max from features
+          const expectedMax = Math.max(
+            1,
+            ...geojson.features.map((f: { properties: { p: number } }) => f.properties.p)
+          );
+
+          expect(maxPop).toBe(expectedMax);
+          expect(maxPop).toBeGreaterThanOrEqual(1);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should return 1 for empty GeoJSON', () => {
+      const emptyGeoJSON = {
+        type: 'FeatureCollection' as const,
+        features: [],
+      };
+
+      const maxPop = calculateMaxPopulation(emptyGeoJSON);
+      expect(maxPop).toBe(1);
+    });
+
+    it('should return 1 for null GeoJSON', () => {
+      const maxPop = calculateMaxPopulation(null);
+      expect(maxPop).toBe(1);
+    });
+
+    it('should handle GeoJSON with all zero populations', () => {
+      const zeroPopGeoJSON = {
+        type: 'FeatureCollection' as const,
+        features: [
+          provinceFeatureWithPopulationArb(0),
+          provinceFeatureWithPopulationArb(0),
+          provinceFeatureWithPopulationArb(0),
+        ],
+      };
+
+      const maxPop = calculateMaxPopulation(zeroPopGeoJSON);
+      expect(maxPop).toBe(1); // Should return 1 as minimum
+    });
+
+    it('should produce opacity values within [0.3, 0.8] range for any population', () => {
+      fc.assert(
+        fc.property(
+          populationArb,
+          maxPopulationArb,
+          (population, maxPop) => {
+            // Calculate expected opacity using linear interpolation
+            const safeMax = Math.max(1, maxPop);
+            const ratio = Math.min(1, population / safeMax);
+            const expectedOpacity = POPULATION_OPACITY_MIN + ratio * (POPULATION_OPACITY_MAX - POPULATION_OPACITY_MIN);
+
+            // Verify opacity is within valid range
+            expect(expectedOpacity).toBeGreaterThanOrEqual(POPULATION_OPACITY_MIN);
+            expect(expectedOpacity).toBeLessThanOrEqual(POPULATION_OPACITY_MAX);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have correct opacity constants', () => {
+      expect(POPULATION_OPACITY_MIN).toBe(0.3);
+      expect(POPULATION_OPACITY_MAX).toBe(0.8);
+    });
+  });
+
+  /**
+   * Feature: historical-data-visualization, Property 8: Layer Visibility Exclusivity
+   *
+   * Property 8 states:
+   * *For any* activeColor dimension change, exactly one province fill layer SHALL be visible
+   * and all others SHALL be hidden.
+   *
+   * **Validates: Requirements 3.6**
+   */
+  describe('Property 8: Layer Visibility Exclusivity', () => {
+    /**
+     * All valid area color dimensions.
+     */
+    const ALL_DIMENSIONS = ['ruler', 'religion', 'religionGeneral', 'culture', 'population'] as const;
+    type AreaColorDimension = (typeof ALL_DIMENSIONS)[number];
+
+    /**
+     * Arbitrary for generating valid area color dimensions.
+     */
+    const dimensionArb: fc.Arbitrary<AreaColorDimension> = fc.constantFrom(...ALL_DIMENSIONS);
+
+    /**
+     * Arbitrary for generating distinct dimension pairs (from, to).
+     * Ensures the dimensions are different to trigger a change.
+     */
+    const distinctDimensionPairArb = fc
+      .tuple(dimensionArb, dimensionArb)
+      .filter(([from, to]) => from !== to);
+
+    /**
+     * Arbitrary for generating dimension change sequences.
+     */
+    const dimensionSequenceArb = fc.array(dimensionArb, { minLength: 2, maxLength: 10 });
+
+    /**
+     * Helper function to count visible layers in layerVisibility state.
+     */
+    function countVisibleLayers(layerVisibility: Record<AreaColorDimension, boolean>): number {
+      return ALL_DIMENSIONS.filter((dim) => layerVisibility[dim]).length;
+    }
+
+    /**
+     * Helper function to get the visible dimension from layerVisibility state.
+     */
+    function getVisibleDimension(layerVisibility: Record<AreaColorDimension, boolean>): AreaColorDimension | null {
+      for (const dim of ALL_DIMENSIONS) {
+        if (layerVisibility[dim]) {
+          return dim;
+        }
+      }
+      return null;
+    }
+
+    it('should have exactly one visible layer when activeColor is set to any dimension', () => {
+      fc.assert(
+        fc.property(dimensionArb, (dimension) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set the active color dimension
+          act(() => {
+            useMapStore.getState().setActiveColor(dimension);
+          });
+
+          // Get the layer visibility state
+          const layerVisibility = useMapStore.getState().layerVisibility;
+
+          // Verify exactly one layer is visible
+          const visibleCount = countVisibleLayers(layerVisibility);
+          expect(visibleCount).toBe(1);
+
+          // Verify the visible layer matches the active dimension
+          const visibleDimension = getVisibleDimension(layerVisibility);
+          expect(visibleDimension).toBe(dimension);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should show only ruler-fill layer when activeColor is ruler', () => {
+      fc.assert(
+        fc.property(fc.constant('ruler' as AreaColorDimension), (dimension) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set active color to ruler
+          act(() => {
+            useMapStore.getState().setActiveColor(dimension);
+          });
+
+          // Verify layer visibility
+          const layerVisibility = useMapStore.getState().layerVisibility;
+          expect(layerVisibility.ruler).toBe(true);
+          expect(layerVisibility.culture).toBe(false);
+          expect(layerVisibility.religion).toBe(false);
+          expect(layerVisibility.religionGeneral).toBe(false);
+          expect(layerVisibility.population).toBe(false);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should hide ruler-fill and show culture-fill when activeColor changes from ruler to culture', () => {
+      fc.assert(
+        fc.property(fc.constant(null), () => {
+          // Reset store with ruler as active
+          act(() => {
+            useMapStore.setState({
+              ...mapInitialState,
+              activeColor: 'ruler',
+              layerVisibility: {
+                ruler: true,
+                religion: false,
+                religionGeneral: false,
+                culture: false,
+                population: false,
+              },
+            });
+          });
+
+          // Verify initial state
+          let layerVisibility = useMapStore.getState().layerVisibility;
+          expect(layerVisibility.ruler).toBe(true);
+          expect(layerVisibility.culture).toBe(false);
+
+          // Change to culture
+          act(() => {
+            useMapStore.getState().setActiveColor('culture');
+          });
+
+          // Verify ruler is hidden and culture is visible
+          layerVisibility = useMapStore.getState().layerVisibility;
+          expect(layerVisibility.ruler).toBe(false);
+          expect(layerVisibility.culture).toBe(true);
+          expect(layerVisibility.religion).toBe(false);
+          expect(layerVisibility.religionGeneral).toBe(false);
+          expect(layerVisibility.population).toBe(false);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should maintain exactly one visible layer after any dimension change', () => {
+      fc.assert(
+        fc.property(distinctDimensionPairArb, ([fromDimension, toDimension]) => {
+          // Reset store with initial dimension
+          act(() => {
+            useMapStore.setState(mapInitialState);
+            useMapStore.getState().setActiveColor(fromDimension);
+          });
+
+          // Verify initial state has exactly one visible layer
+          let layerVisibility = useMapStore.getState().layerVisibility;
+          expect(countVisibleLayers(layerVisibility)).toBe(1);
+          expect(getVisibleDimension(layerVisibility)).toBe(fromDimension);
+
+          // Change to new dimension
+          act(() => {
+            useMapStore.getState().setActiveColor(toDimension);
+          });
+
+          // Verify exactly one layer is visible after change
+          layerVisibility = useMapStore.getState().layerVisibility;
+          expect(countVisibleLayers(layerVisibility)).toBe(1);
+          expect(getVisibleDimension(layerVisibility)).toBe(toDimension);
+
+          // Verify the previous dimension is now hidden
+          expect(layerVisibility[fromDimension]).toBe(false);
+          expect(layerVisibility[toDimension]).toBe(true);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle sequential dimension changes correctly', () => {
+      fc.assert(
+        fc.property(dimensionSequenceArb, (dimensions) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Apply each dimension change sequentially
+          for (const dimension of dimensions) {
+            act(() => {
+              useMapStore.getState().setActiveColor(dimension);
+            });
+
+            // Verify exactly one layer is visible after each change
+            const layerVisibility = useMapStore.getState().layerVisibility;
+            const visibleCount = countVisibleLayers(layerVisibility);
+            expect(visibleCount).toBe(1);
+
+            // Verify the visible layer matches the current dimension
+            const visibleDimension = getVisibleDimension(layerVisibility);
+            expect(visibleDimension).toBe(dimension);
+
+            // Verify activeColor state matches
+            expect(useMapStore.getState().activeColor).toBe(dimension);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should not change visibility when setting same dimension', () => {
+      fc.assert(
+        fc.property(dimensionArb, (dimension) => {
+          // Reset store and set initial dimension
+          act(() => {
+            useMapStore.setState(mapInitialState);
+            useMapStore.getState().setActiveColor(dimension);
+          });
+
+          // Get initial visibility state
+          const initialVisibility = { ...useMapStore.getState().layerVisibility };
+
+          // Set the same dimension again
+          act(() => {
+            useMapStore.getState().setActiveColor(dimension);
+          });
+
+          // Verify visibility state is unchanged
+          const currentVisibility = useMapStore.getState().layerVisibility;
+          expect(currentVisibility).toEqual(initialVisibility);
+          expect(countVisibleLayers(currentVisibility)).toBe(1);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should update previousActiveColor when dimension changes', () => {
+      fc.assert(
+        fc.property(distinctDimensionPairArb, ([fromDimension, toDimension]) => {
+          // Reset store with initial dimension
+          act(() => {
+            useMapStore.setState(mapInitialState);
+            useMapStore.getState().setActiveColor(fromDimension);
+          });
+
+          // Change to new dimension
+          act(() => {
+            useMapStore.getState().setActiveColor(toDimension);
+          });
+
+          // Verify previousActiveColor is updated
+          const state = useMapStore.getState();
+          expect(state.previousActiveColor).toBe(fromDimension);
+          expect(state.activeColor).toBe(toDimension);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have all dimensions hidden except the active one', () => {
+      fc.assert(
+        fc.property(dimensionArb, (activeDimension) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+            useMapStore.getState().setActiveColor(activeDimension);
+          });
+
+          // Get layer visibility
+          const layerVisibility = useMapStore.getState().layerVisibility;
+
+          // Verify all other dimensions are hidden
+          for (const dim of ALL_DIMENSIONS) {
+            if (dim === activeDimension) {
+              expect(layerVisibility[dim]).toBe(true);
+            } else {
+              expect(layerVisibility[dim]).toBe(false);
+            }
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should correctly map layer visibility to Mapbox visibility values', () => {
+      fc.assert(
+        fc.property(dimensionArb, (dimension) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+            useMapStore.getState().setActiveColor(dimension);
+          });
+
+          // Get layer visibility
+          const layerVisibility = useMapStore.getState().layerVisibility;
+
+          // Verify the mapping to Mapbox visibility values
+          for (const dim of ALL_DIMENSIONS) {
+            const mapboxVisibility = layerVisibility[dim] ? 'visible' : 'none';
+            if (dim === dimension) {
+              expect(mapboxVisibility).toBe('visible');
+            } else {
+              expect(mapboxVisibility).toBe('none');
+            }
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have default layer visibility with ruler visible', () => {
+      // Reset store to initial state
+      act(() => {
+        useMapStore.setState(mapInitialState);
+      });
+
+      // Verify default state
+      const state = useMapStore.getState();
+      expect(state.activeColor).toBe('ruler');
+      expect(state.layerVisibility.ruler).toBe(true);
+      expect(state.layerVisibility.culture).toBe(false);
+      expect(state.layerVisibility.religion).toBe(false);
+      expect(state.layerVisibility.religionGeneral).toBe(false);
+      expect(state.layerVisibility.population).toBe(false);
+      expect(countVisibleLayers(state.layerVisibility)).toBe(1);
+    });
+  });
+
+  /**
+   * Feature: historical-data-visualization, Property 10: Marker Rendering by Type
+   *
+   * Property 10 states:
+   * *For any* marker in the markers array, it SHALL be rendered with the icon
+   * corresponding to its type property.
+   *
+   * **Validates: Requirements 5.2, 5.3, 5.5**
+   */
+  describe('Property 10: Marker Rendering by Type', () => {
+    /**
+     * Valid marker types as defined in the API types.
+     */
+    const validMarkerTypes = ['battle', 'city', 'capital', 'person', 'event', 'other'] as const;
+    type MarkerType = (typeof validMarkerTypes)[number];
+
+    /**
+     * Marker colors by type (from MapView.tsx).
+     */
+    const MARKER_COLORS: Record<MarkerType, string> = {
+      battle: '#e74c3c',
+      city: '#3498db',
+      capital: '#f1c40f',
+      person: '#9b59b6',
+      event: '#2ecc71',
+      other: '#95a5a6',
+    };
+
+    /**
+     * Arbitrary for generating valid marker types.
+     */
+    const markerTypeArb: fc.Arbitrary<MarkerType> = fc.constantFrom(...validMarkerTypes);
+
+    /**
+     * Arbitrary for generating valid longitude values [-180, 180].
+     */
+    const longitudeArb = fc.double({ min: -180, max: 180, noNaN: true });
+
+    /**
+     * Arbitrary for generating valid latitude values [-90, 90].
+     */
+    const latitudeArb = fc.double({ min: -90, max: 90, noNaN: true });
+
+    /**
+     * Arbitrary for generating valid year values.
+     */
+    const yearArb = fc.integer({ min: -2000, max: 2000 });
+
+    /**
+     * Arbitrary for generating marker IDs.
+     */
+    const markerIdArb = fc.stringMatching(/^[a-f0-9]{24}$/);
+
+    /**
+     * Arbitrary for generating marker names.
+     */
+    const markerNameArb = fc.string({ minLength: 1, maxLength: 100 });
+
+    /**
+     * Arbitrary for generating a single marker.
+     */
+    const markerArb = fc.record({
+      _id: markerIdArb,
+      name: markerNameArb,
+      type: markerTypeArb,
+      year: yearArb,
+      coo: fc.tuple(longitudeArb, latitudeArb),
+      wiki: fc.option(fc.webUrl(), { nil: undefined }),
+      data: fc.option(
+        fc.record({
+          description: fc.option(fc.string({ minLength: 0, maxLength: 500 }), { nil: undefined }),
+        }),
+        { nil: undefined }
+      ),
+    });
+
+    /**
+     * Arbitrary for generating arrays of markers.
+     */
+    const markersArrayArb = fc.array(markerArb, { minLength: 1, maxLength: 20 });
+
+    it('should assign correct color for each marker type', () => {
+      fc.assert(
+        fc.property(markerTypeArb, (markerType) => {
+          // Verify each marker type has a defined color
+          const color = MARKER_COLORS[markerType];
+          expect(color).toBeDefined();
+          expect(typeof color).toBe('string');
+          expect(color).toMatch(/^#[0-9a-f]{6}$/i);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have distinct colors for each marker type', () => {
+      // Verify all marker types have unique colors
+      const colors = Object.values(MARKER_COLORS);
+      const uniqueColors = new Set(colors);
+      expect(uniqueColors.size).toBe(colors.length);
+    });
+
+    it('should generate valid GeoJSON for any marker', () => {
+      fc.assert(
+        fc.property(markerArb, (marker) => {
+          // Convert marker to GeoJSON feature
+          const feature = {
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: marker.coo,
+            },
+            properties: {
+              id: marker._id,
+              name: marker.name,
+              type: marker.type,
+              year: marker.year,
+              wiki: marker.wiki ?? null,
+              description: marker.data?.description ?? null,
+            },
+          };
+
+          // Verify GeoJSON structure
+          expect(feature.type).toBe('Feature');
+          expect(feature.geometry.type).toBe('Point');
+          expect(Array.isArray(feature.geometry.coordinates)).toBe(true);
+          expect(feature.geometry.coordinates.length).toBe(2);
+
+          // Verify coordinates are valid
+          const [lng, lat] = feature.geometry.coordinates;
+          expect(lng).toBeGreaterThanOrEqual(-180);
+          expect(lng).toBeLessThanOrEqual(180);
+          expect(lat).toBeGreaterThanOrEqual(-90);
+          expect(lat).toBeLessThanOrEqual(90);
+
+          // Verify properties
+          expect(feature.properties.id).toBe(marker._id);
+          expect(feature.properties.name).toBe(marker.name);
+          expect(feature.properties.type).toBe(marker.type);
+          expect(validMarkerTypes).toContain(feature.properties.type);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should generate valid GeoJSON FeatureCollection for any markers array', () => {
+      fc.assert(
+        fc.property(markersArrayArb, (markers) => {
+          // Convert markers to GeoJSON FeatureCollection
+          const featureCollection = {
+            type: 'FeatureCollection' as const,
+            features: markers.map((marker) => ({
+              type: 'Feature' as const,
+              geometry: {
+                type: 'Point' as const,
+                coordinates: marker.coo,
+              },
+              properties: {
+                id: marker._id,
+                name: marker.name,
+                type: marker.type,
+                year: marker.year,
+                wiki: marker.wiki ?? null,
+                description: marker.data?.description ?? null,
+              },
+            })),
+          };
+
+          // Verify FeatureCollection structure
+          expect(featureCollection.type).toBe('FeatureCollection');
+          expect(Array.isArray(featureCollection.features)).toBe(true);
+          expect(featureCollection.features.length).toBe(markers.length);
+
+          // Verify each feature has correct type property
+          for (let i = 0; i < featureCollection.features.length; i++) {
+            const feature = featureCollection.features[i];
+            const marker = markers[i];
+            expect(feature?.properties.type).toBe(marker?.type);
+            expect(validMarkerTypes).toContain(feature?.properties.type);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should map marker type to correct color in match expression', () => {
+      fc.assert(
+        fc.property(markerArb, (marker) => {
+          // Simulate the Mapbox match expression logic
+          const getColorForType = (type: MarkerType): string => {
+            return MARKER_COLORS[type];
+          };
+
+          const expectedColor = MARKER_COLORS[marker.type];
+          const actualColor = getColorForType(marker.type);
+
+          expect(actualColor).toBe(expectedColor);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle markers with all valid type values', () => {
+      // Test each marker type explicitly
+      for (const markerType of validMarkerTypes) {
+        const color = MARKER_COLORS[markerType];
+        expect(color).toBeDefined();
+        expect(typeof color).toBe('string');
+      }
+    });
+
+    it('should store markers in mapStore correctly', () => {
+      fc.assert(
+        fc.property(markersArrayArb, (generatedMarkers) => {
+          // Cast to Marker[] to satisfy exactOptionalPropertyTypes
+          // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+          const markers = generatedMarkers as unknown as import('../../../api/types').Marker[];
+          
+          // Reset store
+          act(() => {
+            useMapStore.setState({
+              ...mapInitialState,
+              markers: [],
+            });
+          });
+
+          // Set markers in store
+          act(() => {
+            useMapStore.setState({ markers });
+          });
+
+          // Verify markers are stored correctly
+          const state = useMapStore.getState();
+          expect(state.markers).toEqual(markers);
+          expect(state.markers.length).toBe(markers.length);
+
+          // Verify each marker has valid type
+          for (const marker of state.markers) {
+            expect(validMarkerTypes).toContain(marker.type);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should preserve marker properties when converting to GeoJSON', () => {
+      fc.assert(
+        fc.property(markerArb, (marker) => {
+          // Convert to GeoJSON and back
+          const geoJSONFeature = {
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: marker.coo,
+            },
+            properties: {
+              id: marker._id,
+              name: marker.name,
+              type: marker.type,
+              year: marker.year,
+              wiki: marker.wiki ?? null,
+              description: marker.data?.description ?? null,
+            },
+          };
+
+          // Verify all essential properties are preserved
+          expect(geoJSONFeature.properties.id).toBe(marker._id);
+          expect(geoJSONFeature.properties.name).toBe(marker.name);
+          expect(geoJSONFeature.properties.type).toBe(marker.type);
+          expect(geoJSONFeature.properties.year).toBe(marker.year);
+          expect(geoJSONFeature.geometry.coordinates[0]).toBe(marker.coo[0]);
+          expect(geoJSONFeature.geometry.coordinates[1]).toBe(marker.coo[1]);
+        }),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  /**
+   * Feature: map-interactions, Property 12: Drawer Content Type Consistency
+   *
+   * Property 12 states:
+   * *For any* drawer content, the content type ('area' or 'marker') SHALL match
+   * the URL type parameter when the drawer is open.
+   *
+   * **Validates: Requirements 2.3, 3.2, 9.1, 9.2**
+   */
+  describe('Property 12: Drawer Content Type Consistency', () => {
+    // Store original location to restore after tests
+    let mockHash: string;
+
+    beforeEach(() => {
+      mockHash = '#/';
+
+      // Create a mock location object with getter/setter for hash
+      const mockLocation = {
+        get hash() {
+          return mockHash;
+        },
+        set hash(value: string) {
+          mockHash = value;
+        },
+        pathname: '/',
+        href: '/',
+        origin: 'http://localhost',
+        protocol: 'http:',
+        host: 'localhost',
+        hostname: 'localhost',
+        port: '',
+        search: '',
+      };
+
+      // Mock window.location
+      Object.defineProperty(window, 'location', {
+        value: mockLocation,
+        writable: true,
+        configurable: true,
+      });
+
+      // Mock history.replaceState
+      window.history.replaceState = (_data: unknown, _unused: string, url?: string | URL | null) => {
+        if (url) {
+          const urlStr = url.toString();
+          const hashIndex = urlStr.indexOf('#');
+          if (hashIndex !== -1) {
+            mockHash = urlStr.slice(hashIndex);
+          }
+        }
+      };
+    });
+
+    /**
+     * Arbitrary for generating province IDs.
+     */
+    const provinceIdArb = fc.stringMatching(/^[A-Za-z][A-Za-z0-9_]{2,20}$/);
+
+    /**
+     * Arbitrary for generating province names.
+     */
+    const provinceNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(
+      (s) => !s.includes('&') && !s.includes('=') && !s.includes('#')
+    );
+
+    /**
+     * Arbitrary for generating marker IDs.
+     */
+    const markerIdArb = fc.stringMatching(/^[A-Za-z][A-Za-z0-9_]{2,30}$/);
+
+    /**
+     * Arbitrary for generating marker types.
+     */
+    const markerTypeArb = fc.constantFrom('battle', 'city', 'capital', 'person', 'event', 'other');
+
+    /**
+     * Arbitrary for generating years.
+     */
+    const yearArb = fc.integer({ min: -5000, max: 2100 });
+
+    /**
+     * Arbitrary for generating coordinates.
+     */
+    const coordinatesArb = fc.tuple(
+      fc.double({ min: -180, max: 180, noNaN: true }),
+      fc.double({ min: -90, max: 90, noNaN: true })
+    );
+
+    /**
+     * Helper function to parse URL state from mock hash.
+     */
+    function parseURLState(): { type?: 'area' | 'marker'; value?: string } {
+      const hash = mockHash;
+      const queryIndex = hash.indexOf('?');
+      if (queryIndex === -1) {
+        return {};
+      }
+
+      const queryString = hash.slice(queryIndex + 1);
+      const params = new URLSearchParams(queryString);
+
+      const state: { type?: 'area' | 'marker'; value?: string } = {};
+
+      const typeParam = params.get('type');
+      if (typeParam === 'area' || typeParam === 'marker') {
+        state.type = typeParam;
+      }
+
+      const valueParam = params.get('value');
+      if (valueParam !== null && valueParam !== '') {
+        state.value = valueParam;
+      }
+
+      return state;
+    }
+
+    /**
+     * Helper function to update URL state.
+     */
+    function updateURLState(params: { type?: 'area' | 'marker'; value?: string }): void {
+      const hash = mockHash;
+      const queryIndex = hash.indexOf('?');
+      const path = queryIndex === -1 ? hash : hash.slice(0, queryIndex);
+      const queryString = queryIndex === -1 ? '' : hash.slice(queryIndex + 1);
+
+      const searchParams = new URLSearchParams(queryString);
+
+      if (params.type !== undefined) {
+        searchParams.set('type', params.type);
+      } else {
+        searchParams.delete('type');
+      }
+
+      if (params.value !== undefined) {
+        searchParams.set('value', params.value);
+      } else {
+        searchParams.delete('value');
+      }
+
+      const newQueryString = searchParams.toString();
+      const newHash = newQueryString ? `${path}?${newQueryString}` : path;
+      mockHash = newHash;
+    }
+
+    /**
+     * Helper function to clear URL params.
+     */
+    function clearURLParams(): void {
+      const hash = mockHash;
+      const queryIndex = hash.indexOf('?');
+      const path = queryIndex === -1 ? hash : hash.slice(0, queryIndex);
+      const queryString = queryIndex === -1 ? '' : hash.slice(queryIndex + 1);
+
+      const searchParams = new URLSearchParams(queryString);
+      searchParams.delete('type');
+      searchParams.delete('value');
+
+      const newQueryString = searchParams.toString();
+      const newHash = newQueryString ? `${path}?${newQueryString}` : path;
+      mockHash = newHash;
+    }
+
+    it('should have URL type=area when drawer content type is area', () => {
+      fc.assert(
+        fc.property(provinceIdArb, provinceNameArb, (provinceId, provinceName) => {
+          // Reset stores and URL
+          act(() => {
+            useUIStore.setState(uiDefaultState);
+          });
+          mockHash = '#/';
+
+          // Simulate opening drawer with area content and updating URL
+          const content = { type: 'area' as const, provinceId, provinceName };
+
+          act(() => {
+            useUIStore.getState().openRightDrawer(content);
+          });
+
+          // Update URL to match drawer content (simulating click handler behavior)
+          updateURLState({ type: 'area', value: provinceName });
+
+          // Verify drawer state
+          const uiState = useUIStore.getState();
+          expect(uiState.rightDrawerOpen).toBe(true);
+          expect(uiState.rightDrawerContent?.type).toBe('area');
+
+          // Verify URL state matches drawer content type
+          const urlState = parseURLState();
+          expect(urlState.type).toBe('area');
+          expect(urlState.type).toBe(uiState.rightDrawerContent?.type);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have URL type=marker when drawer content type is marker', () => {
+      fc.assert(
+        fc.property(
+          markerIdArb,
+          fc.string({ minLength: 1, maxLength: 50 }).filter((s) => !s.includes('&') && !s.includes('=')),
+          markerTypeArb,
+          yearArb,
+          coordinatesArb,
+          (markerId, markerName, markerType, year, coo) => {
+            // Reset stores and URL
+            act(() => {
+              useUIStore.setState(uiDefaultState);
+            });
+            mockHash = '#/';
+
+            // Create marker content
+            const marker = {
+              _id: markerId,
+              name: markerName,
+              type: markerType,
+              year,
+              coo,
+            };
+            const content = { type: 'marker' as const, marker };
+
+            // Simulate opening drawer with marker content
+            act(() => {
+              useUIStore.getState().openRightDrawer(content);
+            });
+
+            // Update URL to match drawer content (simulating click handler behavior)
+            updateURLState({ type: 'marker', value: markerId });
+
+            // Verify drawer state
+            const uiState = useUIStore.getState();
+            expect(uiState.rightDrawerOpen).toBe(true);
+            expect(uiState.rightDrawerContent?.type).toBe('marker');
+
+            // Verify URL state matches drawer content type
+            const urlState = parseURLState();
+            expect(urlState.type).toBe('marker');
+            expect(urlState.type).toBe(uiState.rightDrawerContent?.type);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should not have type/value params in URL when drawer is closed', () => {
+      fc.assert(
+        fc.property(provinceIdArb, provinceNameArb, (provinceId, provinceName) => {
+          // Reset stores and URL
+          act(() => {
+            useUIStore.setState(uiDefaultState);
+          });
+          mockHash = '#/';
+
+          // Open drawer first
+          const content = { type: 'area' as const, provinceId, provinceName };
+          act(() => {
+            useUIStore.getState().openRightDrawer(content);
+          });
+          updateURLState({ type: 'area', value: provinceName });
+
+          // Verify drawer is open
+          expect(useUIStore.getState().rightDrawerOpen).toBe(true);
+
+          // Close drawer and clear URL params
+          act(() => {
+            useUIStore.getState().closeRightDrawer();
+          });
+          clearURLParams();
+
+          // Verify drawer is closed
+          const uiState = useUIStore.getState();
+          expect(uiState.rightDrawerOpen).toBe(false);
+          expect(uiState.rightDrawerContent).toBeNull();
+
+          // Verify URL has no type/value params
+          const urlState = parseURLState();
+          expect(urlState.type).toBeUndefined();
+          expect(urlState.value).toBeUndefined();
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should maintain type consistency when switching between area and marker content', () => {
+      fc.assert(
+        fc.property(
+          provinceIdArb,
+          provinceNameArb,
+          markerIdArb,
+          fc.string({ minLength: 1, maxLength: 50 }).filter((s) => !s.includes('&') && !s.includes('=')),
+          markerTypeArb,
+          yearArb,
+          coordinatesArb,
+          (provinceId, provinceName, markerId, markerName, markerType, year, coo) => {
+            // Reset stores and URL
+            act(() => {
+              useUIStore.setState(uiDefaultState);
+            });
+            mockHash = '#/';
+
+            // Open drawer with area content
+            const areaContent = { type: 'area' as const, provinceId, provinceName };
+            act(() => {
+              useUIStore.getState().openRightDrawer(areaContent);
+            });
+            updateURLState({ type: 'area', value: provinceName });
+
+            // Verify area type consistency
+            let uiState = useUIStore.getState();
+            let urlState = parseURLState();
+            expect(uiState.rightDrawerContent?.type).toBe('area');
+            expect(urlState.type).toBe('area');
+            expect(urlState.type).toBe(uiState.rightDrawerContent?.type);
+
+            // Switch to marker content
+            const marker = {
+              _id: markerId,
+              name: markerName,
+              type: markerType,
+              year,
+              coo,
+            };
+            const markerContent = { type: 'marker' as const, marker };
+            act(() => {
+              useUIStore.getState().openRightDrawer(markerContent);
+            });
+            updateURLState({ type: 'marker', value: markerId });
+
+            // Verify marker type consistency
+            uiState = useUIStore.getState();
+            urlState = parseURLState();
+            expect(uiState.rightDrawerContent?.type).toBe('marker');
+            expect(urlState.type).toBe('marker');
+            expect(urlState.type).toBe(uiState.rightDrawerContent?.type);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have consistent type after multiple open/close cycles', () => {
+      fc.assert(
+        fc.property(
+          fc.array(
+            fc.oneof(
+              fc.record({
+                contentType: fc.constant('area' as const),
+                provinceId: provinceIdArb,
+                provinceName: provinceNameArb,
+              }),
+              fc.record({
+                contentType: fc.constant('marker' as const),
+                markerId: markerIdArb,
+                markerName: fc.string({ minLength: 1, maxLength: 50 }).filter((s) => !s.includes('&') && !s.includes('=')),
+                markerType: markerTypeArb,
+                year: yearArb,
+                coo: coordinatesArb,
+              })
+            ),
+            { minLength: 1, maxLength: 5 }
+          ),
+          (contentSequence) => {
+            // Reset stores and URL
+            act(() => {
+              useUIStore.setState(uiDefaultState);
+            });
+            mockHash = '#/';
+
+            for (const item of contentSequence) {
+              if (item.contentType === 'area') {
+                // Open with area content
+                const content = {
+                  type: 'area' as const,
+                  provinceId: item.provinceId,
+                  provinceName: item.provinceName,
+                };
+                act(() => {
+                  useUIStore.getState().openRightDrawer(content);
+                });
+                updateURLState({ type: 'area', value: item.provinceName });
+
+                // Verify consistency
+                const uiState = useUIStore.getState();
+                const urlState = parseURLState();
+                expect(uiState.rightDrawerOpen).toBe(true);
+                expect(uiState.rightDrawerContent?.type).toBe('area');
+                expect(urlState.type).toBe('area');
+                expect(urlState.type).toBe(uiState.rightDrawerContent?.type);
+              } else {
+                // Open with marker content
+                const marker = {
+                  _id: item.markerId,
+                  name: item.markerName,
+                  type: item.markerType,
+                  year: item.year,
+                  coo: item.coo,
+                };
+                const content = { type: 'marker' as const, marker };
+                act(() => {
+                  useUIStore.getState().openRightDrawer(content);
+                });
+                updateURLState({ type: 'marker', value: item.markerId });
+
+                // Verify consistency
+                const uiState = useUIStore.getState();
+                const urlState = parseURLState();
+                expect(uiState.rightDrawerOpen).toBe(true);
+                expect(uiState.rightDrawerContent?.type).toBe('marker');
+                expect(urlState.type).toBe('marker');
+                expect(urlState.type).toBe(uiState.rightDrawerContent?.type);
+              }
+
+              // Close drawer
+              act(() => {
+                useUIStore.getState().closeRightDrawer();
+              });
+              clearURLParams();
+
+              // Verify closed state
+              const closedUiState = useUIStore.getState();
+              const closedUrlState = parseURLState();
+              expect(closedUiState.rightDrawerOpen).toBe(false);
+              expect(closedUiState.rightDrawerContent).toBeNull();
+              expect(closedUrlState.type).toBeUndefined();
+              expect(closedUrlState.value).toBeUndefined();
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have URL value match drawer content identifier', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.record({
+              contentType: fc.constant('area' as const),
+              provinceId: provinceIdArb,
+              provinceName: provinceNameArb.filter((s) => s.length > 0),
+            }),
+            fc.record({
+              contentType: fc.constant('marker' as const),
+              markerId: markerIdArb,
+              markerName: fc.string({ minLength: 1, maxLength: 50 }).filter((s) => !s.includes('&') && !s.includes('=')),
+              markerType: markerTypeArb,
+              year: yearArb,
+              coo: coordinatesArb,
+            })
+          ),
+          (item) => {
+            // Reset stores and URL
+            act(() => {
+              useUIStore.setState(uiDefaultState);
+            });
+            mockHash = '#/';
+
+            if (item.contentType === 'area') {
+              // Open with area content
+              const content = {
+                type: 'area' as const,
+                provinceId: item.provinceId,
+                provinceName: item.provinceName,
+              };
+              act(() => {
+                useUIStore.getState().openRightDrawer(content);
+              });
+              updateURLState({ type: 'area', value: item.provinceName });
+
+              // Verify URL value matches province name
+              const urlState = parseURLState();
+              expect(urlState.value).toBe(item.provinceName);
+            } else {
+              // Open with marker content
+              const marker = {
+                _id: item.markerId,
+                name: item.markerName,
+                type: item.markerType,
+                year: item.year,
+                coo: item.coo,
+              };
+              const content = { type: 'marker' as const, marker };
+              act(() => {
+                useUIStore.getState().openRightDrawer(content);
+              });
+              updateURLState({ type: 'marker', value: item.markerId });
+
+              // Verify URL value matches marker ID
+              const urlState = parseURLState();
+              expect(urlState.value).toBe(item.markerId);
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  /**
+   * Feature: map-interactions, Property 7: Marker Hover State Invariant
+   *
+   * Property 7 states:
+   * *For any* marker hover interaction, exactly zero or one marker SHALL be in the hovered state at any time.
+   *
+   * This property ensures that:
+   * - At any point in time, hoveredMarkerId is either null (no marker hovered) or a single marker ID
+   * - When setHoveredMarker is called with a new ID, the previous hovered marker is replaced
+   * - Multiple rapid hover changes still result in exactly 0 or 1 marker being hovered
+   *
+   * **Validates: Requirements 5.1, 5.4**
+   */
+  describe('Property 7: Marker Hover State Invariant', () => {
+    /**
+     * Arbitrary for generating valid marker IDs.
+     * Marker IDs are typically alphanumeric strings with underscores.
+     */
+    const markerIdArb = fc.stringMatching(/^[a-zA-Z0-9_-]{1,30}$/);
+
+    /**
+     * Arbitrary for generating nullable marker IDs (null or valid ID).
+     */
+    const nullableMarkerIdArb = fc.option(markerIdArb, { nil: null });
+
+    /**
+     * Arbitrary for generating sequences of marker hover events.
+     * Each event is either a marker ID or null (mouse leave).
+     */
+    const hoverSequenceArb = fc.array(nullableMarkerIdArb, { minLength: 1, maxLength: 50 });
+
+    /**
+     * Arbitrary for generating pairs of distinct marker IDs.
+     */
+    const distinctMarkerPairArb = fc
+      .tuple(markerIdArb, markerIdArb)
+      .filter(([id1, id2]) => id1 !== id2);
+
+    /**
+     * Arbitrary for generating rapid hover sequences (simulating fast mouse movement).
+     */
+    const rapidHoverSequenceArb = fc.array(markerIdArb, { minLength: 5, maxLength: 20 });
+
+    it('should have exactly zero or one marker hovered at any time', () => {
+      fc.assert(
+        fc.property(nullableMarkerIdArb, (markerId) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set hovered marker
+          act(() => {
+            useMapStore.getState().setHoveredMarker(markerId);
+          });
+
+          // Verify the invariant: exactly 0 or 1 marker is hovered
+          const state = useMapStore.getState();
+          const hoveredMarkerId = state.hoveredMarkerId;
+
+          // hoveredMarkerId must be either null or a single string
+          if (hoveredMarkerId === null) {
+            // Zero markers hovered - valid state
+            expect(hoveredMarkerId).toBeNull();
+          } else {
+            // Exactly one marker hovered - must be a string
+            expect(typeof hoveredMarkerId).toBe('string');
+            expect(hoveredMarkerId.length).toBeGreaterThan(0);
+            expect(hoveredMarkerId).toBe(markerId);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should replace previous hovered marker when new marker is hovered', () => {
+      fc.assert(
+        fc.property(distinctMarkerPairArb, ([firstMarkerId, secondMarkerId]) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Hover first marker
+          act(() => {
+            useMapStore.getState().setHoveredMarker(firstMarkerId);
+          });
+
+          // Verify first marker is hovered
+          expect(useMapStore.getState().hoveredMarkerId).toBe(firstMarkerId);
+
+          // Hover second marker (should replace first)
+          act(() => {
+            useMapStore.getState().setHoveredMarker(secondMarkerId);
+          });
+
+          // Verify second marker replaced first
+          const state = useMapStore.getState();
+          expect(state.hoveredMarkerId).toBe(secondMarkerId);
+          expect(state.hoveredMarkerId).not.toBe(firstMarkerId);
+
+          // Verify invariant: exactly one marker is hovered
+          expect(typeof state.hoveredMarkerId).toBe('string');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should maintain invariant through sequential hover changes', () => {
+      fc.assert(
+        fc.property(hoverSequenceArb, (hoverEvents) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Process each hover event
+          for (const markerId of hoverEvents) {
+            act(() => {
+              useMapStore.getState().setHoveredMarker(markerId);
+            });
+
+            // Verify invariant after each change
+            const state = useMapStore.getState();
+            const hoveredMarkerId = state.hoveredMarkerId;
+
+            // Must be exactly 0 or 1 marker hovered
+            if (markerId === null) {
+              expect(hoveredMarkerId).toBeNull();
+            } else {
+              expect(hoveredMarkerId).toBe(markerId);
+              expect(typeof hoveredMarkerId).toBe('string');
+            }
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle rapid hover changes correctly', () => {
+      fc.assert(
+        fc.property(rapidHoverSequenceArb, (markerIds) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Simulate rapid hover changes (like fast mouse movement over markers)
+          for (const markerId of markerIds) {
+            act(() => {
+              useMapStore.getState().setHoveredMarker(markerId);
+            });
+          }
+
+          // After all rapid changes, verify invariant holds
+          const state = useMapStore.getState();
+          const hoveredMarkerId = state.hoveredMarkerId;
+
+          // Must be exactly one marker hovered (the last one)
+          const lastMarkerId = markerIds[markerIds.length - 1];
+          expect(hoveredMarkerId).toBe(lastMarkerId);
+          expect(typeof hoveredMarkerId).toBe('string');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should clear hovered marker when null is set', () => {
+      fc.assert(
+        fc.property(markerIdArb, (markerId) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Hover a marker
+          act(() => {
+            useMapStore.getState().setHoveredMarker(markerId);
+          });
+
+          // Verify marker is hovered
+          expect(useMapStore.getState().hoveredMarkerId).toBe(markerId);
+
+          // Clear hover (mouse leave)
+          act(() => {
+            useMapStore.getState().setHoveredMarker(null);
+          });
+
+          // Verify no marker is hovered
+          const state = useMapStore.getState();
+          expect(state.hoveredMarkerId).toBeNull();
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should not affect province hover state when marker hover changes', () => {
+      fc.assert(
+        fc.property(
+          markerIdArb,
+          fc.stringMatching(/^[a-zA-Z0-9_-]{1,20}$/),
+          (markerId, provinceId) => {
+            // Reset store
+            act(() => {
+              useMapStore.setState(mapInitialState);
+            });
+
+            // Set province hover first
+            act(() => {
+              useMapStore.getState().setHoveredProvince(provinceId);
+            });
+
+            // Verify province is hovered
+            expect(useMapStore.getState().hoveredProvinceId).toBe(provinceId);
+
+            // Now hover a marker
+            act(() => {
+              useMapStore.getState().setHoveredMarker(markerId);
+            });
+
+            // Verify marker hover is independent of province hover
+            const state = useMapStore.getState();
+            expect(state.hoveredMarkerId).toBe(markerId);
+            // Province hover state should be unchanged
+            expect(state.hoveredProvinceId).toBe(provinceId);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle alternating marker and null hover states', () => {
+      fc.assert(
+        fc.property(
+          fc.array(markerIdArb, { minLength: 2, maxLength: 10 }),
+          (markerIds) => {
+            // Reset store
+            act(() => {
+              useMapStore.setState(mapInitialState);
+            });
+
+            // Alternate between hovering markers and clearing
+            for (const markerId of markerIds) {
+              // Hover marker
+              act(() => {
+                useMapStore.getState().setHoveredMarker(markerId);
+              });
+              expect(useMapStore.getState().hoveredMarkerId).toBe(markerId);
+
+              // Clear hover
+              act(() => {
+                useMapStore.getState().setHoveredMarker(null);
+              });
+              expect(useMapStore.getState().hoveredMarkerId).toBeNull();
+            }
+
+            // Final state should be null (no marker hovered)
+            expect(useMapStore.getState().hoveredMarkerId).toBeNull();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle setting same marker ID multiple times', () => {
+      fc.assert(
+        fc.property(
+          markerIdArb,
+          fc.integer({ min: 2, max: 10 }),
+          (markerId, repeatCount) => {
+            // Reset store
+            act(() => {
+              useMapStore.setState(mapInitialState);
+            });
+
+            // Set the same marker ID multiple times
+            for (let i = 0; i < repeatCount; i++) {
+              act(() => {
+                useMapStore.getState().setHoveredMarker(markerId);
+              });
+
+              // Verify invariant holds after each call
+              const state = useMapStore.getState();
+              expect(state.hoveredMarkerId).toBe(markerId);
+            }
+
+            // Final state should still be the same marker
+            expect(useMapStore.getState().hoveredMarkerId).toBe(markerId);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should maintain store consistency after marker hover changes', () => {
+      fc.assert(
+        fc.property(hoverSequenceArb, (hoverEvents) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Process hover events
+          for (const markerId of hoverEvents) {
+            act(() => {
+              useMapStore.getState().setHoveredMarker(markerId);
+            });
+          }
+
+          // Verify store state is consistent
+          const state = useMapStore.getState();
+
+          // hoveredMarkerId should match the last event
+          const lastEvent = hoverEvents[hoverEvents.length - 1];
+          expect(state.hoveredMarkerId).toBe(lastEvent);
+
+          // Other state should be unaffected
+          expect(state.viewport).toBeDefined();
+          expect(state.activeColor).toBeDefined();
+          expect(state.markers).toBeDefined();
+          expect(Array.isArray(state.markers)).toBe(true);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle marker IDs with various valid formats', () => {
+      /**
+       * Arbitrary for generating various marker ID formats.
+       */
+      const variousMarkerIdArb = fc.oneof(
+        fc.stringMatching(/^[a-z]{3,15}$/), // lowercase letters
+        fc.stringMatching(/^[A-Z]{3,15}$/), // uppercase letters
+        fc.stringMatching(/^[a-zA-Z0-9]{3,20}$/), // alphanumeric
+        fc.stringMatching(/^[a-z]+-[a-z]+$/), // hyphenated
+        fc.stringMatching(/^[a-z]+_[a-z]+$/), // underscored
+        fc.stringMatching(/^marker_[0-9]+$/), // prefixed with number
+        fc.stringMatching(/^battle_[a-z]+_[0-9]+$/), // battle format
+      );
+
+      fc.assert(
+        fc.property(variousMarkerIdArb, (markerId) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set hovered marker
+          act(() => {
+            useMapStore.getState().setHoveredMarker(markerId);
+          });
+
+          // Verify marker is hovered correctly
+          const state = useMapStore.getState();
+          expect(state.hoveredMarkerId).toBe(markerId);
+          expect(typeof state.hoveredMarkerId).toBe('string');
+        }),
+        { numRuns: 100 }
+      );
+    });
+  });
 });

@@ -9,6 +9,15 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type { Marker } from '@/api/types';
+
+/**
+ * Right drawer content types
+ * Requirements: 2.1, 3.1, 4.8
+ */
+export type DrawerContent =
+  | { type: 'area'; provinceId: string; provinceName: string; wikiUrl?: string }
+  | { type: 'marker'; marker: Marker };
 
 /**
  * Applies the theme to the document element by setting the data-theme attribute.
@@ -38,6 +47,10 @@ export interface UIState {
   locale: string;
   sidebarOpen: boolean;
   isFullscreen: boolean;
+  /** Whether the right drawer is open - Requirement 2.1, 3.1 */
+  rightDrawerOpen: boolean;
+  /** Content displayed in the right drawer - Requirement 4.8 */
+  rightDrawerContent: DrawerContent | null;
 }
 
 /**
@@ -50,6 +63,10 @@ export interface UIActions {
   setSidebarOpen: (open: boolean) => void;
   setFullscreen: (isFullscreen: boolean) => void;
   resetToDefaults: () => void;
+  /** Opens the right drawer with content - Requirement 2.1, 3.1 */
+  openRightDrawer: (content: DrawerContent) => void;
+  /** Closes the right drawer - Requirement 2.7 */
+  closeRightDrawer: () => void;
 }
 
 /**
@@ -65,6 +82,8 @@ const defaultState: UIState = {
   locale: 'en',
   sidebarOpen: true,
   isFullscreen: false,
+  rightDrawerOpen: false,
+  rightDrawerContent: null,
 };
 
 /**
@@ -157,6 +176,31 @@ export const useUIStore = create<UIStore>()(
       resetToDefaults: () => {
         applyThemeToDocument(defaultState.theme);
         set(defaultState);
+      },
+
+      /**
+       * Opens the right drawer with the specified content.
+       * Requirement 2.1: WHEN a province is clicked, THE RightDrawer SHALL open
+       * Requirement 3.1: WHEN a marker is clicked, THE RightDrawer SHALL open
+       *
+       * @param content - The content to display in the drawer
+       */
+      openRightDrawer: (content: DrawerContent) => {
+        set({
+          rightDrawerOpen: true,
+          rightDrawerContent: content,
+        });
+      },
+
+      /**
+       * Closes the right drawer and clears its content.
+       * Requirement 2.7: WHEN the close button is clicked, THE RightDrawer SHALL close
+       */
+      closeRightDrawer: () => {
+        set({
+          rightDrawerOpen: false,
+          rightDrawerContent: null,
+        });
       },
     }),
     {

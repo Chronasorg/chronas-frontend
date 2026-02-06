@@ -119,14 +119,27 @@ export interface AuthResponse {
 // ============================================================================
 
 /**
+ * Marker type enumeration for historical events.
+ * Requirements: 9.4
+ * Note: API uses single-letter codes: p=person, s=scholar, a=artist, ar=artwork, 
+ * o=organization, ai=architecture, b=battle, e=event, etc.
+ * The filter state uses long-form names, so a mapping is needed.
+ */
+export type MarkerType = string;
+
+/**
  * Map marker data
  */
 export interface Marker {
   _id: string;
   name: string;
-  type: string;
+  type: MarkerType;
   year: number;
   coo: [number, number];
+  /** Secondary coordinates (e.g., death location for persons) */
+  coo2?: [number, number];
+  /** End year (e.g., death year for persons) */
+  end?: number;
   wiki?: string;
   data?: MarkerData;
 }
@@ -140,9 +153,56 @@ export interface MarkerData {
   [key: string]: unknown;
 }
 
+/**
+ * Marker filter state for toggling marker visibility by type.
+ * Requirements: 9.4
+ */
+export interface MarkerFilterState {
+  battle: boolean;
+  city: boolean;
+  capital: boolean;
+  person: boolean;
+  event: boolean;
+  other: boolean;
+  /** Index signature to allow any marker type string */
+  [key: string]: boolean;
+}
+
 // ============================================================================
 // Metadata Types
 // ============================================================================
+
+/**
+ * Metadata entry with name and color for entity display.
+ * Requirements: 9.4
+ */
+export interface MetadataEntry {
+  /** Display name */
+  name: string;
+  /** Color value (rgba string) */
+  color: string;
+  /** Optional: Wikipedia URL for the entity */
+  wiki?: string;
+  /** Optional: parent category for religionGeneral mapping */
+  parent?: string;
+}
+
+/**
+ * Entity metadata containing color and label information for rulers, cultures, religions.
+ * Requirements: 9.4
+ */
+export interface EntityMetadata {
+  ruler: Record<string, MetadataEntry>;
+  culture: Record<string, MetadataEntry>;
+  religion: Record<string, MetadataEntry>;
+  religionGeneral: Record<string, MetadataEntry>;
+}
+
+/**
+ * API response type for metadata endpoint.
+ * Requirements: 9.4
+ */
+export type MetadataResponse = EntityMetadata;
 
 /**
  * Metadata entry

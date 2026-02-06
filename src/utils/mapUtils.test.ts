@@ -217,6 +217,7 @@ describe('mapUtils', () => {
         value: {
           href: mockUrl.href,
           search: mockUrl.search,
+          hash: '',
           toString: () => mockUrl.href,
         },
         writable: true,
@@ -264,6 +265,22 @@ describe('mapUtils', () => {
       it('should return null for non-existent parameter', () => {
         const result = getQueryStringParameter('nonexistent');
         expect(result).toBeNull();
+      });
+
+      it('should return parameter from hash-based URL', () => {
+        // Simulate HashRouter URL: /#/?year=1500
+        Object.defineProperty(window, 'location', {
+          value: {
+            href: 'http://localhost/#/?year=1500',
+            hash: '#/?year=1500',
+            search: '',
+            pathname: '/',
+          },
+          writable: true,
+        });
+        
+        const result = getQueryStringParameter('year');
+        expect(result).toBe('1500');
       });
     });
 

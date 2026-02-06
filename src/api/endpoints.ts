@@ -60,6 +60,17 @@ export const MARKERS = {
   GET: (markerId: string) => `/markers/${markerId}`,
   UPDATE: (markerId: string) => `/markers/${markerId}`,
   DELETE: (markerId: string) => `/markers/${markerId}`,
+  /**
+   * Get markers for a specific year.
+   * Requirements: 9.1
+   */
+  GET_BY_YEAR: (year: number) => `/markers?year=${String(year)}`,
+  /**
+   * Get markers for a specific year and type.
+   * Requirements: 9.1
+   */
+  GET_BY_YEAR_AND_TYPE: (year: number, type: string) =>
+    `/markers?year=${String(year)}&type=${type}`,
 } as const;
 
 // ============================================================================
@@ -72,6 +83,22 @@ export const METADATA = {
   GET: (metadataId: string) => `/metadata/${metadataId}`,
   UPDATE: (metadataId: string) => `/metadata/${metadataId}`,
   DELETE: (metadataId: string) => `/metadata/${metadataId}`,
+  /**
+   * Get metadata list.
+   * Requirements: 9.1
+   */
+  LIST_V1: '/metadata',
+  /**
+   * Get metadata filtered by type.
+   * Requirements: 9.1
+   */
+  GET_BY_TYPE: (type: string) => `/metadata?type=${type}`,
+  /**
+   * Get combined metadata including provinces GeoJSON and entity colors.
+   * This is the initialization endpoint that returns all required metadata.
+   * Requirements: 2.1, 2.2
+   */
+  GET_INIT: '/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral',
 } as const;
 
 // ============================================================================

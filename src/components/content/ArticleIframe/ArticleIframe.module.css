@@ -1,0 +1,311 @@
+/**
+ * ArticleIframe Component Styles
+ *
+ * Implements the Wikipedia iframe embedding with loading and error states.
+ *
+ * Requirements:
+ * - 2.6, 3.7: Embed Wikipedia iframe
+ * - 11.3: Loading indicator while iframe loads
+ * - 11.4: Error message with retry option
+ * - 2.10, 3.8: "No Wikipedia article available" message
+ */
+
+/* Container for the iframe section */
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--color-background, #ffffff);
+}
+
+/* Wrapper for iframe with relative positioning for overlay */
+.iframeWrapper {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The iframe itself */
+.iframe {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  border: none;
+  background-color: var(--color-background, #ffffff);
+}
+
+/* Loading overlay that appears over the iframe */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface, #f5f5f5);
+  z-index: 1;
+}
+
+/* Loading spinner container */
+.spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md, 1rem);
+}
+
+/* Animated spinner circle */
+.spinnerInner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border, #e0e0e0);
+  border-top-color: var(--color-primary, #1976d2);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading text */
+.loadingText {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-secondary, #757575);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Error container */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl, 2rem);
+  text-align: center;
+  min-height: 200px;
+  gap: var(--spacing-md, 1rem);
+}
+
+.errorIcon {
+  font-size: 2.5rem;
+}
+
+.errorMessage {
+  font-size: var(--font-size-base, 1rem);
+  color: var(--color-error, #d32f2f);
+  margin: 0;
+}
+
+/* Retry button */
+.retryButton {
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-lg, 1.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--color-primary, #1976d2);
+  background-color: transparent;
+  border: 1px solid var(--color-primary, #1976d2);
+  border-radius: var(--radius-sm, 0.25rem);
+  cursor: pointer;
+  transition: background-color var(--transition-fast, 150ms ease),
+              color var(--transition-fast, 150ms ease);
+}
+
+.retryButton:hover {
+  background-color: var(--color-primary, #1976d2);
+  color: var(--color-on-primary, #ffffff);
+}
+
+.retryButton:focus {
+  outline: 2px solid var(--color-primary, #1976d2);
+  outline-offset: 2px;
+}
+
+.retryButton:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-primary, #1976d2);
+  outline-offset: 2px;
+}
+
+/* No article available state */
+.noArticle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl, 2rem);
+  text-align: center;
+  min-height: 200px;
+  gap: var(--spacing-md, 1rem);
+  color: var(--color-text-secondary, #757575);
+}
+
+.noArticleIcon {
+  font-size: 2.5rem;
+  opacity: 0.6;
+}
+
+.noArticleText {
+  font-size: var(--font-size-base, 1rem);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Invalid URL state */
+.invalidUrl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl, 2rem);
+  text-align: center;
+  min-height: 200px;
+  gap: var(--spacing-md, 1rem);
+  color: var(--color-warning, #f57c00);
+}
+
+.invalidUrlIcon {
+  font-size: 2.5rem;
+}
+
+.invalidUrlText {
+  font-size: var(--font-size-base, 1rem);
+  margin: 0;
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .container {
+  background-color: var(--color-background, #121212);
+  border-color: var(--color-border, #333333);
+}
+
+[data-theme='dark'] .loadingOverlay {
+  background-color: var(--color-surface, #1e1e1e);
+}
+
+[data-theme='dark'] .iframe {
+  background-color: var(--color-background, #121212);
+}
+
+[data-theme='dark'] .spinnerInner {
+  border-color: var(--color-border, #333333);
+  border-top-color: var(--color-primary, #90caf9);
+}
+
+[data-theme='dark'] .loadingText {
+  color: var(--color-text-secondary, #b0b0b0);
+}
+
+[data-theme='dark'] .errorMessage {
+  color: var(--color-error, #f44336);
+}
+
+[data-theme='dark'] .retryButton {
+  color: var(--color-primary, #90caf9);
+  border-color: var(--color-primary, #90caf9);
+}
+
+[data-theme='dark'] .retryButton:hover {
+  background-color: var(--color-primary, #90caf9);
+  color: var(--color-on-primary, #000000);
+}
+
+[data-theme='dark'] .noArticle {
+  color: var(--color-text-secondary, #b0b0b0);
+}
+
+[data-theme='dark'] .invalidUrl {
+  color: var(--color-warning, #ffb74d);
+}
+
+/* Luther theme adjustments */
+[data-theme='luther'] .container {
+  background-color: var(--color-background, #f5f0e6);
+  border-color: var(--color-border, #d4c9b5);
+}
+
+[data-theme='luther'] .loadingOverlay {
+  background-color: var(--color-surface, #ebe4d4);
+}
+
+[data-theme='luther'] .iframe {
+  background-color: var(--color-background, #f5f0e6);
+}
+
+[data-theme='luther'] .spinnerInner {
+  border-color: var(--color-border, #d4c9b5);
+  border-top-color: var(--color-primary, #8b4513);
+}
+
+[data-theme='luther'] .loadingText {
+  color: var(--color-text-secondary, #6b6b6b);
+}
+
+[data-theme='luther'] .errorMessage {
+  color: var(--color-error, #c62828);
+}
+
+[data-theme='luther'] .retryButton {
+  color: var(--color-primary, #8b4513);
+  border-color: var(--color-primary, #8b4513);
+}
+
+[data-theme='luther'] .retryButton:hover {
+  background-color: var(--color-primary, #8b4513);
+  color: var(--color-on-primary, #ffffff);
+}
+
+[data-theme='luther'] .noArticle {
+  color: var(--color-text-secondary, #6b6b6b);
+}
+
+[data-theme='luther'] .invalidUrl {
+  color: var(--color-warning, #e65100);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .container {
+    min-height: 250px;
+  }
+
+  .iframeWrapper {
+    min-height: 300px;
+  }
+
+  .iframe {
+    min-height: 300px;
+  }
+
+  .errorContainer,
+  .noArticle,
+  .invalidUrl {
+    padding: var(--spacing-lg, 1.5rem);
+    min-height: 150px;
+  }
+}
