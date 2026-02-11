@@ -15,10 +15,10 @@
   right: 0;
   width: 100%;
   
-  /* Background and theming */
-  background-color: var(--chronas-back-1, #ffffff);
-  background: var(--chronas-gradient, linear-gradient(180deg, #fff 0, #F2F2F2));
-  border-top: 1px solid var(--chronas-border, rgba(200, 200, 200, 1));
+  /* Background - completely transparent to show epic items */
+  background-color: transparent !important;
+  background: none !important;
+  border-top: none;
   
   /* Z-index: above map content and main content, but below modals */
   z-index: var(--z-timeline, 350);
@@ -27,7 +27,7 @@
   transition: height 500ms ease-in-out;
   
   /* Prevent content overflow during transition */
-  overflow: hidden;
+  overflow: visible;
   
   /* Box sizing for consistent sizing */
   box-sizing: border-box;
@@ -56,9 +56,29 @@
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   padding: var(--spacing-sm, 0.5rem);
   box-sizing: border-box;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Year display container - removed, year now shown on marker */
+.yearDisplayWrapper {
+  display: none;
+}
+
+/* Vis.js Timeline container - takes full width with space for controls */
+.visTimeline {
+  flex: 1;
+  min-height: 80px;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  margin-left: 60px; /* Space for controls on the left */
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Placeholder content (temporary until sub-components are added) */

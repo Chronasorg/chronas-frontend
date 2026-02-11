@@ -12,6 +12,7 @@ import type { DrawerContent } from '@/stores/uiStore';
 import { useMapStore } from '@/stores/mapStore';
 import { ProvinceDrawerContent } from '@/components/content/ProvinceDrawerContent/ProvinceDrawerContent';
 import { MarkerDrawerContent } from '@/components/content/MarkerDrawerContent/MarkerDrawerContent';
+import { ArticleIframe } from '@/components/content/ArticleIframe/ArticleIframe';
 import styles from './RightDrawer.module.css';
 
 export interface RightDrawerProps {
@@ -34,6 +35,8 @@ function getDrawerTitle(content: DrawerContent | null): string {
       return content.provinceName;
     case 'marker':
       return content.marker.name;
+    case 'epic':
+      return content.epicName;
     default:
       return '';
   }
@@ -211,6 +214,13 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
             {/* Render MarkerDrawerContent for marker type */}
             {content.type === 'marker' && (
               <MarkerDrawerContent marker={content.marker} />
+            )}
+            {/* Render ArticleIframe for epic type (Requirement 6.3) */}
+            {content.type === 'epic' && (
+              <ArticleIframe
+                url={content.wikiUrl}
+                title={`Wikipedia article: ${content.epicName}`}
+              />
             )}
           </div>
         ) : (

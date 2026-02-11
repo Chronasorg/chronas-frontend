@@ -66,6 +66,12 @@ export const MARKERS = {
    */
   GET_BY_YEAR: (year: number) => `/markers?year=${String(year)}`,
   /**
+   * Get markers for a specific year with limit.
+   * Requirements: 4.2, 4.3
+   */
+  GET_BY_YEAR_WITH_LIMIT: (year: number, limit: number) =>
+    `/markers?year=${String(year)}&limit=${String(limit)}`,
+  /**
    * Get markers for a specific year and type.
    * Requirements: 9.1
    */
@@ -102,6 +108,24 @@ export const METADATA = {
 } as const;
 
 // ============================================================================
+// Epic Items Endpoints
+// ============================================================================
+
+export const EPICS = {
+  /**
+   * Get epic items by subtype.
+   * Subtypes include: 'ew' (wars), 'ei' (discoveries/empires), 'ps' (persons/primary sources)
+   * Requirements: 6.1
+   */
+  GET_BY_SUBTYPE: (subtype: string) => `/metadata?type=e&end=3000&subtype=${subtype}`,
+  /**
+   * Get all epic items (wars, discoveries, persons).
+   * Requirements: 6.1
+   */
+  GET_ALL: '/metadata?type=e&end=3000&subtype=ew,ei,ps',
+} as const;
+
+// ============================================================================
 // Health & Version Endpoints
 // ============================================================================
 
@@ -123,6 +147,7 @@ export const ENDPOINTS = {
   AREAS,
   MARKERS,
   METADATA,
+  EPICS,
   HEALTH,
   VERSION,
 } as const;

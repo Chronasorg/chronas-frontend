@@ -55,7 +55,9 @@ function App() {
   const currentAreaData = useMapStore((state) => state.currentAreaData);
   const activeColor = useMapStore((state) => state.activeColor);
   const getEntityWiki = useMapStore((state) => state.getEntityWiki);
+  const selectedYear = useTimelineStore((state) => state.selectedYear);
   const setYear = useTimelineStore((state) => state.setYear);
+  const loadEpicItems = useTimelineStore((state) => state.loadEpicItems);
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
   const closeRightDrawer = useUIStore((state) => state.closeRightDrawer);
 
@@ -66,12 +68,12 @@ function App() {
     loadFromStorage();
     // Load metadata for entity colors on app startup
     void loadMetadata();
+    // Load epic items for timeline display
+    void loadEpicItems();
     
-    // Initialize year from URL if present
-    const yearFromURL = getYearFromURL();
-    if (yearFromURL !== null) {
-      setYear(yearFromURL);
-    }
+    // Note: Year is now initialized synchronously from URL in timelineStore's initial state
+    // This prevents race conditions where MapView loads data for wrong year
+    // We no longer need to call setYear here as it's already set
     
     // Restore drawer state from URL if present
     // Requirement 9.4: THE application SHALL restore drawer state from URL on page load
@@ -97,7 +99,7 @@ function App() {
             _id: urlState.value,
             name: urlState.value,
             type: 'other',
-            year: yearFromURL ?? 1000,
+            year: selectedYear,
             coo: [0, 0],
           },
         });
@@ -133,7 +135,7 @@ function App() {
               _id: newUrlState.value,
               name: newUrlState.value,
               type: 'other',
-              year: newYearFromURL ?? 1000,
+              year: newYearFromURL ?? selectedYear,
               coo: [0, 0],
             },
           });
@@ -156,7 +158,7 @@ function App() {
     // to avoid re-running the effect when they change. The handleURLStateChange callback
     // will use the latest values when called.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadFromStorage, loadMetadata, setYear, openRightDrawer, closeRightDrawer]);
+  }, [loadFromStorage, loadMetadata, loadEpicItems, setYear, openRightDrawer, closeRightDrawer]);
 
   return (
     <HashRouter>

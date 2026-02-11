@@ -16,13 +16,16 @@ import {
   initialState,
   isValidViewport,
   isValidColorDimension,
+  isValidBasemapType,
   clampLatitude,
   normalizeLongitude,
   clampZoom,
   DEFAULT_FLY_TO_DURATION,
   FALLBACK_COLOR,
+  BASEMAP_STYLES,
   type ViewportState,
   type AreaColorDimension,
+  type BasemapType,
   type AreaData,
   type ProvinceData,
   type EntityMetadata,
@@ -114,6 +117,15 @@ describe('mapStore', () => {
     it('should initialize with error as null', () => {
       const state = useMapStore.getState();
       expect(state.error).toBeNull();
+    });
+
+    /**
+     * Requirement 1.1: THE MapStore SHALL update the basemap state
+     * Default basemap should be 'topographic'
+     */
+    it('should initialize with topographic as default basemap', () => {
+      const state = useMapStore.getState();
+      expect(state.basemap).toBe('topographic');
     });
 
     /**
@@ -254,6 +266,68 @@ describe('mapStore', () => {
       const state = useMapStore.getState();
       expect(state.viewport.minZoom).toBe(5);
       expect(state.viewport.zoom).toBe(5); // Should be raised to minZoom
+    });
+  });
+
+  describe('setBasemap', () => {
+    /**
+     * Requirement 1.1: WHEN the user selects a basemap option from the dropdown,
+     * THE MapStore SHALL update the basemap state
+     */
+    it('should set basemap to topographic', () => {
+      act(() => {
+        useMapStore.getState().setBasemap('topographic');
+      });
+
+      const state = useMapStore.getState();
+      expect(state.basemap).toBe('topographic');
+    });
+
+    it('should set basemap to watercolor', () => {
+      act(() => {
+        useMapStore.getState().setBasemap('watercolor');
+      });
+
+      const state = useMapStore.getState();
+      expect(state.basemap).toBe('watercolor');
+    });
+
+    it('should set basemap to none', () => {
+      act(() => {
+        useMapStore.getState().setBasemap('none');
+      });
+
+      const state = useMapStore.getState();
+      expect(state.basemap).toBe('none');
+    });
+
+    it('should not change state for invalid basemap type', () => {
+      const initialBasemap = useMapStore.getState().basemap;
+      
+      act(() => {
+        // @ts-expect-error Testing invalid input
+        useMapStore.getState().setBasemap('invalid');
+      });
+
+      const state = useMapStore.getState();
+      expect(state.basemap).toBe(initialBasemap);
+    });
+
+    it('should allow switching between all basemap types', () => {
+      act(() => {
+        useMapStore.getState().setBasemap('watercolor');
+      });
+      expect(useMapStore.getState().basemap).toBe('watercolor');
+
+      act(() => {
+        useMapStore.getState().setBasemap('none');
+      });
+      expect(useMapStore.getState().basemap).toBe('none');
+
+      act(() => {
+        useMapStore.getState().setBasemap('topographic');
+      });
+      expect(useMapStore.getState().basemap).toBe('topographic');
     });
   });
 
@@ -1039,6 +1113,55 @@ describe('utility functions', () => {
       expect(isValidColorDimension(null)).toBe(false);
       expect(isValidColorDimension(undefined)).toBe(false);
       expect(isValidColorDimension(123)).toBe(false);
+    });
+  });
+
+  describe('isValidBasemapType', () => {
+    /**
+     * Requirement 1.3: THE MapView SHALL support three basemap options:
+     * topographic, watercolor, and none
+     */
+    it('should return true for valid basemap types', () => {
+      expect(isValidBasemapType('topographic')).toBe(true);
+      expect(isValidBasemapType('watercolor')).toBe(true);
+      expect(isValidBasemapType('none')).toBe(true);
+    });
+
+    it('should return false for invalid basemap types', () => {
+      expect(isValidBasemapType('invalid')).toBe(false);
+      expect(isValidBasemapType('')).toBe(false);
+      expect(isValidBasemapType(null)).toBe(false);
+      expect(isValidBasemapType(undefined)).toBe(false);
+      expect(isValidBasemapType(123)).toBe(false);
+      expect(isValidBasemapType('satellite')).toBe(false);
+    });
+  });
+
+  describe('BASEMAP_STYLES', () => {
+    /**
+     * Requirement 1.2: WHEN the basemap state changes, THE MapView SHALL
+     * update the map style to reflect the selected basemap
+     */
+    it('should have style URL for topographic', () => {
+      expect(BASEMAP_STYLES.topographic).toBe('mapbox://styles/mapbox/outdoors-v12');
+    });
+
+    it('should have style URL for watercolor', () => {
+      expect(BASEMAP_STYLES.watercolor).toBeDefined();
+      expect(typeof BASEMAP_STYLES.watercolor).toBe('string');
+      expect(BASEMAP_STYLES.watercolor.length).toBeGreaterThan(0);
+    });
+
+    it('should have style URL for none (empty/minimal style)', () => {
+      expect(BASEMAP_STYLES.none).toBe('mapbox://styles/mapbox/empty-v9');
+    });
+
+    it('should have all three basemap types defined', () => {
+      const basemapTypes: BasemapType[] = ['topographic', 'watercolor', 'none'];
+      for (const type of basemapTypes) {
+        expect(BASEMAP_STYLES[type]).toBeDefined();
+        expect(typeof BASEMAP_STYLES[type]).toBe('string');
+      }
     });
   });
 
@@ -2679,5 +2802,184 @@ describe('Province Click Behavior - No Auto Zoom', () => {
     expect(state.viewport.longitude).toBe(initialViewport.longitude);
     expect(state.viewport.zoom).toBe(initialViewport.zoom);
     expect(state.isFlying).toBe(false);
+  });
+});
+
+/**
+ * Marker Limit Tests
+ * Requirement 4.1: WHEN the user adjusts the marker limit slider, THE MapStore SHALL update the markerLimit state
+ * Requirement 4.5: THE MapStore SHALL default markerLimit to 5000
+ */
+describe('markerLimit', () => {
+  // Reset store before each test
+  beforeEach(() => {
+    act(() => {
+      useMapStore.setState({
+        ...initialState,
+        areaDataCache: new Map(),
+      });
+    });
+  });
+
+  describe('initial state', () => {
+    /**
+     * Requirement 4.5: THE MapStore SHALL default markerLimit to 5000
+     */
+    it('should initialize with markerLimit of 5000', () => {
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(5000);
+    });
+  });
+
+  describe('setMarkerLimit', () => {
+    /**
+     * Requirement 4.1: WHEN the user adjusts the marker limit slider,
+     * THE MapStore SHALL update the markerLimit state
+     */
+    it('should set markerLimit to a valid value', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(1000);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(1000);
+    });
+
+    it('should set markerLimit to 0', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(0);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(0);
+    });
+
+    it('should set markerLimit to maximum value 10000', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(10000);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(10000);
+    });
+
+    it('should clamp markerLimit to minimum 0 for negative values', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(-100);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(0);
+    });
+
+    it('should clamp markerLimit to maximum 10000 for values above limit', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(15000);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(10000);
+    });
+
+    it('should round decimal values to nearest integer', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(1500.7);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(1501);
+    });
+
+    it('should round down decimal values below 0.5', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(1500.3);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(1500);
+    });
+
+    it('should not change state for NaN value', () => {
+      // First set a valid value
+      act(() => {
+        useMapStore.getState().setMarkerLimit(2000);
+      });
+
+      // Try to set NaN
+      act(() => {
+        useMapStore.getState().setMarkerLimit(NaN);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(2000);
+    });
+
+    it('should not change state for Infinity value', () => {
+      // First set a valid value
+      act(() => {
+        useMapStore.getState().setMarkerLimit(2000);
+      });
+
+      // Try to set Infinity
+      act(() => {
+        useMapStore.getState().setMarkerLimit(Infinity);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(2000);
+    });
+
+    it('should not change state for -Infinity value', () => {
+      // First set a valid value
+      act(() => {
+        useMapStore.getState().setMarkerLimit(2000);
+      });
+
+      // Try to set -Infinity
+      act(() => {
+        useMapStore.getState().setMarkerLimit(-Infinity);
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(2000);
+    });
+
+    it('should not change state for non-number value', () => {
+      // First set a valid value
+      act(() => {
+        useMapStore.getState().setMarkerLimit(2000);
+      });
+
+      // Try to set a string
+      act(() => {
+        // @ts-expect-error Testing invalid input
+        useMapStore.getState().setMarkerLimit('invalid');
+      });
+
+      const state = useMapStore.getState();
+      expect(state.markerLimit).toBe(2000);
+    });
+
+    it('should allow multiple updates in sequence', () => {
+      act(() => {
+        useMapStore.getState().setMarkerLimit(1000);
+      });
+      expect(useMapStore.getState().markerLimit).toBe(1000);
+
+      act(() => {
+        useMapStore.getState().setMarkerLimit(5000);
+      });
+      expect(useMapStore.getState().markerLimit).toBe(5000);
+
+      act(() => {
+        useMapStore.getState().setMarkerLimit(0);
+      });
+      expect(useMapStore.getState().markerLimit).toBe(0);
+
+      act(() => {
+        useMapStore.getState().setMarkerLimit(10000);
+      });
+      expect(useMapStore.getState().markerLimit).toBe(10000);
+    });
   });
 });

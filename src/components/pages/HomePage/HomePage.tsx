@@ -2,7 +2,8 @@
  * HomePage Component
  *
  * Main home page that displays the interactive historical map as the primary visual element.
- * Integrates MapView, YearNotification, and Timeline components.
+ * Integrates MapView and YearNotification components.
+ * Note: Timeline is rendered in AppShell, not here, to avoid duplicates.
  *
  * Requirements: 1.3 - THE MapView SHALL be the primary visual element on the home page
  */
@@ -11,7 +12,6 @@ import type React from 'react';
 import { useState, useCallback, useEffect } from 'react';
 import { MapView, MapErrorBoundary } from '../../map/MapView';
 import { YearNotification } from '../../map/YearNotification';
-import { Timeline } from '../../timeline/Timeline';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import styles from './HomePage.module.css';
 
@@ -71,10 +71,6 @@ export const HomePage: React.FC = () => {
         onHide={handleYearNotificationHide}
         className={styles['yearNotification'] ?? ''}
       />
-
-      {/* Timeline - Bottom of viewport */}
-      {/* Timeline uses portal to render at bottom */}
-      <Timeline />
     </div>
   );
 };

@@ -1,12 +1,15 @@
 /**
  * Timeline Store Property-Based Tests
  *
- * Property-based tests for autoplay advancement functionality.
- * Uses fast-check library to generate random autoplay configurations
+ * Property-based tests for autoplay advancement functionality and epic filtering.
+ * Uses fast-check library to generate random configurations
  * and verify universal properties.
  *
  * **Feature: timeline-migration, Property 15: Autoplay Advancement**
  * **Validates: Requirements 9.9, 9.10**
+ *
+ * **Feature: production-parity-fixes, Property 8: Epic Filtering Correctness**
+ * **Validates: Requirements 7.3**
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -18,6 +21,9 @@ import {
   MIN_YEAR,
   MAX_YEAR,
   type AutoplayConfig,
+  type EpicType,
+  EPIC_TYPES,
+  mapSubtypeToEpicType,
 } from './timelineStore';
 
 describe('timelineStore Property Tests', () => {
@@ -601,5 +607,355 @@ describe('timelineStore Property Tests', () => {
         { numRuns: 50 }
       );
     });
+  });
+});
+
+
+/**
+ * **Feature: production-parity-fixes, Property 8: Epic Filtering Correctness**
+ *
+ * Property 8 states:
+ * *For any* epic filter state and epic items array, the filtered epic items
+ * SHALL only include items whose type has a true value in the filter state.
+ *
+ * **Validates: Requirements 7.3**
+ */
+describe('Property 8: Epic Filtering Correctness', () => {
+  // Reset store state before each test
+  beforeEach(() => {
+    useTimelineStore.setState(initialState);
+  });
+
+  /**
+   * Arbitrary for generating valid EpicItem objects.
+   * Generates items with various subtypes that map to different EpicType categories.
+   */
+  const epicSubtypeArb = fc.oneof(
+    // War-related subtypes
+    fc.constantFrom('war', 'battle', 'conflict'),
+    // Empire-related subtypes
+    fc.constantFrom('empire', 'ei', 'kingdom', 'dynasty'),
+    // Religion-related subtypes
+    fc.constantFrom('religion', 'religious'),
+    // Culture-related subtypes
+    fc.constantFrom('culture', 'cultural', 'art'),
+    // Person-related subtypes
+    fc.constantFrom('person', 'ps', 'people', 'leader'),
+    // Other/unknown subtypes
+    fc.constantFrom('other', 'unknown', 'misc', 'event')
+  );
+
+  const epicItemArb = fc.record({
+    id: fc.uuid(),
+    content: fc.string({ minLength: 1, maxLength: 100 }),
+    wiki: fc.webUrl(),
+    start: fc.date({ min: new Date(-2000, 0, 1), max: new Date(2000, 11, 31) }),
+    end: fc.date({ min: new Date(-2000, 0, 1), max: new Date(2000, 11, 31) }),
+    group: fc.integer({ min: 1, max: 10 }),
+    subtype: epicSubtypeArb,
+    className: fc.string({ minLength: 1, maxLength: 50 }),
+  });
+
+  /**
+   * Arbitrary for generating epic filter state.
+   * Each EpicType can be independently enabled or disabled.
+   */
+  const epicFiltersArb: fc.Arbitrary<Record<EpicType, boolean>> = fc.record({
+    war: fc.boolean(),
+    empire: fc.boolean(),
+    religion: fc.boolean(),
+    culture: fc.boolean(),
+    person: fc.boolean(),
+    other: fc.boolean(),
+  });
+
+  it('should include items when their type filter is enabled', () => {
+    fc.assert(
+      fc.property(
+        fc.array(epicItemArb, { minLength: 1, maxLength: 50 }),
+        epicFiltersArb,
+        (items, filters) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set epic items
+          useTimelineStore.getState().setEpicItems(items);
+
+          // Set filters
+          EPIC_TYPES.forEach((type) => {
+            useTimelineStore.getState().setEpicFilter(type, filters[type]);
+          });
+
+          // Get filtered items
+          const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+
+          // Verify: all filtered items have their type enabled
+          filteredItems.forEach((item) => {
+            const epicType = mapSubtypeToEpicType(item.subtype);
+            expect(filters[epicType]).toBe(true);
+          });
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should exclude items when their type filter is disabled', () => {
+    fc.assert(
+      fc.property(
+        fc.array(epicItemArb, { minLength: 1, maxLength: 50 }),
+        epicFiltersArb,
+        (items, filters) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set epic items
+          useTimelineStore.getState().setEpicItems(items);
+
+          // Set filters
+          EPIC_TYPES.forEach((type) => {
+            useTimelineStore.getState().setEpicFilter(type, filters[type]);
+          });
+
+          // Get filtered items
+          const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+          const filteredIds = new Set(filteredItems.map((item) => item.id));
+
+          // Verify: items with disabled types are NOT in filtered results
+          items.forEach((item) => {
+            const epicType = mapSubtypeToEpicType(item.subtype);
+            if (!filters[epicType]) {
+              expect(filteredIds.has(item.id)).toBe(false);
+            }
+          });
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should return all items when all filters are enabled', () => {
+    fc.assert(
+      fc.property(
+        fc.array(epicItemArb, { minLength: 0, maxLength: 50 }),
+        (items) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set epic items
+          useTimelineStore.getState().setEpicItems(items);
+
+          // Enable all filters
+          useTimelineStore.getState().setAllEpicFilters(true);
+
+          // Get filtered items
+          const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+
+          // Verify: all items are included
+          expect(filteredItems.length).toBe(items.length);
+          
+          // Verify: same items (by id)
+          const originalIds = new Set(items.map((item) => item.id));
+          const filteredIds = new Set(filteredItems.map((item) => item.id));
+          expect(filteredIds).toEqual(originalIds);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should return no items when all filters are disabled', () => {
+    fc.assert(
+      fc.property(
+        fc.array(epicItemArb, { minLength: 0, maxLength: 50 }),
+        (items) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set epic items
+          useTimelineStore.getState().setEpicItems(items);
+
+          // Disable all filters
+          useTimelineStore.getState().setAllEpicFilters(false);
+
+          // Get filtered items
+          const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+
+          // Verify: no items are included
+          expect(filteredItems.length).toBe(0);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('setAllEpicFilters(true) should enable all filters', () => {
+    fc.assert(
+      fc.property(
+        epicFiltersArb,
+        (initialFilters) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set initial random filters
+          EPIC_TYPES.forEach((type) => {
+            useTimelineStore.getState().setEpicFilter(type, initialFilters[type]);
+          });
+
+          // Enable all filters
+          useTimelineStore.getState().setAllEpicFilters(true);
+
+          // Verify: all filters are enabled
+          const state = useTimelineStore.getState();
+          EPIC_TYPES.forEach((type) => {
+            expect(state.epicFilters[type]).toBe(true);
+          });
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('setAllEpicFilters(false) should disable all filters', () => {
+    fc.assert(
+      fc.property(
+        epicFiltersArb,
+        (initialFilters) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set initial random filters
+          EPIC_TYPES.forEach((type) => {
+            useTimelineStore.getState().setEpicFilter(type, initialFilters[type]);
+          });
+
+          // Disable all filters
+          useTimelineStore.getState().setAllEpicFilters(false);
+
+          // Verify: all filters are disabled
+          const state = useTimelineStore.getState();
+          EPIC_TYPES.forEach((type) => {
+            expect(state.epicFilters[type]).toBe(false);
+          });
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should correctly filter items by individual type toggles', () => {
+    fc.assert(
+      fc.property(
+        fc.array(epicItemArb, { minLength: 1, maxLength: 50 }),
+        fc.constantFrom(...EPIC_TYPES),
+        (items, typeToDisable) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set epic items
+          useTimelineStore.getState().setEpicItems(items);
+
+          // Enable all filters first
+          useTimelineStore.getState().setAllEpicFilters(true);
+
+          // Disable one specific type
+          useTimelineStore.getState().setEpicFilter(typeToDisable, false);
+
+          // Get filtered items
+          const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+
+          // Count items of other types in original list (items that should remain)
+          const otherTypesCount = items.filter(
+            (item) => mapSubtypeToEpicType(item.subtype) !== typeToDisable
+          ).length;
+
+          // Verify: filtered items should equal items of other types
+          expect(filteredItems.length).toBe(otherTypesCount);
+
+          // Verify: no items of the disabled type are in filtered results
+          filteredItems.forEach((item) => {
+            expect(mapSubtypeToEpicType(item.subtype)).not.toBe(typeToDisable);
+          });
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should preserve filter state after multiple setEpicFilter calls', () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({
+            type: fc.constantFrom(...EPIC_TYPES),
+            enabled: fc.boolean(),
+          }),
+          { minLength: 1, maxLength: 20 }
+        ),
+        (filterChanges) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Apply filter changes sequentially
+          filterChanges.forEach(({ type, enabled }) => {
+            useTimelineStore.getState().setEpicFilter(type, enabled);
+          });
+
+          // Build expected final state by replaying changes
+          const expectedFilters: Record<EpicType, boolean> = { ...initialState.epicFilters };
+          filterChanges.forEach(({ type, enabled }) => {
+            expectedFilters[type] = enabled;
+          });
+
+          // Verify: final state matches expected
+          const state = useTimelineStore.getState();
+          EPIC_TYPES.forEach((type) => {
+            expect(state.epicFilters[type]).toBe(expectedFilters[type]);
+          });
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should maintain filter consistency across getFilteredEpicItems calls', () => {
+    fc.assert(
+      fc.property(
+        fc.array(epicItemArb, { minLength: 1, maxLength: 50 }),
+        epicFiltersArb,
+        (items, filters) => {
+          // Reset state
+          useTimelineStore.setState(initialState);
+
+          // Set epic items
+          useTimelineStore.getState().setEpicItems(items);
+
+          // Set filters
+          EPIC_TYPES.forEach((type) => {
+            useTimelineStore.getState().setEpicFilter(type, filters[type]);
+          });
+
+          // Call getFilteredEpicItems multiple times
+          const result1 = useTimelineStore.getState().getFilteredEpicItems();
+          const result2 = useTimelineStore.getState().getFilteredEpicItems();
+          const result3 = useTimelineStore.getState().getFilteredEpicItems();
+
+          // Verify: all calls return the same result
+          expect(result1.length).toBe(result2.length);
+          expect(result2.length).toBe(result3.length);
+
+          // Verify: same items in same order
+          result1.forEach((item, index) => {
+            const item2 = result2[index];
+            const item3 = result3[index];
+            expect(item2).toBeDefined();
+            expect(item3).toBeDefined();
+            expect(item.id).toBe(item2!.id);
+            expect(item.id).toBe(item3!.id);
+          });
+        }
+      ),
+      { numRuns: 50 }
+    );
   });
 });

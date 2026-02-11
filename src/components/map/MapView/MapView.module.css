@@ -412,3 +412,40 @@
 .noDataMessage[data-theme="luther"] .noDataText {
   color: #aaa;
 }
+
+/* Label hover tooltip */
+/* Shows entity name when hovering over map labels */
+.labelTooltip {
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.labelTooltipContent {
+  padding: 8px 14px;
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Dark theme label tooltip */
+:global([data-theme="dark"]) .labelTooltipContent {
+  background-color: rgba(30, 30, 30, 0.95);
+  color: #f2f2f2;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Luther theme label tooltip */
+:global([data-theme="luther"]) .labelTooltipContent {
+  background-color: rgba(61, 43, 31, 0.95);
+  color: #fff3d3;
+  border-color: rgba(255, 243, 211, 0.3);
+}

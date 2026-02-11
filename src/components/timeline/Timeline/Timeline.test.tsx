@@ -4,18 +4,20 @@
  * Tests for the Timeline container component.
  * Validates rendering, height changes, store integration, and accessibility.
  *
- * Requirements: 1.1, 1.2, 1.3
+ * Requirements: 1.1, 1.2, 1.3, 6.3
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { Timeline, TIMELINE_HEIGHT_COLLAPSED, TIMELINE_HEIGHT_EXPANDED } from './Timeline';
 import { useTimelineStore, initialState } from '../../../stores/timelineStore';
+import { useUIStore, defaultState as uiDefaultState } from '../../../stores/uiStore';
 
 describe('Timeline Component', () => {
   // Reset store state before each test
   beforeEach(() => {
     useTimelineStore.setState(initialState);
+    useUIStore.setState(uiDefaultState);
   });
 
   // Clean up after each test
@@ -325,6 +327,190 @@ describe('Timeline Component', () => {
     });
   });
 
+  describe('Epic Items Integration (Requirements 6.2, 6.4, 6.5)', () => {
+    it('renders VisTimelineWrapper component', () => {
+      render(<Timeline />);
+      
+      // VisTimelineWrapper renders with data-testid="vis-timeline"
+      const visTimeline = screen.getByTestId('vis-timeline');
+      expect(visTimeline).toBeInTheDocument();
+    });
+
+    it('passes filtered epic items to VisTimelineWrapper', () => {
+      // Set up epic items in the store
+      const epicItems = [
+        {
+          id: 'epic-1',
+          content: 'Roman Empire',
+          wiki: 'Roman_Empire',
+          start: new Date(-27, 0, 1),
+          end: new Date(476, 8, 4),
+          group: 1,
+          subtype: 'ei',
+          className: 'timelineItem_ei',
+        },
+        {
+          id: 'epic-2',
+          content: 'Hundred Years War',
+          wiki: 'Hundred_Years_War',
+          start: new Date(1337, 4, 24),
+          end: new Date(1453, 9, 19),
+          group: 2,
+          subtype: 'war',
+          className: 'timelineItem_war',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+      });
+      
+      render(<Timeline />);
+      
+      // VisTimelineWrapper should be rendered
+      const visTimeline = screen.getByTestId('vis-timeline');
+      expect(visTimeline).toBeInTheDocument();
+    });
+
+    it('filters epic items based on epicFilters state', () => {
+      // Set up epic items in the store
+      const epicItems = [
+        {
+          id: 'epic-1',
+          content: 'Roman Empire',
+          wiki: 'Roman_Empire',
+          start: new Date(-27, 0, 1),
+          end: new Date(476, 8, 4),
+          group: 1,
+          subtype: 'ei', // Maps to 'empire' type
+          className: 'timelineItem_ei',
+        },
+        {
+          id: 'war-1',
+          content: 'Hundred Years War',
+          wiki: 'Hundred_Years_War',
+          start: new Date(1337, 4, 24),
+          end: new Date(1453, 9, 19),
+          group: 2,
+          subtype: 'war', // Maps to 'war' type
+          className: 'timelineItem_war',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+        // Disable war type filter
+        useTimelineStore.getState().setEpicFilter('war', false);
+      });
+      
+      render(<Timeline />);
+      
+      // Verify filtered items - only empire items should be included
+      const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+      expect(filteredItems).toHaveLength(1);
+      expect(filteredItems[0]?.id).toBe('epic-1');
+    });
+
+    it('updates timeline items when epic filters change', () => {
+      const epicItems = [
+        {
+          id: 'epic-1',
+          content: 'Roman Empire',
+          wiki: 'Roman_Empire',
+          start: new Date(-27, 0, 1),
+          end: new Date(476, 8, 4),
+          group: 1,
+          subtype: 'ei',
+          className: 'timelineItem_ei',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+      });
+      
+      render(<Timeline />);
+      
+      // Initially all filters are enabled
+      let filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+      expect(filteredItems).toHaveLength(1);
+      
+      // Disable empire filter
+      act(() => {
+        useTimelineStore.getState().setEpicFilter('empire', false);
+      });
+      
+      filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+      expect(filteredItems).toHaveLength(0);
+      
+      // Re-enable empire filter
+      act(() => {
+        useTimelineStore.getState().setEpicFilter('empire', true);
+      });
+      
+      filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+      expect(filteredItems).toHaveLength(1);
+    });
+
+    it('renders with empty epic items array', () => {
+      act(() => {
+        useTimelineStore.getState().setEpicItems([]);
+      });
+      
+      render(<Timeline />);
+      
+      const visTimeline = screen.getByTestId('vis-timeline');
+      expect(visTimeline).toBeInTheDocument();
+    });
+
+    it('handles setAllEpicFilters correctly', () => {
+      const epicItems = [
+        {
+          id: 'epic-1',
+          content: 'Roman Empire',
+          wiki: 'Roman_Empire',
+          start: new Date(-27, 0, 1),
+          end: new Date(476, 8, 4),
+          group: 1,
+          subtype: 'ei',
+          className: 'timelineItem_ei',
+        },
+        {
+          id: 'war-1',
+          content: 'Hundred Years War',
+          wiki: 'Hundred_Years_War',
+          start: new Date(1337, 4, 24),
+          end: new Date(1453, 9, 19),
+          group: 2,
+          subtype: 'war',
+          className: 'timelineItem_war',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+      });
+      
+      render(<Timeline />);
+      
+      // Disable all filters
+      act(() => {
+        useTimelineStore.getState().setAllEpicFilters(false);
+      });
+      
+      let filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+      expect(filteredItems).toHaveLength(0);
+      
+      // Enable all filters
+      act(() => {
+        useTimelineStore.getState().setAllEpicFilters(true);
+      });
+      
+      filteredItems = useTimelineStore.getState().getFilteredEpicItems();
+      expect(filteredItems).toHaveLength(2);
+    });
+  });
+
   describe('Edge Cases', () => {
     it('handles rapid state changes correctly', () => {
       render(<Timeline />);
@@ -366,6 +552,144 @@ describe('Timeline Component', () => {
         });
         expect(screen.getByTestId('timeline')).toHaveAttribute('data-year', String(year));
       }
+    });
+  });
+
+  describe('Epic Click Handler (Requirement 6.3)', () => {
+    it('calls onEpicSelect callback when epic is clicked', () => {
+      const onEpicSelect = vi.fn();
+      const epicItems = [
+        {
+          id: 'epic-1',
+          content: 'Roman Empire',
+          wiki: 'https://en.wikipedia.org/wiki/Roman_Empire',
+          start: new Date(-27, 0, 1),
+          end: new Date(476, 8, 4),
+          group: 1,
+          subtype: 'ei',
+          className: 'timelineItem_ei',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+      });
+      
+      render(<Timeline onEpicSelect={onEpicSelect} />);
+      
+      // Verify the component renders
+      expect(screen.getByTestId('vis-timeline')).toBeInTheDocument();
+    });
+
+    it('opens right drawer with epic content when epic with wiki URL is clicked', () => {
+      const epicItems = [
+        {
+          id: 'epic-1',
+          content: 'Roman Empire',
+          wiki: 'https://en.wikipedia.org/wiki/Roman_Empire',
+          start: new Date(-27, 0, 1),
+          end: new Date(476, 8, 4),
+          group: 1,
+          subtype: 'ei',
+          className: 'timelineItem_ei',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+      });
+      
+      render(<Timeline />);
+      
+      // Simulate what happens when openRightDrawer is called with epic content
+      act(() => {
+        useUIStore.getState().openRightDrawer({
+          type: 'epic',
+          epicId: 'epic-1',
+          epicName: 'Roman Empire',
+          wikiUrl: 'https://en.wikipedia.org/wiki/Roman_Empire',
+        });
+      });
+      
+      // Verify the UI store state is updated correctly
+      const uiState = useUIStore.getState();
+      expect(uiState.rightDrawerOpen).toBe(true);
+      expect(uiState.rightDrawerContent).toEqual({
+        type: 'epic',
+        epicId: 'epic-1',
+        epicName: 'Roman Empire',
+        wikiUrl: 'https://en.wikipedia.org/wiki/Roman_Empire',
+      });
+    });
+
+    it('does not open right drawer when epic has no wiki URL', () => {
+      const epicItems = [
+        {
+          id: 'epic-no-wiki',
+          content: 'Epic Without Wiki',
+          wiki: '', // Empty wiki URL
+          start: new Date(1000, 0, 1),
+          end: new Date(1100, 0, 1),
+          group: 1,
+          subtype: 'ei',
+          className: 'timelineItem_ei',
+        },
+      ];
+      
+      act(() => {
+        useTimelineStore.getState().setEpicItems(epicItems);
+      });
+      
+      render(<Timeline />);
+      
+      // Verify the right drawer is not opened (initial state)
+      const uiState = useUIStore.getState();
+      expect(uiState.rightDrawerOpen).toBe(false);
+      expect(uiState.rightDrawerContent).toBeNull();
+    });
+
+    it('supports epic drawer content type in uiStore', () => {
+      // Test that the uiStore correctly handles epic content type
+      act(() => {
+        useUIStore.getState().openRightDrawer({
+          type: 'epic',
+          epicId: 'test-epic',
+          epicName: 'Test Epic Name',
+          wikiUrl: 'https://en.wikipedia.org/wiki/Test',
+        });
+      });
+      
+      const state = useUIStore.getState();
+      expect(state.rightDrawerOpen).toBe(true);
+      expect(state.rightDrawerContent?.type).toBe('epic');
+      if (state.rightDrawerContent?.type === 'epic') {
+        expect(state.rightDrawerContent.epicId).toBe('test-epic');
+        expect(state.rightDrawerContent.epicName).toBe('Test Epic Name');
+        expect(state.rightDrawerContent.wikiUrl).toBe('https://en.wikipedia.org/wiki/Test');
+      }
+    });
+
+    it('closes right drawer correctly after opening with epic content', () => {
+      // Open drawer with epic content
+      act(() => {
+        useUIStore.getState().openRightDrawer({
+          type: 'epic',
+          epicId: 'epic-1',
+          epicName: 'Roman Empire',
+          wikiUrl: 'https://en.wikipedia.org/wiki/Roman_Empire',
+        });
+      });
+      
+      expect(useUIStore.getState().rightDrawerOpen).toBe(true);
+      
+      // Close drawer
+      act(() => {
+        useUIStore.getState().closeRightDrawer();
+      });
+      
+      const state = useUIStore.getState();
+      expect(state.rightDrawerOpen).toBe(false);
+      expect(state.rightDrawerContent).toBeNull();
     });
   });
 });

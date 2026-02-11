@@ -1162,7 +1162,7 @@ test.describe('Wikipedia Link Correctness Tests', () => {
 
       if (iframeCount > 0) {
         const src = await iframe.getAttribute('src');
-        console.log(`   ✅ Wikipedia iframe found with src: ${src?.substring(0, 80)}...`);
+        console.log(`   ✅ Wikipedia iframe found with src: ${src ? src.substring(0, 80) : 'unknown'}...`);
         expect(src).toContain('wikipedia.org');
       } else {
         console.log('   ⚠️ Wikipedia iframe not found in right drawer');
@@ -1196,7 +1196,7 @@ test.describe('Wikipedia Link Correctness Tests', () => {
     const iframe = page.locator('iframe[src*="wikipedia"]');
     if ((await iframe.count()) > 0) {
       const src = await iframe.getAttribute('src');
-      console.log(`   📖 Wikipedia article: ${src}`);
+      console.log(`   📖 Wikipedia article: ${src ?? 'unknown'}`);
       expect(src).toContain('wikipedia.org');
     }
   });
@@ -1237,7 +1237,7 @@ test.describe('Wikipedia Link Correctness Tests', () => {
     const iframe = page.locator('iframe[src*="wikipedia"]');
     if ((await iframe.count()) > 0) {
       const src = await iframe.getAttribute('src');
-      console.log(`   📖 Religion Wikipedia article: ${src}`);
+      console.log(`   📖 Religion Wikipedia article: ${src ?? 'unknown'}`);
       expect(src).toContain('wikipedia.org');
     }
   });
@@ -1287,7 +1287,7 @@ test.describe('Wikipedia Link Correctness Tests', () => {
     const iframe = page.locator('iframe[src*="wikipedia"]');
     if ((await iframe.count()) > 0) {
       const src = await iframe.getAttribute('src');
-      console.log(`   📖 ReligionGeneral Wikipedia article: ${src}`);
+      console.log(`   📖 ReligionGeneral Wikipedia article: ${src ?? 'unknown'}`);
       expect(src).toContain('wikipedia.org');
       // The URL should contain a general religion term, not a specific denomination
     }
@@ -1374,7 +1374,7 @@ test.describe('Province Click Viewport Stability Tests', () => {
       if (pos) {
         await page.mouse.click(pos.x, pos.y);
         await page.waitForTimeout(500);
-        console.log(`   🖱️ Click ${i + 1}: (${Math.round(pos.x)}, ${Math.round(pos.y)})`);
+        console.log(`   🖱️ Click ${String(i + 1)}: (${String(Math.round(pos.x))}, ${String(Math.round(pos.y))})`);
       }
     }
 

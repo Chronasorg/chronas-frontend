@@ -140,6 +140,36 @@ function getMarkerDescription(marker: Marker): string | undefined {
 }
 
 /**
+ * Constructs the full Wikipedia URL for a marker.
+ * 
+ * Production behavior (from chronas/src/components/content/ArticleIframe.js):
+ * - If marker.wiki exists and is already a full URL, use it
+ * - If marker.wiki exists but is just an article name, prepend Wikipedia base URL
+ * - If marker.wiki is undefined, use marker._id as the article name
+ * 
+ * @param marker - The marker to get Wikipedia URL for
+ * @returns Full Wikipedia URL or undefined if no article available
+ */
+function getMarkerWikiUrl(marker: Marker): string | undefined {
+  const WIKIPEDIA_BASE_URL = 'https://en.wikipedia.org/wiki/';
+  
+  // Get the wiki identifier from marker.wiki or marker._id
+  const wikiId = marker.wiki ?? marker._id;
+  
+  if (!wikiId) {
+    return undefined;
+  }
+  
+  // Check if it's already a full URL
+  if (wikiId.startsWith('http://') || wikiId.startsWith('https://')) {
+    return wikiId;
+  }
+  
+  // Construct full Wikipedia URL from article name
+  return `${WIKIPEDIA_BASE_URL}${wikiId}`;
+}
+
+/**
  * MarkerDrawerContent Component
  *
  * Displays detailed marker information in the right drawer panel.
@@ -179,6 +209,7 @@ export const MarkerDrawerContent: React.FC<MarkerDrawerContentProps> = ({
   const typeName = getMarkerTypeName(marker.type);
   const formattedYear = formatYear(marker.year);
   const description = getMarkerDescription(marker);
+  const wikiUrl = getMarkerWikiUrl(marker);
 
   return (
     <div className={styles['container']} data-testid="marker-drawer-content">
@@ -238,7 +269,7 @@ export const MarkerDrawerContent: React.FC<MarkerDrawerContentProps> = ({
         aria-label="Wikipedia article"
       >
         <ArticleIframe
-          url={marker.wiki}
+          url={wikiUrl}
           title={`Wikipedia article for ${marker.name}`}
         />
       </section>

@@ -64,6 +64,22 @@ export interface ViewportState {
 export type AreaColorDimension = 'ruler' | 'religion' | 'religionGeneral' | 'culture' | 'population';
 
 /**
+ * Basemap type for map background style.
+ * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+ */
+export type BasemapType = 'topographic' | 'watercolor' | 'none';
+
+/**
+ * Mapping of basemap types to Mapbox style URLs.
+ * Requirement 1.2: WHEN the basemap state changes, THE MapView SHALL update the map style
+ */
+export const BASEMAP_STYLES: Record<BasemapType, string> = {
+  topographic: 'mapbox://styles/mapbox/outdoors-v12',
+  watercolor: 'mapbox://styles/stamen/cj3hzkdwfaw1v2sqmrlvmdqjf', // Stamen watercolor style
+  none: 'mapbox://styles/mapbox/empty-v9', // Minimal style with no features
+};
+
+/**
  * Options for the flyTo animation action.
  * Requirement 2.6: THE MapStore SHALL provide a flyTo action that animates
  * the viewport to a target location
@@ -95,6 +111,12 @@ export type LayerVisibility = Record<AreaColorDimension, boolean>;
 export interface MapState {
   /** Current viewport state */
   viewport: ViewportState;
+  /** Selected basemap style - Requirement 1.1 */
+  basemap: BasemapType;
+  /** Whether province borders are visible - Requirement 2.1 */
+  showProvinceBorders: boolean;
+  /** Whether population-based opacity is enabled - Requirement 3.1 */
+  populationOpacity: boolean;
   /** Active color dimension for area coloring */
   activeColor: AreaColorDimension;
   /** Active label dimension for entity labels - Requirement 6.4, 6.5 */
@@ -139,6 +161,10 @@ export interface MapState {
   markers: Marker[];
   /** Whether markers are currently being loaded - Requirement 5.1 */
   isLoadingMarkers: boolean;
+  /** Maximum markers to fetch from API - Requirement 4.1, 4.5 */
+  markerLimit: number;
+  /** Whether marker clustering is enabled - Requirement 5.1 */
+  clusterMarkers: boolean;
   /** Marker filter state for toggling visibility by type - Requirement 6.3 */
   markerFilters: MarkerFilterState;
   /** Label data for entity labels on the map - Requirement 7.1 */
@@ -207,6 +233,47 @@ export interface MapActions {
    * @param viewport - Partial viewport state to merge
    */
   setViewport: (viewport: Partial<ViewportState>) => void;
+
+  /**
+   * Sets the basemap style for the map.
+   * Requirement 1.1: WHEN the user selects a basemap option, THE MapStore SHALL update the basemap state
+   *
+   * @param basemap - The basemap style to set ('topographic', 'watercolor', or 'none')
+   */
+  setBasemap: (basemap: BasemapType) => void;
+
+  /**
+   * Sets whether province borders are visible.
+   * Requirement 2.1: WHEN the user toggles the "Show Provinces" checkbox, THE MapStore SHALL update the showProvinceBorders state
+   *
+   * @param show - Whether province borders should be visible
+   */
+  setShowProvinceBorders: (show: boolean) => void;
+
+  /**
+   * Sets whether population-based opacity is enabled.
+   * Requirement 3.1: WHEN the user toggles the "Opacity by Population" checkbox, THE MapStore SHALL update the populationOpacity state
+   *
+   * @param enabled - Whether population-based opacity should be enabled
+   */
+  setPopulationOpacity: (enabled: boolean) => void;
+
+  /**
+   * Sets the maximum number of markers to fetch from the API.
+   * Requirement 4.1: WHEN the user adjusts the marker limit slider, THE MapStore SHALL update the markerLimit state
+   * Requirement 4.5: THE MapStore SHALL default markerLimit to 5000
+   *
+   * @param limit - The maximum number of markers (clamped to [0, 10000])
+   */
+  setMarkerLimit: (limit: number) => void;
+
+  /**
+   * Sets whether marker clustering is enabled.
+   * Requirement 5.1: WHEN the user toggles the "Cluster Markers" checkbox, THE MapStore SHALL update the clusterMarkers state
+   *
+   * @param enabled - Whether marker clustering should be enabled
+   */
+  setClusterMarkers: (enabled: boolean) => void;
 
   /**
    * Initiates a flyTo animation to a target location.
@@ -530,15 +597,87 @@ export const defaultLayerVisibility: LayerVisibility = {
  * Default marker filter state.
  * All marker types are visible by default.
  * Requirement 6.3: THE Map_Store SHALL maintain the current marker filter state.
+ * Uses individual API marker type codes to match production behavior.
  */
 export const defaultMarkerFilters: MarkerFilterState = {
+  // Legacy grouped categories (kept for backwards compatibility)
   battle: true,
   city: true,
   capital: true,
   person: true,
   event: true,
   other: true,
+  // Individual marker types matching production
+  ar: true,   // Artifact
+  b: true,    // Battle
+  si: true,   // Siege
+  ca: true,   // Capital
+  c: true,    // City
+  l: true,    // Castle/Landmark
+  ai: true,   // Landmark/Architecture
+  m: true,    // Military
+  p: true,    // Politician/Person
+  e: true,    // Explorer/Event
+  s: true,    // Scientists
+  a: true,    // Artists
+  r: true,    // Religious
+  at: true,   // Athletes
+  op: true,   // Unclassified
+  o: true,    // Unknown/Organization
+  h: true,    // Historical figure
 };
+
+/**
+ * Mapping from API short marker type codes to filter category names.
+ * The API returns single-letter codes (p, s, b, etc.) but our filter state
+ * uses category names (person, battle, etc.).
+ * 
+ * Categories:
+ * - person: p (person), s (scholar), r (religious figure), h (historical figure)
+ * - battle: b (battle), m (military)
+ * - city: c (city)
+ * - capital: ca (capital)
+ * - event: e (event)
+ * - other: a (artist), ar (artwork), ai (architecture), o (organization), 
+ *          si (site), l (landmark), and any unknown types
+ */
+export const MARKER_TYPE_TO_FILTER_CATEGORY: Record<string, keyof MarkerFilterState> = {
+  // Person category
+  p: 'person',
+  s: 'person',  // scholar -> person
+  r: 'person',  // religious figure -> person
+  h: 'person',  // historical figure -> person
+  // Battle category
+  b: 'battle',
+  m: 'battle',  // military -> battle
+  // City category
+  c: 'city',
+  // Capital category
+  ca: 'capital',
+  // Event category
+  e: 'event',
+  // Other category (art, architecture, organizations, sites, landmarks)
+  a: 'other',   // artist
+  ar: 'other',  // artwork
+  ai: 'other',  // architecture
+  o: 'other',   // organization
+  si: 'other',  // site
+  l: 'other',   // landmark
+  at: 'other',  // athlete
+  op: 'other',  // unclassified
+};
+
+/**
+ * Gets the filter category for a marker type.
+ * Maps API short codes to filter category names.
+ * 
+ * @param type - The marker type from the API (e.g., 'p', 'b', 's')
+ * @returns The filter category name (e.g., 'person', 'battle', 'other')
+ */
+export function getMarkerFilterCategory(type: string): keyof MarkerFilterState {
+  const normalizedType = type.toLowerCase();
+  return MARKER_TYPE_TO_FILTER_CATEGORY[normalizedType] ?? 'other';
+}
 
 /**
  * Performance threshold for cached year switches in milliseconds.
@@ -551,6 +690,9 @@ export const CACHED_SWITCH_THRESHOLD_MS = 100;
  */
 export const initialState: MapState = {
   viewport: { ...defaultViewport },
+  basemap: 'topographic',
+  showProvinceBorders: true,
+  populationOpacity: false,
   activeColor: 'ruler',
   activeLabel: 'ruler',
   colorLabelLocked: true,
@@ -573,6 +715,8 @@ export const initialState: MapState = {
   isLoadingMetadata: false,
   markers: [],
   isLoadingMarkers: false,
+  markerLimit: 5000,
+  clusterMarkers: false,
   markerFilters: { ...defaultMarkerFilters },
   labelData: null,
   areaDataAbortController: null,
@@ -639,6 +783,17 @@ export function isValidColorDimension(dimension: unknown): dimension is AreaColo
     dimension === 'culture' ||
     dimension === 'population'
   );
+}
+
+/**
+ * Validates that a basemap type is one of the allowed values.
+ * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+ *
+ * @param basemap - The basemap type to validate
+ * @returns true if the basemap type is valid
+ */
+export function isValidBasemapType(basemap: unknown): basemap is BasemapType {
+  return basemap === 'topographic' || basemap === 'watercolor' || basemap === 'none';
 }
 
 /**
@@ -781,6 +936,90 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
       return { viewport: newViewport };
     });
+  },
+
+  /**
+   * Sets the basemap style for the map.
+   * Requirement 1.1: WHEN the user selects a basemap option, THE MapStore SHALL update the basemap state
+   *
+   * @param basemap - The basemap style to set ('topographic', 'watercolor', or 'none')
+   */
+  setBasemap: (basemap: BasemapType) => {
+    // Validate basemap is a valid type
+    if (!isValidBasemapType(basemap)) {
+      console.warn(`setBasemap: Invalid basemap type "${String(basemap)}"`);
+      return;
+    }
+    
+    set({ basemap });
+  },
+
+  /**
+   * Sets whether province borders are visible.
+   * Requirement 2.1: WHEN the user toggles the "Show Provinces" checkbox, THE MapStore SHALL update the showProvinceBorders state
+   *
+   * @param show - Whether province borders should be visible
+   */
+  setShowProvinceBorders: (show: boolean) => {
+    // Validate show is a boolean
+    if (typeof show !== 'boolean') {
+      console.warn(`setShowProvinceBorders: Invalid value "${String(show)}", expected boolean`);
+      return;
+    }
+    
+    set({ showProvinceBorders: show });
+  },
+
+  /**
+   * Sets whether population-based opacity is enabled.
+   * Requirement 3.1: WHEN the user toggles the "Opacity by Population" checkbox, THE MapStore SHALL update the populationOpacity state
+   *
+   * @param enabled - Whether population-based opacity should be enabled
+   */
+  setPopulationOpacity: (enabled: boolean) => {
+    // Validate enabled is a boolean
+    if (typeof enabled !== 'boolean') {
+      console.warn(`setPopulationOpacity: Invalid value "${String(enabled)}", expected boolean`);
+      return;
+    }
+    
+    set({ populationOpacity: enabled });
+  },
+
+  /**
+   * Sets the maximum number of markers to fetch from the API.
+   * Requirement 4.1: WHEN the user adjusts the marker limit slider, THE MapStore SHALL update the markerLimit state
+   * Requirement 4.5: THE MapStore SHALL default markerLimit to 5000
+   *
+   * @param limit - The maximum number of markers (clamped to [0, 10000])
+   */
+  setMarkerLimit: (limit: number) => {
+    // Validate limit is a number
+    if (typeof limit !== 'number' || !Number.isFinite(limit)) {
+      console.warn(`setMarkerLimit: Invalid value "${String(limit)}", expected number`);
+      return;
+    }
+    
+    // Clamp to valid range [0, 10000]
+    const clampedLimit = Math.max(0, Math.min(10000, Math.round(limit)));
+    
+    set({ markerLimit: clampedLimit });
+  },
+
+  /**
+   * Sets whether marker clustering is enabled.
+   * Requirement 5.1: WHEN the user toggles the "Cluster Markers" checkbox, THE MapStore SHALL update the clusterMarkers state
+   *
+   * @param enabled - Whether marker clustering should be enabled
+   */
+  setClusterMarkers: (enabled: boolean) => {
+    // Validate enabled is a boolean
+    if (typeof enabled !== 'boolean') {
+      console.warn(`setClusterMarkers: Invalid value "${String(enabled)}", expected boolean`);
+      return;
+    }
+    
+    set({ clusterMarkers: enabled });
   },
 
   /**
@@ -1632,6 +1871,14 @@ export const useMapStore = create<MapStore>((set, get) => ({
     }
 
     const state = get();
+    const { markerLimit } = state;
+
+    // Handle limit=0 case - skip API call and return empty array
+    // Requirement 4.4: WHEN markerLimit is 0, THE MapView SHALL not display any markers
+    if (markerLimit === 0) {
+      set({ markers: [], isLoadingMarkers: false });
+      return [];
+    }
 
     // Cancel any in-flight request - Requirement 9.5
     if (state.markersAbortController) {
@@ -1644,8 +1891,10 @@ export const useMapStore = create<MapStore>((set, get) => ({
     set({ isLoadingMarkers: true, markersAbortController: abortController });
 
     try {
-      // Fetch from /v1/markers?year={year} endpoint - Requirement 5.1
-      const endpoint = MARKERS.GET_BY_YEAR(year);
+      // Fetch from /v1/markers?year={year}&limit={markerLimit} endpoint
+      // Requirement 4.2: WHEN markers are fetched from the API, THE MapStore SHALL include the markerLimit as a query parameter
+      // Requirement 4.3: THE API request SHALL use the format `/markers?year={year}&limit={markerLimit}`
+      const endpoint = MARKERS.GET_BY_YEAR_WITH_LIMIT(year, markerLimit);
       const data = await apiClient.get<Marker[]>(endpoint, { signal: abortController.signal });
 
       // Validate response is an array
@@ -1705,18 +1954,13 @@ export const useMapStore = create<MapStore>((set, get) => ({
   /**
    * Sets the marker filter state for a specific marker type.
    * Requirement 6.3: THE Map_Store SHALL maintain the current marker filter state.
+   * Supports both individual API types (p, b, ca, etc.) and legacy categories.
    *
-   * @param type - The marker type to filter
+   * @param type - The marker type to filter (API code or category name)
    * @param enabled - Whether the marker type should be visible
    */
   setMarkerFilter: (type: MarkerType, enabled: boolean) => {
-    // Validate type is a valid marker type
-    const validTypes: MarkerType[] = ['battle', 'city', 'capital', 'person', 'event', 'other'];
-    if (!validTypes.includes(type)) {
-      console.warn(`setMarkerFilter: Invalid marker type "${type}"`);
-      return;
-    }
-
+    // Accept any string type - the filter state uses index signature
     set((state) => ({
       markerFilters: {
         ...state.markerFilters,
@@ -1728,6 +1972,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
   /**
    * Gets the filtered markers based on current filter state.
    * Requirement 6.4: WHEN markers are fetched, THE MapView SHALL apply the current filter.
+   * Checks both individual marker type and legacy category filters.
    *
    * @returns Array of markers that pass the current filter
    */
@@ -1736,9 +1981,18 @@ export const useMapStore = create<MapStore>((set, get) => ({
     const { markers, markerFilters } = state;
 
     // Filter markers based on current filter state
+    // First check if the individual type is filtered, then fall back to category
     return markers.filter((marker) => {
-      const markerType = marker.type;
-      return markerFilters[markerType];
+      const markerType = marker.type.toLowerCase();
+      
+      // Check individual type filter first (e.g., 'p', 'b', 'ca')
+      if (markerFilters[markerType] !== undefined) {
+        return markerFilters[markerType];
+      }
+      
+      // Fall back to category filter (e.g., 'person', 'battle')
+      const filterCategory = getMarkerFilterCategory(markerType);
+      return markerFilters[filterCategory];
     });
   },
 

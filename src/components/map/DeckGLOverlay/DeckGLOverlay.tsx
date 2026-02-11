@@ -219,26 +219,40 @@ export interface IconEntry {
 export type IconMapping = Record<string, IconEntry>;
 
 /**
+ * Icon dimensions for themed atlas (from production properties.js)
+ */
+const ICON_WIDTH = 135;
+const ICON_HEIGHT = 127;
+
+/**
  * Basic icon mapping for themed markers
+ * Positions from production iconMapping['them'] in properties.js
  */
 export const themedIconMapping: IconMapping = {
-  cp: { x: 0, y: 0, width: 64, height: 64, anchorY: 64, mask: true },
-  c0: { x: 64, y: 0, width: 64, height: 64, anchorY: 64, mask: false },
-  c: { x: 128, y: 0, width: 64, height: 64, anchorY: 64, mask: false },
-  ca: { x: 192, y: 0, width: 64, height: 64, anchorY: 64, mask: false },
-  b: { x: 0, y: 64, width: 64, height: 64, anchorY: 64, mask: false },
-  si: { x: 64, y: 64, width: 64, height: 64, anchorY: 64, mask: false },
-  l: { x: 128, y: 64, width: 64, height: 64, anchorY: 64, mask: false },
-  m: { x: 192, y: 64, width: 64, height: 64, anchorY: 64, mask: false },
-  p: { x: 0, y: 128, width: 64, height: 64, anchorY: 64, mask: false },
-  e: { x: 64, y: 128, width: 64, height: 64, anchorY: 64, mask: false },
-  s: { x: 128, y: 128, width: 64, height: 64, anchorY: 64, mask: false },
-  a: { x: 192, y: 128, width: 64, height: 64, anchorY: 64, mask: false },
-  r: { x: 0, y: 192, width: 64, height: 64, anchorY: 64, mask: false },
-  at: { x: 64, y: 192, width: 64, height: 64, anchorY: 64, mask: false },
-  op: { x: 128, y: 192, width: 64, height: 64, anchorY: 64, mask: false },
-  o: { x: 192, y: 192, width: 64, height: 64, anchorY: 64, mask: false },
-  ar: { x: 0, y: 256, width: 64, height: 64, anchorY: 64, mask: false },
+  // Row 0: r, p, e (and '1' for cluster)
+  r: { x: ICON_WIDTH, y: 0, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  p: { x: 2 * ICON_WIDTH, y: 0, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  e: { x: 3 * ICON_WIDTH, y: 0, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  // Row 1: a, s, op (and '6' for cluster)
+  a: { x: 0, y: ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  s: { x: 2 * ICON_WIDTH, y: ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  op: { x: 3 * ICON_WIDTH, y: ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  // Row 2: at, m (and '9', '12' for cluster)
+  at: { x: ICON_WIDTH, y: 2 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  m: { x: 2 * ICON_WIDTH, y: 2 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  // Row 3: ar, b, si, cp
+  ar: { x: 0, y: 3 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  b: { x: ICON_WIDTH, y: 3 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  si: { x: 2 * ICON_WIDTH, y: 3 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  cp: { x: 3 * ICON_WIDTH, y: 3 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: true },
+  // Row 4: ca, c0, l, o (and '18' for cluster)
+  ca: { x: 0, y: 4 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  c0: { x: ICON_WIDTH, y: 4 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  l: { x: 2 * ICON_WIDTH, y: 4 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  h: { x: 2 * ICON_WIDTH, y: 4 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false }, // Same as l
+  o: { x: 3 * ICON_WIDTH, y: 4 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
+  // Row 5: c
+  c: { x: 0, y: 5 * ICON_HEIGHT, width: ICON_WIDTH, height: ICON_HEIGHT, anchorY: ICON_HEIGHT, mask: false },
 };
 
 /**
@@ -864,7 +878,18 @@ export function DeckGLOverlay(props: DeckGLOverlayProps) {
     }
 
     // Add screen coordinates to markers for clustering
-    const markersWithCoords = markerData.map((marker) => {
+    // coo is typed as [number, number], but runtime data may be invalid
+    // Use type assertion to allow runtime validation
+    const validMarkers = markerData.filter((marker) => {
+      const coo = marker.coo as unknown;
+      if (!coo || !Array.isArray(coo) || coo.length < 2) {
+        return false;
+      }
+      const [lng, lat] = coo as [unknown, unknown];
+      return typeof lng === 'number' && typeof lat === 'number' && !isNaN(lng) && !isNaN(lat);
+    });
+
+    const markersWithCoords = validMarkers.map((marker) => {
       // Simple mercator projection for screen coordinates
       // This is a simplified version - in production, use WebMercatorViewport
       const x = ((marker.coo[0] + 180) / 360) * viewport.width;
@@ -943,7 +968,8 @@ export function DeckGLOverlay(props: DeckGLOverlayProps) {
    * Requirements: 9.4
    */
   const highlightColor = useMemo(() => {
-    return rgbaToArray(theme.highlightColors[0]);
+    const colorStr = theme.highlightColors[0];
+    return rgbaToArray(colorStr);
   }, [theme.highlightColors]);
 
   /**

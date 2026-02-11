@@ -40,6 +40,13 @@ const sampleMarkerContent: DrawerContent = {
   },
 };
 
+const sampleEpicContent: DrawerContent = {
+  type: 'epic',
+  epicId: 'roman-empire',
+  epicName: 'Roman Empire',
+  wikiUrl: 'https://en.wikipedia.org/wiki/Roman_Empire',
+};
+
 describe('RightDrawer', () => {
   const mockOnClose = vi.fn();
 
@@ -383,6 +390,45 @@ describe('RightDrawer', () => {
       );
 
       expect(screen.getByTestId('right-drawer-title')).toHaveTextContent('No Wiki Province');
+    });
+
+    it('should handle epic content type correctly (Requirement 6.3)', () => {
+      render(
+        <RightDrawer
+          isOpen={true}
+          content={sampleEpicContent}
+          onClose={mockOnClose}
+        />
+      );
+
+      expect(screen.getByTestId('right-drawer-title')).toHaveTextContent('Roman Empire');
+    });
+
+    it('should display ArticleIframe for epic content', () => {
+      render(
+        <RightDrawer
+          isOpen={true}
+          content={sampleEpicContent}
+          onClose={mockOnClose}
+        />
+      );
+
+      // ArticleIframe renders with data-testid="article-iframe-container"
+      expect(screen.getByTestId('article-iframe-container')).toBeInTheDocument();
+    });
+
+    it('should pass correct wikiUrl to ArticleIframe for epic content', () => {
+      render(
+        <RightDrawer
+          isOpen={true}
+          content={sampleEpicContent}
+          onClose={mockOnClose}
+        />
+      );
+
+      // The iframe should be rendered with the wiki URL
+      const iframe = screen.getByTestId('article-iframe');
+      expect(iframe).toHaveAttribute('src', 'https://en.wikipedia.org/wiki/Roman_Empire');
     });
   });
 });

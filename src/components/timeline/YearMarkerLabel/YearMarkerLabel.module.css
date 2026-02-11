@@ -1,0 +1,79 @@
+/**
+ * YearMarkerLabel Styles
+ * 
+ * Styles for the year label displayed on the timeline marker.
+ * Matches production .currentYearLabel styling from mapTimeline.scss
+ */
+
+.yearLabel {
+  /* Reset button styles */
+  pointer-events: all;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  
+  /* Typography - matches production */
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--chronas-fore-2, #494949);
+  text-shadow: 0.03em 0 4px white, 0.03em 0 4px white, 0.03em 0 4px white, 0.03em 0 4px white;
+  
+  /* Positioning */
+  position: absolute;
+  top: 0;
+  left: 4px;
+  margin-top: 8px;
+  z-index: 1000;
+  
+  /* Remove focus outline but keep accessible */
+  outline: none;
+}
+
+.yearLabel:hover {
+  color: var(--chronas-highlight, #4a90d9);
+}
+
+.yearLabel:focus-visible {
+  outline: 2px solid var(--chronas-highlight, #4a90d9);
+  outline-offset: 2px;
+}
+
+/* Suggested year indicator (appears above main year on hover) */
+.suggestedYear {
+  position: absolute;
+  margin-top: -36px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+.arrowIcon {
+  height: 32px;
+  width: 32px;
+  position: absolute;
+  top: 5px;
+  left: -6px;
+  color: rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.suggestedYearText {
+  font-size: 18px;
+  position: absolute;
+  left: 0;
+  top: -8px;
+  color: var(--chronas-fore-2, #494949);
+  text-shadow: 0.03em 0 4px white, 0.03em 0 4px white;
+}
+
+/* Dark theme adjustments */
+:global([data-theme="dark"]) .yearLabel {
+  color: var(--chronas-fore-2, #e0e0e0);
+  text-shadow: 0.03em 0 4px rgba(0, 0, 0, 0.8), 0.03em 0 4px rgba(0, 0, 0, 0.8);
+}
+
+:global([data-theme="dark"]) .suggestedYearText {
+  color: var(--chronas-fore-2, #e0e0e0);
+  text-shadow: 0.03em 0 4px rgba(0, 0, 0, 0.8);
+}

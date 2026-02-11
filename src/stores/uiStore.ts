@@ -13,11 +13,12 @@ import type { Marker } from '@/api/types';
 
 /**
  * Right drawer content types
- * Requirements: 2.1, 3.1, 4.8
+ * Requirements: 2.1, 3.1, 4.8, 6.3
  */
 export type DrawerContent =
   | { type: 'area'; provinceId: string; provinceName: string; wikiUrl?: string }
-  | { type: 'marker'; marker: Marker };
+  | { type: 'marker'; marker: Marker }
+  | { type: 'epic'; epicId: string; epicName: string; wikiUrl: string };
 
 /**
  * Applies the theme to the document element by setting the data-theme attribute.

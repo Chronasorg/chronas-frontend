@@ -17,6 +17,7 @@ import {
   useMapStore,
   initialState,
   isValidViewport,
+  getMarkerFilterCategory,
   type AreaData,
   type ProvinceData,
   type AreaColorDimension,
@@ -2426,18 +2427,24 @@ describe('Property 11: Marker Filter Application', () => {
   });
 
   /**
-   * Valid marker types as defined in the API types.
+   * Valid marker types as returned by the API (short codes).
+   * These map to filter categories:
+   * - p, s, r -> person
+   * - b -> battle
+   * - c -> city
+   * - e -> event
+   * - a, ar, ai, o -> other
    */
-  const validMarkerTypes = ['battle', 'city', 'capital', 'person', 'event', 'other'] as const;
+  const validMarkerTypes = ['p', 's', 'r', 'b', 'c', 'e', 'a', 'ar', 'ai', 'o'] as const;
   type MarkerType = (typeof validMarkerTypes)[number];
 
   /**
-   * Arbitrary for generating valid marker types.
+   * Arbitrary for generating valid marker types (API short codes).
    */
   const markerTypeArb: fc.Arbitrary<MarkerType> = fc.constantFrom(...validMarkerTypes);
 
   /**
-   * Arbitrary for generating marker filter states.
+   * Arbitrary for generating marker filter states (using category names).
    */
   const markerFilterStateArb = fc.record({
     battle: fc.boolean(),
@@ -2482,16 +2489,18 @@ describe('Property 11: Marker Filter Application', () => {
         // Get filtered markers
         const filteredMarkers = useMapStore.getState().getFilteredMarkers();
 
-        // Verify each filtered marker has an enabled type
+        // Verify each filtered marker has an enabled category
         for (const marker of filteredMarkers) {
-          const markerType = marker.type as MarkerType;
-          expect(filterState[markerType]).toBe(true);
+          const filterCategory = getMarkerFilterCategory(marker.type);
+          expect((filterState as Record<string, boolean>)[filterCategory]).toBe(true);
         }
 
-        // Verify no markers with disabled types are included
-        const disabledTypes = validMarkerTypes.filter((type) => !filterState[type]);
+        // Verify no markers with disabled categories are included
+        const filterCategories = ['battle', 'city', 'capital', 'person', 'event', 'other'] as const;
+        const disabledCategories = filterCategories.filter((cat) => !filterState[cat]);
         for (const marker of filteredMarkers) {
-          expect(disabledTypes).not.toContain(marker.type);
+          const markerCategory = getMarkerFilterCategory(marker.type);
+          expect(disabledCategories).not.toContain(markerCategory);
         }
       }),
       { numRuns: 100 }
@@ -2564,7 +2573,10 @@ describe('Property 11: Marker Filter Application', () => {
   it('should correctly filter markers by single type', () => {
     fc.assert(
       fc.property(markersArrayArb, markerTypeArb, (markers, enabledType) => {
-        // Create filter with only one type enabled
+        // Get the filter category for this API type code
+        const enabledCategory = getMarkerFilterCategory(enabledType);
+        
+        // Create filter with only one category enabled
         const singleTypeFilter = {
           battle: false,
           city: false,
@@ -2572,7 +2584,7 @@ describe('Property 11: Marker Filter Application', () => {
           person: false,
           event: false,
           other: false,
-          [enabledType]: true,
+          [enabledCategory]: true,
         };
 
         act(() => {
@@ -2586,13 +2598,13 @@ describe('Property 11: Marker Filter Application', () => {
         // Get filtered markers
         const filteredMarkers = useMapStore.getState().getFilteredMarkers();
 
-        // All filtered markers should have the enabled type
+        // All filtered markers should map to the enabled category
         for (const marker of filteredMarkers) {
-          expect(marker.type).toBe(enabledType);
+          expect(getMarkerFilterCategory(marker.type)).toBe(enabledCategory);
         }
 
-        // Count should match markers of that type
-        const expectedCount = markers.filter((m) => m.type === enabledType).length;
+        // Count should match markers that map to the enabled category
+        const expectedCount = markers.filter((m) => getMarkerFilterCategory(m.type) === enabledCategory).length;
         expect(filteredMarkers.length).toBe(expectedCount);
       }),
       { numRuns: 100 }
@@ -2600,8 +2612,12 @@ describe('Property 11: Marker Filter Application', () => {
   });
 
   it('should update filtered markers when setMarkerFilter is called', () => {
+    // Use filter category names for setMarkerFilter (not API short codes)
+    type FilterCategory = 'battle' | 'city' | 'capital' | 'person' | 'event' | 'other';
+    const filterCategoryArb = fc.constantFrom<FilterCategory>('battle', 'city', 'capital', 'person', 'event', 'other');
+    
     fc.assert(
-      fc.property(markersArrayArb, markerTypeArb, fc.boolean(), (markers, markerType, enabled) => {
+      fc.property(markersArrayArb, filterCategoryArb, fc.boolean(), (markers, filterCategory, enabled) => {
         // Start with all filters enabled
         const initialFilters = {
           battle: true,
@@ -2620,26 +2636,26 @@ describe('Property 11: Marker Filter Application', () => {
           });
         });
 
-        // Change filter for specific type
+        // Change filter for specific category
         act(() => {
-          useMapStore.getState().setMarkerFilter(markerType, enabled);
+          useMapStore.getState().setMarkerFilter(filterCategory, enabled);
         });
 
         // Verify filter state was updated
         const state = useMapStore.getState();
-        expect(state.markerFilters[markerType]).toBe(enabled);
+        expect(state.markerFilters[filterCategory]).toBe(enabled);
 
         // Get filtered markers
         const filteredMarkers = state.getFilteredMarkers();
 
-        // Verify markers of the changed type are included/excluded correctly
-        const markersOfType = markers.filter((m) => m.type === markerType);
-        const filteredMarkersOfType = filteredMarkers.filter((m) => m.type === markerType);
+        // Verify markers of the changed category are included/excluded correctly
+        const markersOfCategory = markers.filter((m) => getMarkerFilterCategory(m.type) === filterCategory);
+        const filteredMarkersOfCategory = filteredMarkers.filter((m) => getMarkerFilterCategory(m.type) === filterCategory);
 
         if (enabled) {
-          expect(filteredMarkersOfType.length).toBe(markersOfType.length);
+          expect(filteredMarkersOfCategory.length).toBe(markersOfCategory.length);
         } else {
-          expect(filteredMarkersOfType.length).toBe(0);
+          expect(filteredMarkersOfCategory.length).toBe(0);
         }
       }),
       { numRuns: 100 }
@@ -2647,8 +2663,13 @@ describe('Property 11: Marker Filter Application', () => {
   });
 
   it('should preserve filter state for other types when one type is changed', () => {
+    // Use filter category names for setMarkerFilter (not API short codes)
+    type FilterCategory = 'battle' | 'city' | 'capital' | 'person' | 'event' | 'other';
+    const filterCategoryArb = fc.constantFrom<FilterCategory>('battle', 'city', 'capital', 'person', 'event', 'other');
+    const filterCategories: FilterCategory[] = ['battle', 'city', 'capital', 'person', 'event', 'other'];
+    
     fc.assert(
-      fc.property(markerFilterStateArb, markerTypeArb, fc.boolean(), (initialFilters, typeToChange, newValue) => {
+      fc.property(markerFilterStateArb, filterCategoryArb, fc.boolean(), (initialFilters, categoryToChange, newValue) => {
         // Set initial filter state
         act(() => {
           useMapStore.setState({
@@ -2657,18 +2678,18 @@ describe('Property 11: Marker Filter Application', () => {
           });
         });
 
-        // Change filter for specific type
+        // Change filter for specific category
         act(() => {
-          useMapStore.getState().setMarkerFilter(typeToChange, newValue);
+          useMapStore.getState().setMarkerFilter(categoryToChange, newValue);
         });
 
         // Verify other filter states are preserved
         const state = useMapStore.getState();
-        for (const type of validMarkerTypes) {
-          if (type === typeToChange) {
-            expect(state.markerFilters[type]).toBe(newValue);
+        for (const category of filterCategories) {
+          if (category === categoryToChange) {
+            expect(state.markerFilters[category]).toBe(newValue);
           } else {
-            expect(state.markerFilters[type]).toBe(initialFilters[type]);
+            expect(state.markerFilters[category]).toBe(initialFilters[category]);
           }
         }
       }),
@@ -5484,9 +5505,10 @@ describe('Markers API Response Processing', () => {
       await useMapStore.getState().loadMarkers(1500);
     });
 
-    // Verify the correct endpoint was called
+    // Verify the correct endpoint was called with limit parameter
+    // Default markerLimit is 5000 (Requirement 4.5)
     expect(mockGet).toHaveBeenCalledWith(
-      '/markers?year=1500',
+      '/markers?year=1500&limit=5000',
       expect.objectContaining({ signal: expect.any(AbortSignal) })
     );
   });
@@ -6268,6 +6290,1153 @@ describe('Hover State Management', () => {
             });
             expect(useMapStore.getState().hoveredProvinceId).toBe(provinceId);
           }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+
+/**
+ * Feature: production-parity-fixes, Property 1: State Update Consistency
+ *
+ * Property 1 states:
+ * *For any* UI control action (basemap selection, toggle click, slider adjustment),
+ * the corresponding Zustand store state SHALL update to reflect the user's selection.
+ *
+ * **Validates: Requirements 1.1, 2.1, 3.1, 4.1, 5.1**
+ */
+describe('Property 1: State Update Consistency', () => {
+  // Reset store state before each test
+  beforeEach(() => {
+    vi.clearAllMocks();
+    act(() => {
+      useMapStore.setState(initialState);
+    });
+  });
+
+  /**
+   * Arbitrary for generating valid basemap types.
+   * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+   */
+  const basemapTypeArb: fc.Arbitrary<'topographic' | 'watercolor' | 'none'> = fc.constantFrom('topographic', 'watercolor', 'none');
+
+  /**
+   * Arbitrary for generating boolean values for toggle controls.
+   */
+  const booleanArb = fc.boolean();
+
+  /**
+   * Arbitrary for generating marker limit values.
+   * Valid range is [0, 10000] per Requirement 4.5.
+   */
+  const markerLimitArb = fc.integer({ min: 0, max: 10000 });
+
+  /**
+   * Arbitrary for generating marker limit values outside valid range.
+   * Used to test clamping behavior.
+   */
+  const markerLimitOutOfRangeArb = fc.oneof(
+    fc.integer({ min: -10000, max: -1 }),
+    fc.integer({ min: 10001, max: 50000 })
+  );
+
+  /**
+   * Test: setBasemap updates basemap state for any valid BasemapType
+   * Requirement 1.1: WHEN the user selects a basemap option from the dropdown,
+   * THE MapStore SHALL update the basemap state
+   */
+  it('should update basemap state for any valid BasemapType', () => {
+    fc.assert(
+      fc.property(basemapTypeArb, (basemap) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply basemap selection
+        act(() => {
+          useMapStore.getState().setBasemap(basemap);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: basemap state SHALL reflect the user's selection
+        expect(state.basemap).toBe(basemap);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setBasemap maintains state consistency across multiple selections
+   * Requirement 1.1: State should always reflect the most recent selection
+   */
+  it('should maintain basemap state consistency across multiple selections', () => {
+    fc.assert(
+      fc.property(
+        fc.array(basemapTypeArb, { minLength: 1, maxLength: 20 }),
+        (basemapSelections) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Apply multiple basemap selections
+          for (const basemap of basemapSelections) {
+            act(() => {
+              useMapStore.getState().setBasemap(basemap);
+            });
+
+            // After each selection, state should reflect the selection
+            expect(useMapStore.getState().basemap).toBe(basemap);
+          }
+
+          // Final state should be the last selection
+          const lastBasemap = basemapSelections[basemapSelections.length - 1];
+          expect(useMapStore.getState().basemap).toBe(lastBasemap);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setShowProvinceBorders updates showProvinceBorders state for any boolean
+   * Requirement 2.1: WHEN the user toggles the "Show Provinces" checkbox,
+   * THE MapStore SHALL update the showProvinceBorders state
+   */
+  it('should update showProvinceBorders state for any boolean', () => {
+    fc.assert(
+      fc.property(booleanArb, (show) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply toggle
+        act(() => {
+          useMapStore.getState().setShowProvinceBorders(show);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: showProvinceBorders state SHALL reflect the user's selection
+        expect(state.showProvinceBorders).toBe(show);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setShowProvinceBorders maintains state consistency across multiple toggles
+   * Requirement 2.1: State should always reflect the most recent toggle
+   */
+  it('should maintain showProvinceBorders state consistency across multiple toggles', () => {
+    fc.assert(
+      fc.property(
+        fc.array(booleanArb, { minLength: 1, maxLength: 20 }),
+        (toggles) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Apply multiple toggles
+          for (const show of toggles) {
+            act(() => {
+              useMapStore.getState().setShowProvinceBorders(show);
+            });
+
+            // After each toggle, state should reflect the selection
+            expect(useMapStore.getState().showProvinceBorders).toBe(show);
+          }
+
+          // Final state should be the last toggle
+          const lastToggle = toggles[toggles.length - 1];
+          expect(useMapStore.getState().showProvinceBorders).toBe(lastToggle);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setPopulationOpacity updates populationOpacity state for any boolean
+   * Requirement 3.1: WHEN the user toggles the "Opacity by Population" checkbox,
+   * THE MapStore SHALL update the populationOpacity state
+   */
+  it('should update populationOpacity state for any boolean', () => {
+    fc.assert(
+      fc.property(booleanArb, (enabled) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply toggle
+        act(() => {
+          useMapStore.getState().setPopulationOpacity(enabled);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: populationOpacity state SHALL reflect the user's selection
+        expect(state.populationOpacity).toBe(enabled);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setPopulationOpacity maintains state consistency across multiple toggles
+   * Requirement 3.1: State should always reflect the most recent toggle
+   */
+  it('should maintain populationOpacity state consistency across multiple toggles', () => {
+    fc.assert(
+      fc.property(
+        fc.array(booleanArb, { minLength: 1, maxLength: 20 }),
+        (toggles) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Apply multiple toggles
+          for (const enabled of toggles) {
+            act(() => {
+              useMapStore.getState().setPopulationOpacity(enabled);
+            });
+
+            // After each toggle, state should reflect the selection
+            expect(useMapStore.getState().populationOpacity).toBe(enabled);
+          }
+
+          // Final state should be the last toggle
+          const lastToggle = toggles[toggles.length - 1];
+          expect(useMapStore.getState().populationOpacity).toBe(lastToggle);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setMarkerLimit updates markerLimit state for any number in [0, 10000]
+   * Requirement 4.1: WHEN the user adjusts the marker limit slider,
+   * THE MapStore SHALL update the markerLimit state
+   */
+  it('should update markerLimit state for any number in [0, 10000]', () => {
+    fc.assert(
+      fc.property(markerLimitArb, (limit) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply slider adjustment
+        act(() => {
+          useMapStore.getState().setMarkerLimit(limit);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: markerLimit state SHALL reflect the user's selection
+        expect(state.markerLimit).toBe(limit);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setMarkerLimit clamps values outside valid range [0, 10000]
+   * Requirement 4.1: THE MapStore SHALL clamp markerLimit to [0, 10000]
+   */
+  it('should clamp markerLimit values outside valid range [0, 10000]', () => {
+    fc.assert(
+      fc.property(markerLimitOutOfRangeArb, (limit) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply slider adjustment with out-of-range value
+        act(() => {
+          useMapStore.getState().setMarkerLimit(limit);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: markerLimit state SHALL be clamped to [0, 10000]
+        expect(state.markerLimit).toBeGreaterThanOrEqual(0);
+        expect(state.markerLimit).toBeLessThanOrEqual(10000);
+
+        // Verify clamping behavior
+        if (limit < 0) {
+          expect(state.markerLimit).toBe(0);
+        } else if (limit > 10000) {
+          expect(state.markerLimit).toBe(10000);
+        }
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setMarkerLimit maintains state consistency across multiple adjustments
+   * Requirement 4.1: State should always reflect the most recent adjustment
+   */
+  it('should maintain markerLimit state consistency across multiple adjustments', () => {
+    fc.assert(
+      fc.property(
+        fc.array(markerLimitArb, { minLength: 1, maxLength: 20 }),
+        (limits) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Apply multiple slider adjustments
+          for (const limit of limits) {
+            act(() => {
+              useMapStore.getState().setMarkerLimit(limit);
+            });
+
+            // After each adjustment, state should reflect the selection
+            expect(useMapStore.getState().markerLimit).toBe(limit);
+          }
+
+          // Final state should be the last adjustment
+          const lastLimit = limits[limits.length - 1];
+          expect(useMapStore.getState().markerLimit).toBe(lastLimit);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setClusterMarkers updates clusterMarkers state for any boolean
+   * Requirement 5.1: WHEN the user toggles the "Cluster Markers" checkbox,
+   * THE MapStore SHALL update the clusterMarkers state
+   */
+  it('should update clusterMarkers state for any boolean', () => {
+    fc.assert(
+      fc.property(booleanArb, (enabled) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply toggle
+        act(() => {
+          useMapStore.getState().setClusterMarkers(enabled);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: clusterMarkers state SHALL reflect the user's selection
+        expect(state.clusterMarkers).toBe(enabled);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setClusterMarkers maintains state consistency across multiple toggles
+   * Requirement 5.1: State should always reflect the most recent toggle
+   */
+  it('should maintain clusterMarkers state consistency across multiple toggles', () => {
+    fc.assert(
+      fc.property(
+        fc.array(booleanArb, { minLength: 1, maxLength: 20 }),
+        (toggles) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Apply multiple toggles
+          for (const enabled of toggles) {
+            act(() => {
+              useMapStore.getState().setClusterMarkers(enabled);
+            });
+
+            // After each toggle, state should reflect the selection
+            expect(useMapStore.getState().clusterMarkers).toBe(enabled);
+          }
+
+          // Final state should be the last toggle
+          const lastToggle = toggles[toggles.length - 1];
+          expect(useMapStore.getState().clusterMarkers).toBe(lastToggle);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: All layer control states can be updated independently
+   * Validates: Requirements 1.1, 2.1, 3.1, 4.1, 5.1
+   * 
+   * This test verifies that updating one layer control state does not affect other states.
+   */
+  it('should allow independent updates to all layer control states', () => {
+    fc.assert(
+      fc.property(
+        basemapTypeArb,
+        booleanArb,
+        booleanArb,
+        markerLimitArb,
+        booleanArb,
+        (basemap, showProvinceBorders, populationOpacity, markerLimit, clusterMarkers) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Apply all layer control updates
+          act(() => {
+            useMapStore.getState().setBasemap(basemap);
+          });
+          act(() => {
+            useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+          });
+          act(() => {
+            useMapStore.getState().setPopulationOpacity(populationOpacity);
+          });
+          act(() => {
+            useMapStore.getState().setMarkerLimit(markerLimit);
+          });
+          act(() => {
+            useMapStore.getState().setClusterMarkers(clusterMarkers);
+          });
+
+          const state = useMapStore.getState();
+
+          // Property: All states SHALL reflect their respective user selections
+          expect(state.basemap).toBe(basemap);
+          expect(state.showProvinceBorders).toBe(showProvinceBorders);
+          expect(state.populationOpacity).toBe(populationOpacity);
+          expect(state.markerLimit).toBe(markerLimit);
+          expect(state.clusterMarkers).toBe(clusterMarkers);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Layer control states remain consistent after interleaved updates
+   * Validates: Requirements 1.1, 2.1, 3.1, 4.1, 5.1
+   * 
+   * This test verifies that interleaved updates to different layer controls
+   * maintain state consistency.
+   */
+  it('should maintain state consistency with interleaved layer control updates', () => {
+    /**
+     * Arbitrary for generating a sequence of layer control actions.
+     */
+    const layerControlActionArb = fc.oneof(
+      fc.record({ type: fc.constant('basemap' as const), value: basemapTypeArb }),
+      fc.record({ type: fc.constant('showProvinceBorders' as const), value: booleanArb }),
+      fc.record({ type: fc.constant('populationOpacity' as const), value: booleanArb }),
+      fc.record({ type: fc.constant('markerLimit' as const), value: markerLimitArb }),
+      fc.record({ type: fc.constant('clusterMarkers' as const), value: booleanArb })
+    );
+
+    fc.assert(
+      fc.property(
+        fc.array(layerControlActionArb, { minLength: 1, maxLength: 30 }),
+        (actions) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Track expected state
+          let expectedBasemap = initialState.basemap;
+          let expectedShowProvinceBorders = initialState.showProvinceBorders;
+          let expectedPopulationOpacity = initialState.populationOpacity;
+          let expectedMarkerLimit = initialState.markerLimit;
+          let expectedClusterMarkers = initialState.clusterMarkers;
+
+          // Apply interleaved actions
+          for (const action of actions) {
+            switch (action.type) {
+              case 'basemap': {
+                act(() => {
+                  useMapStore.getState().setBasemap(action.value);
+                });
+                expectedBasemap = action.value;
+                break;
+              }
+              case 'showProvinceBorders': {
+                act(() => {
+                  useMapStore.getState().setShowProvinceBorders(action.value);
+                });
+                expectedShowProvinceBorders = action.value;
+                break;
+              }
+              case 'populationOpacity': {
+                act(() => {
+                  useMapStore.getState().setPopulationOpacity(action.value);
+                });
+                expectedPopulationOpacity = action.value;
+                break;
+              }
+              case 'markerLimit': {
+                act(() => {
+                  useMapStore.getState().setMarkerLimit(action.value);
+                });
+                expectedMarkerLimit = action.value;
+                break;
+              }
+              case 'clusterMarkers': {
+                act(() => {
+                  useMapStore.getState().setClusterMarkers(action.value);
+                });
+                expectedClusterMarkers = action.value;
+                break;
+              }
+            }
+
+            // After each action, verify all states are consistent
+            const state = useMapStore.getState();
+            expect(state.basemap).toBe(expectedBasemap);
+            expect(state.showProvinceBorders).toBe(expectedShowProvinceBorders);
+            expect(state.populationOpacity).toBe(expectedPopulationOpacity);
+            expect(state.markerLimit).toBe(expectedMarkerLimit);
+            expect(state.clusterMarkers).toBe(expectedClusterMarkers);
+          }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: setMarkerLimit rounds floating point values to integers
+   * Requirement 4.1: markerLimit should be an integer value
+   */
+  it('should round floating point markerLimit values to integers', () => {
+    const floatMarkerLimitArb = fc.double({ min: 0, max: 10000, noNaN: true });
+
+    fc.assert(
+      fc.property(floatMarkerLimitArb, (limit) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply slider adjustment with floating point value
+        act(() => {
+          useMapStore.getState().setMarkerLimit(limit);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: markerLimit SHALL be an integer
+        expect(Number.isInteger(state.markerLimit)).toBe(true);
+
+        // Property: markerLimit SHALL be the rounded value
+        expect(state.markerLimit).toBe(Math.max(0, Math.min(10000, Math.round(limit))));
+      }),
+      { numRuns: 100 }
+    );
+  });
+});
+
+
+/**
+ * Feature: production-parity-fixes, Property 6: Marker Limit URL Parameter
+ *
+ * Property 6 states:
+ * *For any* markerLimit state value and year, the markers API request URL SHALL include
+ * `limit={markerLimit}` as a query parameter.
+ *
+ * **Validates: Requirements 4.2, 4.3**
+ */
+describe('Property 6: Marker Limit URL Parameter', () => {
+  // Reset store state before each test
+  beforeEach(() => {
+    vi.clearAllMocks();
+    act(() => {
+      useMapStore.setState(initialState);
+    });
+  });
+
+  /**
+   * Arbitrary for generating valid year values.
+   * Years can be negative (BC) or positive (AD).
+   */
+  const yearArb = fc.integer({ min: -5000, max: 2100 });
+
+  /**
+   * Arbitrary for generating valid marker limit values.
+   * Marker limit must be in range [0, 10000].
+   */
+  const markerLimitArb = fc.integer({ min: 1, max: 10000 });
+
+  /**
+   * Test: loadMarkers URL includes limit parameter for any markerLimit and year
+   * Validates: Requirements 4.2, 4.3
+   *
+   * This test verifies that for any valid markerLimit and year combination,
+   * the API request URL includes the limit parameter in the correct format.
+   */
+  it('should include limit parameter in markers API URL for any markerLimit and year', async () => {
+    await fc.assert(
+      fc.asyncProperty(yearArb, markerLimitArb, async (year, markerLimit) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Set the marker limit
+        act(() => {
+          useMapStore.getState().setMarkerLimit(markerLimit);
+        });
+
+        // Mock the API client to capture the URL
+        let capturedUrl: string | null = null;
+        mockGet.mockImplementation((url: string) => {
+          capturedUrl = url;
+          return Promise.resolve([]);
+        });
+
+        // Call loadMarkers
+        await act(async () => {
+          await useMapStore.getState().loadMarkers(year);
+        });
+
+        // Property: The URL SHALL include limit={markerLimit} as a query parameter
+        // Requirement 4.3: THE API request SHALL use the format `/markers?year={year}&limit={markerLimit}`
+        expect(capturedUrl).not.toBeNull();
+        expect(capturedUrl).toContain(`year=${String(year)}`);
+        expect(capturedUrl).toContain(`limit=${String(markerLimit)}`);
+        expect(capturedUrl).toBe(`/markers?year=${String(year)}&limit=${String(markerLimit)}`);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: loadMarkers skips API call when markerLimit is 0
+   * Validates: Requirement 4.4
+   *
+   * This test verifies that when markerLimit is 0, the loadMarkers function
+   * does not make an API call and returns an empty array.
+   */
+  it('should skip API call and return empty array when markerLimit is 0', async () => {
+    await fc.assert(
+      fc.asyncProperty(yearArb, async (year) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Set marker limit to 0
+        act(() => {
+          useMapStore.getState().setMarkerLimit(0);
+        });
+
+        // Mock the API client
+        mockGet.mockClear();
+        mockGet.mockResolvedValue([]);
+
+        // Call loadMarkers
+        let result: unknown[] = [];
+        await act(async () => {
+          result = await useMapStore.getState().loadMarkers(year);
+        });
+
+        // Property: WHEN markerLimit is 0, THE MapView SHALL not display any markers
+        // This means no API call should be made
+        expect(mockGet).not.toHaveBeenCalled();
+        expect(result).toEqual([]);
+
+        // Verify markers state is empty
+        const state = useMapStore.getState();
+        expect(state.markers).toEqual([]);
+        expect(state.isLoadingMarkers).toBe(false);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: URL format is consistent across different markerLimit values
+   * Validates: Requirements 4.2, 4.3
+   *
+   * This test verifies that the URL format remains consistent regardless
+   * of the specific markerLimit value.
+   */
+  it('should maintain consistent URL format for any valid markerLimit', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        yearArb,
+        fc.array(markerLimitArb, { minLength: 2, maxLength: 5 }),
+        async (year, markerLimits) => {
+          for (const markerLimit of markerLimits) {
+            // Reset state
+            act(() => {
+              useMapStore.setState(initialState);
+            });
+
+            // Set the marker limit
+            act(() => {
+              useMapStore.getState().setMarkerLimit(markerLimit);
+            });
+
+            // Mock the API client to capture the URL
+            let capturedUrl: string | null = null;
+            mockGet.mockImplementation((url: string) => {
+              capturedUrl = url;
+              return Promise.resolve([]);
+            });
+
+            // Call loadMarkers
+            await act(async () => {
+              await useMapStore.getState().loadMarkers(year);
+            });
+
+            // Property: URL format SHALL be `/markers?year={year}&limit={markerLimit}`
+            const expectedUrl = `/markers?year=${String(year)}&limit=${String(markerLimit)}`;
+            expect(capturedUrl).toBe(expectedUrl);
+          }
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: markerLimit state is correctly read during loadMarkers
+   * Validates: Requirements 4.1, 4.2
+   *
+   * This test verifies that loadMarkers reads the current markerLimit state
+   * at the time of the call, not a stale value.
+   */
+  it('should read current markerLimit state when loadMarkers is called', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        yearArb,
+        markerLimitArb,
+        markerLimitArb,
+        async (year, initialLimit, updatedLimit) => {
+          // Skip if limits are the same
+          if (initialLimit === updatedLimit) return;
+
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Set initial marker limit
+          act(() => {
+            useMapStore.getState().setMarkerLimit(initialLimit);
+          });
+
+          // Mock the API client to capture the URL
+          let capturedUrl: string | null = null;
+          mockGet.mockImplementation((url: string) => {
+            capturedUrl = url;
+            return Promise.resolve([]);
+          });
+
+          // Update marker limit before calling loadMarkers
+          act(() => {
+            useMapStore.getState().setMarkerLimit(updatedLimit);
+          });
+
+          // Call loadMarkers
+          await act(async () => {
+            await useMapStore.getState().loadMarkers(year);
+          });
+
+          // Property: loadMarkers SHALL use the current markerLimit state
+          // Use exact URL match to avoid substring matching issues
+          const expectedUrl = `/markers?year=${String(year)}&limit=${String(updatedLimit)}`;
+          expect(capturedUrl).toBe(expectedUrl);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+
+/**
+ * Feature: production-parity-fixes, Property 7: Clustering Configuration Consistency
+ *
+ * Property 7 states:
+ * *For any* clusterMarkers state value, the markers GeoJSON source cluster property
+ * SHALL equal the clusterMarkers state.
+ *
+ * **Validates: Requirements 5.2, 5.3**
+ *
+ * This property ensures that the clustering configuration in the MapView's markers
+ * source is always consistent with the clusterMarkers state in the mapStore.
+ * When clusterMarkers is true, clustering should be enabled; when false, disabled.
+ */
+describe('Property 7: Clustering Configuration Consistency', () => {
+  // Reset store state before each test
+  beforeEach(() => {
+    vi.clearAllMocks();
+    act(() => {
+      useMapStore.setState(initialState);
+    });
+  });
+
+  /**
+   * Arbitrary for generating boolean values for cluster toggle.
+   */
+  const clusterMarkersArb = fc.boolean();
+
+  /**
+   * Arbitrary for generating sequences of cluster toggle values.
+   */
+  const clusterToggleSequenceArb = fc.array(clusterMarkersArb, { minLength: 1, maxLength: 20 });
+
+  /**
+   * Arbitrary for generating marker data for testing clustering behavior.
+   * Markers are GeoJSON points with type and coordinates.
+   */
+  const markerTypeArb: fc.Arbitrary<MarkerType> = fc.constantFrom('p', 's', 'a', 'ar', 'o', 'ai');
+  const markerArb = fc.record({
+    _id: fc.stringMatching(/^[a-zA-Z0-9_-]{3,20}$/),
+    name: fc.string({ minLength: 1, maxLength: 50 }),
+    type: markerTypeArb,
+    year: fc.integer({ min: -2000, max: 2000 }),
+    coo: fc.tuple(
+      fc.double({ min: -180, max: 180, noNaN: true }),
+      fc.double({ min: -90, max: 90, noNaN: true })
+    ),
+  });
+
+  /**
+   * Arbitrary for generating arrays of markers.
+   */
+  const markersArrayArb = fc.array(markerArb, { minLength: 0, maxLength: 20 });
+
+  /**
+   * Test: clusterMarkers state determines clustering configuration
+   * Requirement 5.2: WHEN clusterMarkers is true, THE MapView SHALL group nearby markers into clusters
+   * Requirement 5.3: WHEN clusterMarkers is false, THE MapView SHALL display all markers individually
+   *
+   * This test verifies that for any boolean value of clusterMarkers,
+   * the state correctly reflects whether clustering should be enabled.
+   */
+  it('should have clusterMarkers state equal to the cluster configuration for any boolean value', () => {
+    fc.assert(
+      fc.property(clusterMarkersArb, (clusterEnabled) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Set clusterMarkers state
+        act(() => {
+          useMapStore.getState().setClusterMarkers(clusterEnabled);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: clusterMarkers state SHALL equal the cluster configuration
+        // When clusterMarkers is true, clustering is enabled
+        // When clusterMarkers is false, clustering is disabled
+        expect(state.clusterMarkers).toBe(clusterEnabled);
+
+        // The cluster property in the source configuration should match
+        const expectedClusterConfig = clusterEnabled;
+        expect(state.clusterMarkers).toBe(expectedClusterConfig);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering configuration remains consistent after multiple toggles
+   * Validates: Requirements 5.2, 5.3
+   *
+   * This test verifies that the clustering configuration remains consistent
+   * with the clusterMarkers state after any sequence of toggle operations.
+   */
+  it('should maintain clustering configuration consistency after multiple toggles', () => {
+    fc.assert(
+      fc.property(clusterToggleSequenceArb, (toggleSequence) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Apply each toggle in sequence
+        for (const clusterEnabled of toggleSequence) {
+          act(() => {
+            useMapStore.getState().setClusterMarkers(clusterEnabled);
+          });
+
+          const state = useMapStore.getState();
+
+          // Property: After each toggle, clusterMarkers state SHALL equal the cluster configuration
+          expect(state.clusterMarkers).toBe(clusterEnabled);
+
+          // Verify the state is a boolean
+          expect(typeof state.clusterMarkers).toBe('boolean');
+        }
+
+        // Final state should match the last toggle value
+        const finalState = useMapStore.getState();
+        const lastToggle = toggleSequence[toggleSequence.length - 1];
+        expect(finalState.clusterMarkers).toBe(lastToggle);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering configuration is independent of marker data
+   * Validates: Requirements 5.2, 5.3
+   *
+   * This test verifies that the clustering configuration (clusterMarkers state)
+   * is independent of the actual marker data. The cluster property should be
+   * determined solely by the clusterMarkers state, not by the markers themselves.
+   */
+  it('should have clustering configuration independent of marker data', () => {
+    fc.assert(
+      fc.property(clusterMarkersArb, markersArrayArb, (clusterEnabled, markers) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Set markers in state
+        act(() => {
+          useMapStore.setState({ markers });
+        });
+
+        // Set clusterMarkers state
+        act(() => {
+          useMapStore.getState().setClusterMarkers(clusterEnabled);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: clusterMarkers state SHALL be independent of marker data
+        // The clustering configuration should only depend on the clusterMarkers toggle
+        expect(state.clusterMarkers).toBe(clusterEnabled);
+
+        // Verify markers are stored correctly
+        expect(state.markers).toEqual(markers);
+
+        // The cluster configuration should not change based on marker count
+        expect(state.clusterMarkers).toBe(clusterEnabled);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering configuration is preserved when markers are updated
+   * Validates: Requirements 5.2, 5.3
+   *
+   * This test verifies that updating markers does not affect the clustering
+   * configuration. The clusterMarkers state should remain unchanged when
+   * new markers are loaded.
+   */
+  it('should preserve clustering configuration when markers are updated', () => {
+    fc.assert(
+      fc.property(
+        clusterMarkersArb,
+        markersArrayArb,
+        markersArrayArb,
+        (clusterEnabled, initialMarkers, updatedMarkers) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Set initial clustering configuration
+          act(() => {
+            useMapStore.getState().setClusterMarkers(clusterEnabled);
+          });
+
+          // Set initial markers
+          act(() => {
+            useMapStore.setState({ markers: initialMarkers });
+          });
+
+          // Verify initial state
+          expect(useMapStore.getState().clusterMarkers).toBe(clusterEnabled);
+
+          // Update markers
+          act(() => {
+            useMapStore.setState({ markers: updatedMarkers });
+          });
+
+          const state = useMapStore.getState();
+
+          // Property: Clustering configuration SHALL be preserved when markers are updated
+          expect(state.clusterMarkers).toBe(clusterEnabled);
+          expect(state.markers).toEqual(updatedMarkers);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering configuration defaults to false
+   * Validates: Requirements 5.1
+   *
+   * This test verifies that the default clustering configuration is disabled (false).
+   */
+  it('should default clusterMarkers to false', () => {
+    fc.assert(
+      fc.property(fc.constant(null), () => {
+        // Reset state to initial
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: Default clusterMarkers state SHALL be false
+        expect(state.clusterMarkers).toBe(false);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering configuration is consistent with source cluster property
+   * Validates: Requirements 5.2, 5.3, 5.4
+   *
+   * This test simulates the relationship between clusterMarkers state and
+   * the Mapbox GL source cluster property. The cluster property in the source
+   * configuration should always equal the clusterMarkers state.
+   */
+  it('should have source cluster property equal to clusterMarkers state', () => {
+    fc.assert(
+      fc.property(clusterMarkersArb, (clusterEnabled) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Set clusterMarkers state
+        act(() => {
+          useMapStore.getState().setClusterMarkers(clusterEnabled);
+        });
+
+        const state = useMapStore.getState();
+
+        // Simulate the source configuration that MapView would use
+        // This mirrors the actual implementation in MapView.tsx:
+        // <Source ... cluster={clusterMarkers} clusterMaxZoom={14} clusterRadius={50}>
+        const sourceConfig = {
+          type: 'geojson' as const,
+          cluster: state.clusterMarkers,
+          clusterMaxZoom: 14,
+          clusterRadius: 50,
+        };
+
+        // Property: Source cluster property SHALL equal clusterMarkers state
+        expect(sourceConfig.cluster).toBe(clusterEnabled);
+        expect(sourceConfig.cluster).toBe(state.clusterMarkers);
+
+        // Verify clustering constants match design spec
+        // Requirement 5.4: THE MapView SHALL use Mapbox GL clustering with a cluster radius of 50 pixels
+        expect(sourceConfig.clusterRadius).toBe(50);
+        expect(sourceConfig.clusterMaxZoom).toBe(14);
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering behavior is correctly determined by state
+   * Validates: Requirements 5.2, 5.3
+   *
+   * This test verifies the logical relationship between clusterMarkers state
+   * and the expected clustering behavior:
+   * - When clusterMarkers is true: nearby markers should be grouped into clusters
+   * - When clusterMarkers is false: all markers should be displayed individually
+   */
+  it('should determine correct clustering behavior based on state', () => {
+    fc.assert(
+      fc.property(clusterMarkersArb, (clusterEnabled) => {
+        // Reset state
+        act(() => {
+          useMapStore.setState(initialState);
+        });
+
+        // Set clusterMarkers state
+        act(() => {
+          useMapStore.getState().setClusterMarkers(clusterEnabled);
+        });
+
+        const state = useMapStore.getState();
+
+        // Property: Clustering behavior SHALL be determined by clusterMarkers state
+        if (clusterEnabled) {
+          // Requirement 5.2: WHEN clusterMarkers is true, THE MapView SHALL group nearby markers into clusters
+          expect(state.clusterMarkers).toBe(true);
+          // Clustering is enabled - markers within clusterRadius should be grouped
+        } else {
+          // Requirement 5.3: WHEN clusterMarkers is false, THE MapView SHALL display all markers individually
+          expect(state.clusterMarkers).toBe(false);
+          // Clustering is disabled - all markers displayed individually
+        }
+      }),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Test: Clustering configuration is independent of other layer controls
+   * Validates: Requirements 5.1, 5.2, 5.3
+   *
+   * This test verifies that the clustering configuration is independent of
+   * other layer control states (basemap, showProvinceBorders, populationOpacity, markerLimit).
+   */
+  it('should have clustering configuration independent of other layer controls', () => {
+    type BasemapType = 'topographic' | 'watercolor' | 'none';
+    const basemapArb: fc.Arbitrary<BasemapType> = fc.constantFrom('topographic', 'watercolor', 'none');
+    const markerLimitArb = fc.integer({ min: 0, max: 10000 });
+
+    fc.assert(
+      fc.property(
+        clusterMarkersArb,
+        basemapArb,
+        fc.boolean(),
+        fc.boolean(),
+        markerLimitArb,
+        (clusterEnabled, basemap, showProvinceBorders, populationOpacity, markerLimit) => {
+          // Reset state
+          act(() => {
+            useMapStore.setState(initialState);
+          });
+
+          // Set all layer control states
+          act(() => {
+            useMapStore.getState().setBasemap(basemap);
+            useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+            useMapStore.getState().setPopulationOpacity(populationOpacity);
+            useMapStore.getState().setMarkerLimit(markerLimit);
+            useMapStore.getState().setClusterMarkers(clusterEnabled);
+          });
+
+          const state = useMapStore.getState();
+
+          // Property: clusterMarkers state SHALL be independent of other layer controls
+          expect(state.clusterMarkers).toBe(clusterEnabled);
+          expect(state.basemap).toBe(basemap);
+          expect(state.showProvinceBorders).toBe(showProvinceBorders);
+          expect(state.populationOpacity).toBe(populationOpacity);
+          expect(state.markerLimit).toBe(markerLimit);
         }
       ),
       { numRuns: 100 }

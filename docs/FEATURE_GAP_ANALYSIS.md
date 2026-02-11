@@ -1,360 +1,256 @@
-# Feature Gap Analysis: Old Chronas vs New Implementation
+# Feature Gap Analysis: Production Chronas vs New Frontend
 
-This document analyzes the interactive features from the old Chronas codebase (`chronas/`) compared to the new implementation (`chronas-frontend/`).
+**Last Updated:** February 6, 2026  
+**Audit Status:** Complete
 
-## User Flow Analysis
-
-Based on the user flow:
-1. **Entry** → Land on default map (year 1000, global viewport)
-2. **Observe** → Year_Notification (top-center badge)
-3. **Navigate Timeline** → Click year marker, drag/zoom, search epic
-4. **Explore Map** → Pan/zoom, toggle layers (ruler/religion/culture/population)
-5. **Interact Provinces** → Hover → highlight + tooltip, Click → select → entity outline → fit bounds
-6. **Interact Markers** → Hover → highlight, Click → emit wiki/info panel
-7. **Advanced** → Autoplay, theme switch, sidebar
+This document provides a comprehensive comparison between the production Chronas frontend (`chronas/`) and the new React 19 implementation (`chronas-frontend/`).
 
 ---
 
-## ✅ IMPLEMENTED Features
+## Executive Summary
 
-### Map Core
-| Feature | Old Code Location | New Code Location | Status |
-|---------|------------------|-------------------|--------|
-| Map rendering with Mapbox GL | `Map.js` MapGL component | `MapView.tsx` Map component | ✅ Complete |
-| Province coloring by ruler | `Map.js` layer config | `MapView.tsx` ruler-fill layer | ✅ Complete |
-| Province coloring by culture | `Map.js` layer config | `MapView.tsx` culture-fill layer | ✅ Complete |
-| Province coloring by religion | `Map.js` layer config | `MapView.tsx` religion-fill layer | ✅ Complete |
-| Province coloring by population | `Map.js` layer config | `MapView.tsx` population-fill layer | ✅ Complete |
-| Entity labels (ruler/culture/religion names) | `Map.js` area-labels | `MapView.tsx` area-labels-layer | ✅ Complete |
-| Viewport state management | `Map.js` state.viewport | `mapStore.ts` viewport | ✅ Complete |
-| Pan/zoom interactions | `Map.js` onViewportChange | `MapView.tsx` handleMove | ✅ Complete |
-| Sidebar layout integration | `Map.js` leftOffset | `MapView.tsx` leftOffset | ✅ Complete |
+The new frontend has implemented the **core functionality** required for feature parity with production. Most critical features are complete, with some UI polish and advanced features still pending.
 
-### Timeline Integration
-| Feature | Old Code Location | New Code Location | Status |
-|---------|------------------|-------------------|--------|
-| Year change triggers data fetch | `Map.js` componentWillReceiveProps | `MapView.tsx` useEffect on debouncedYear | ✅ Complete |
-| Year notification badge | `Map.js` Snackbar | `YearDisplay.tsx` | ✅ Complete |
-| Debounced year changes | N/A (direct) | `MapView.tsx` useDebounce hook | ✅ Complete |
-
-### Markers
-| Feature | Old Code Location | New Code Location | Status |
-|---------|------------------|-------------------|--------|
-| Marker display on map | `DeckGLOverlay.js` IconLayer | `MapView.tsx` markers-layer | ✅ Complete |
-| Marker click → popup | `Map.js` _onMarkerClick | `MapView.tsx` handleClick + Popup | ✅ Complete |
-| Marker filtering by type | `Map.js` filtered state | `mapStore.ts` markerFilters | ✅ Complete |
-
-### Province Selection
-| Feature | Old Code Location | New Code Location | Status |
-|---------|------------------|-------------------|--------|
-| Province click selection | `Map.js` _onClick | `MapView.tsx` handleClick | ✅ Complete |
-| Entity outline display | `Map.js` area-outlines source | `MapView.tsx` entity-outline-layer | ✅ Complete |
-| Selected province state | Redux selectedItem | `mapStore.ts` selectedProvinceId | ✅ Complete |
-
-### Error Handling
-| Feature | Old Code Location | New Code Location | Status |
-|---------|------------------|-------------------|--------|
-| WebGL support check | N/A | `MapView.tsx` checkWebGLSupport | ✅ Complete |
-| Error display overlay | `Map.js` showNotification | `MapView.tsx` errorOverlay | ✅ Complete |
-| No data message | N/A | `MapView.tsx` noDataMessage | ✅ Complete |
-| Retry functionality | N/A | `MapView.tsx` handleRetry | ✅ Complete |
+### Overall Status
+- **Core Map Features:** ✅ Complete
+- **Timeline Features:** ✅ Complete  
+- **Province Interactions:** ✅ Complete
+- **Marker Interactions:** ✅ Complete
+- **Right Drawer/Content Panel:** ✅ Complete
+- **Layer Controls:** ✅ Complete
+- **Advanced Features:** ⚠️ Partial (some production features not yet implemented)
 
 ---
 
-## ❌ MISSING Features
+## ✅ FULLY IMPLEMENTED Features
 
-### 1. Province Hover Tooltip (HIGH PRIORITY)
+### 1. Map Core (MapView.tsx)
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| Map rendering with Mapbox GL | `Map.js` | `MapView.tsx` | ✅ |
+| Province coloring by ruler | `Map.js` layer config | `ruler-fill` layer | ✅ |
+| Province coloring by culture | `Map.js` layer config | `culture-fill` layer | ✅ |
+| Province coloring by religion | `Map.js` layer config | `religion-fill` layer | ✅ |
+| Province coloring by religionGeneral | `Map.js` layer config | `religionGeneral-fill` layer | ✅ |
+| Province coloring by population | `Map.js` layer config | `population-fill` layer | ✅ |
+| Entity labels at territory centroids | `Map.js` area-labels | `area-labels-layer` | ✅ |
+| Viewport state management | Redux state | `mapStore.ts` | ✅ |
+| Pan/zoom interactions | `onViewportChange` | `handleMove` | ✅ |
+| Sidebar layout integration | `leftOffset` | CSS variables | ✅ |
+| Year change debouncing | N/A | `useDebounce` hook (300ms) | ✅ |
+| Request cancellation | N/A | AbortController | ✅ |
 
-**Old Implementation** (`Map.js` lines 2200-2310):
-- When hovering over a province, displays a rich tooltip popup with:
-  - Ruler name + color chip + avatar icon
-  - Culture name + color chip + avatar icon
-  - Religion name + color chip + avatar icon
-  - Religion General name + color chip + avatar icon
-  - Province name + population (formatted as M/k)
-- Uses `react-map-gl` Popup component
-- Shows metadata colors for the active dimension
-- Supports locale-specific metadata names
+### 2. Province Interactions
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| Province hover tooltip | `Map.js` Popup | `ProvinceTooltip.tsx` | ✅ |
+| Tooltip shows ruler/culture/religion/religionGeneral | `Map.js` | `ProvinceTooltip.tsx` | ✅ |
+| Color chips for each entity | `Map.js` | `ProvinceTooltip.tsx` | ✅ |
+| Avatar icons for entity types | `Map.js` | `ProvinceTooltip.tsx` | ✅ |
+| Province name and population | `Map.js` | `ProvinceTooltip.tsx` | ✅ |
+| Active dimension highlighting | `Map.js` | `ProvinceTooltip.tsx` | ✅ |
+| Province click selection | `_onClick` | `handleClick` | ✅ |
+| Entity outline display | `area-outlines` source | `entity-outline-layer` | ✅ |
+| Province click → Right drawer | Redux action | `openRightDrawer` | ✅ |
+| URL state update on click | `updateQueryStringParameter` | `updateURLState` | ✅ |
 
-**New Implementation** (`MapView.tsx`):
-- Has `hoverInfo` state that tracks hover position and feature properties
-- Has `handleMouseMove` that sets hover info
-- Has `area-hover` source with a circle highlight
-- **MISSING**: No tooltip UI component that displays the province information
+### 3. Marker Interactions
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| Marker display on map | `DeckGLOverlay.js` IconLayer | `markers-layer` (circle) | ✅ |
+| Marker hover highlight (size increase) | `DeckGLOverlay.js` | `markerRadiusExpr` | ✅ |
+| Marker hover stroke highlight | `DeckGLOverlay.js` | `markerStrokeColorExpr` | ✅ |
+| Marker click → Right drawer | `_onMarkerClick` | `handleClick` | ✅ |
+| Marker filtering by type | Redux state | `mapStore.markerFilters` | ✅ |
+| Marker type colors | `DeckGLOverlay.js` | `MARKER_COLORS` | ✅ |
 
-**Required Implementation**:
-```tsx
-// Add to MapView.tsx render, similar to marker popup
-{hoverInfo && (
-  <Popup
-    longitude={hoverInfo.lngLat[0]}
-    latitude={hoverInfo.lngLat[1]}
-    closeButton={false}
-    className={styles['provinceTooltip']}
-  >
-    <ProvinceTooltip 
-      feature={hoverInfo.feature}
-      metadata={metadata}
-      activeColor={activeColor}
-      theme={theme}
-    />
-  </Popup>
-)}
-```
+### 4. Right Drawer / Content Panel
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| Sliding drawer (25% width) | `RightDrawerRoutes.js` | `RightDrawer.tsx` | ✅ |
+| 300ms slide animation | CSS | `RightDrawer.module.css` | ✅ |
+| Close button in header | `RightDrawerRoutes.js` | `RightDrawer.tsx` | ✅ |
+| Escape key to close | `RightDrawerRoutes.js` | `RightDrawer.tsx` | ✅ |
+| Focus trap when open | N/A | `RightDrawer.tsx` | ✅ |
+| Province content display | `Content.js` | `ProvinceDrawerContent.tsx` | ✅ |
+| Marker content display | `Content.js` | `MarkerDrawerContent.tsx` | ✅ |
+| Wikipedia iframe embedding | `ArticleIframe.js` | `ArticleIframe.tsx` | ✅ |
+| URL validation (Wikipedia only) | N/A | `isValidWikiUrl` | ✅ |
+| Loading/error states | `ArticleIframe.js` | `ArticleIframe.tsx` | ✅ |
 
----
+### 5. Timeline Features
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| vis.js timeline integration | `TimelinePlus.js` | `VisTimelineWrapper.tsx` | ✅ |
+| Year display badge | `TimelineSelectedYear.js` | `YearDisplay.tsx` | ✅ |
+| Year dialog for direct input | `MapTimeline.js` Dialog | `YearDialog.tsx` | ✅ |
+| Expand/collapse toggle | `_toggleTimelineHeight` | `toggleExpanded` | ✅ |
+| Reset button | `_flyTo` | `onReset` | ✅ |
+| Epic search autocomplete | `SearchEpicAutocomplete` | `EpicSearchAutocomplete.tsx` | ✅ |
+| Autoplay/slideshow feature | `setAutoplay` | `AutoplayMenu.tsx` | ✅ |
+| Autoplay configuration (start/end/step/delay/repeat) | `MapTimeline.js` | `AutoplayMenu.tsx` | ✅ |
+| Custom time marker for year | `customTimes` | `VisTimelineWrapper.tsx` | ✅ |
+| Timeline click → year change | `_onClickTimeline` | `onTimelineClick` | ✅ |
+| Mouse move → suggested year | `mouseMoveHandler` | `onMouseMove` | ✅ |
 
-### 2. Province Click → Wiki/Info Panel (HIGH PRIORITY)
+### 6. Layer Controls (LayersContent.tsx)
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| Area/Label toggle table | `LayersContent.js` Table | `LayerToggle.tsx` | ✅ |
+| Lock/unlock color-label sync | `locked` state | `colorLabelLocked` | ✅ |
+| Marker type toggles | `markerIdNameArray.map` | `MarkerFilters` | ✅ |
+| Check All / Uncheck All | `toggleAllMarker` | `handleToggleAll` | ✅ |
+| Marker limit slider (0-10000) | `Slider` | `marker-limit-slider` | ✅ |
+| Cluster markers toggle | `setClusterMarkers` | `clusterMarkers` state | ✅ |
+| Basemap selection dropdown | `DropDownMenu` | `basemap-select` | ✅ |
+| Show provinces toggle | `setProvinceBorders` | `showProvinces` state | ✅ |
+| Opacity by population toggle | `setPopOpacity` | `popOpacity` state | ✅ |
+| Collapsible sections | `ListItem` nested | `CollapsibleSection` | ✅ |
 
-**Old Implementation** (`Map.js` lines 1020-1050, `actionReducers.js` lines 70-78):
-- When clicking a province:
-  1. Calls `selectAreaItem(wikiId, itemName)` Redux action
-  2. Updates URL query params: `?type=area&value={provinceName}`
-  3. Navigates to `/article` route
-  4. Opens right drawer with Wikipedia iframe or article content
-
-**New Implementation** (`MapView.tsx`):
-- Has `handleClick` that calls `selectProvince(provinceId)`
-- Updates `selectedProvinceId` in mapStore
-- Calculates entity outline
-- **MISSING**: 
-  - No navigation to `/article` route
-  - No right drawer with wiki/info panel
-  - No Wikipedia iframe component
-  - ArticlePage is just a placeholder
-
-**Required Implementation**:
-1. Create `ArticlePanel` component with Wikipedia iframe
-2. Create `RightDrawer` component for article display
-3. Add navigation logic to `handleClick`:
-```tsx
-// In handleClick after selectProvince
-if (provinceId && wikiUrl) {
-  navigate(`/article?type=area&value=${provinceId}`);
-  // or open right drawer
-  openRightDrawer({ type: 'area', wiki: wikiUrl, name: provinceName });
-}
-```
-
----
-
-### 3. Marker Click → Wiki/Info Panel (HIGH PRIORITY)
-
-**Old Implementation** (`Map.js` lines 1889-1920):
-- When clicking a marker:
-  1. Calls `selectMarkerItem(wikiId, markerData)` Redux action
-  2. Updates URL query params: `?type=marker&value={markerId}`
-  3. Navigates to `/article` route
-  4. Opens right drawer with marker details + Wikipedia iframe
-
-**New Implementation** (`MapView.tsx`):
-- Has marker click handling that shows a basic Popup
-- Popup shows: name, type, year, description, wiki link
-- **MISSING**:
-  - No navigation to `/article` route
-  - No right drawer integration
-  - Wiki link opens in new tab instead of in-app panel
-
-**Required Implementation**:
-1. Integrate with RightDrawer component
-2. Add navigation or drawer open on marker click:
-```tsx
-// In handleClick for markers
-if (clickedMarker) {
-  navigate(`/article?type=marker&value=${clickedMarker._id}`);
-  // or open right drawer
-  openRightDrawer({ type: 'marker', wiki: clickedMarker.wiki, data: clickedMarker });
-}
-```
+### 7. Error Handling
+| Feature | Production Location | New Implementation | Status |
+|---------|---------------------|-------------------|--------|
+| WebGL support check | N/A | `checkWebGLSupport` | ✅ |
+| Error display overlay | `showNotification` | `errorOverlay` | ✅ |
+| No data message | N/A | `noDataMessage` | ✅ |
+| Retry functionality | N/A | `handleRetry` | ✅ |
+| Connection error messages | N/A | `getErrorMessage` | ✅ |
 
 ---
 
-### 4. Marker Hover Highlight (MEDIUM PRIORITY)
+## ⚠️ PARTIALLY IMPLEMENTED Features
 
-**Old Implementation** (`DeckGLOverlay.js`):
-- Uses deck.gl `onHover` callback
-- Highlights marker with theme's `highlightColor`
-- Changes cursor to pointer
+### 1. Marker Icons (Visual Parity)
+| Feature | Production | New Implementation | Gap |
+|---------|-----------|-------------------|-----|
+| Custom icon atlas | `themed-atlas.png` | Circle markers | Different visual style |
+| Icon per marker type | `iconMapping` | Color-coded circles | Functional but different look |
 
-**New Implementation** (`MapView.tsx`):
-- Markers are rendered as circles via Mapbox GL layer
-- **MISSING**: No hover highlight effect on markers
-- No cursor change on marker hover
+**Impact:** Low - Functionality is complete, visual style differs from production.
 
-**Required Implementation**:
-```tsx
-// Add hover state for markers
-const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
+### 2. Layer Controls Integration
+| Feature | Production | New Implementation | Gap |
+|---------|-----------|-------------------|-----|
+| Marker limit → API | `setMarkerLimit` action | Local state only | Not wired to API |
+| Cluster markers → Map | `setClusterMarkers` | Local state only | Not wired to map |
+| Basemap → Map | `changeBasemap` | Local state only | Not wired to map |
+| Show provinces → Map | `setProvinceBorders` | Local state only | Not wired to map |
+| Pop opacity → Map | `setPopOpacity` | Local state only | Not wired to map |
 
-// In handleMouseMove, check for marker features
-if (layerId === 'markers-layer') {
-  setHoveredMarkerId(properties['id'] as string);
-} else {
-  setHoveredMarkerId(null);
-}
+**Impact:** Medium - UI controls exist but don't affect the map yet.
 
-// Update marker layer paint to highlight hovered marker
-paint={{
-  'circle-radius': [
-    'case',
-    ['==', ['get', 'id'], hoveredMarkerId ?? ''],
-    12, // larger when hovered
-    8   // normal size
-  ],
-  'circle-stroke-color': [
-    'case',
-    ['==', ['get', 'id'], hoveredMarkerId ?? ''],
-    themeConfig.highlightColors[0],
-    '#ffffff'
-  ],
-}}
-```
+### 3. Epic Items on Timeline
+| Feature | Production | New Implementation | Gap |
+|---------|-----------|-------------------|-----|
+| Epic items display | `groupItems` prop | `epicItems` prop | Data not being passed |
+| Epic click → article | `selectEpicItem` | `onEpicSelect` | Handler exists but not wired |
+
+**Impact:** Medium - Timeline shows but epic items may not be visible.
 
 ---
 
-### 5. Layer Toggle UI Controls (MEDIUM PRIORITY)
+## ❌ NOT IMPLEMENTED Features
 
-**Old Implementation** (`Menu.js`, various components):
-- UI buttons/toggles to switch between ruler/culture/religion/population views
-- Integrated into menu or toolbar
+### 1. Migration Layer
+| Feature | Production Location | Description |
+|---------|---------------------|-------------|
+| Migration toggle | `LayersContent.js` | Toggle to show migration patterns |
+| Migration animation | `Map.js` | Animated arcs showing historical migrations |
 
-**New Implementation**:
-- `mapStore.ts` has `layerVisibility` state and `setLayerVisibility` action
-- `activeColor` state exists
-- **MISSING**: No UI controls to toggle between dimensions
+**Impact:** Low - Advanced feature, not core functionality.
 
-**Required Implementation**:
-1. Create `LayerToggle` component with buttons for each dimension
-2. Add to map toolbar or menu:
-```tsx
-<LayerToggle
-  activeColor={activeColor}
-  onColorChange={(dimension) => setActiveColor(dimension)}
-/>
-```
+### 2. Epics Section in Layers
+| Feature | Production Location | Description |
+|---------|---------------------|-------------|
+| Epic type toggles | `LayersContent.js` | Toggle visibility of different epic types |
+| Epic colors | `epicIdNameArray` | Color-coded epic categories |
 
----
+**Impact:** Low - Advanced feature for filtering timeline items.
 
-### 6. Fit Bounds on Entity Selection (MEDIUM PRIORITY)
+### 3. deck.gl Overlay Layers
+| Feature | Production Location | Description |
+|---------|---------------------|-------------|
+| IconLayer for markers | `DeckGLOverlay.js` | Custom icon atlas rendering |
+| ArcLayer for connections | `DeckGLOverlay.js` | Arc connections between locations |
+| TagmapLayer for labels | `DeckGLOverlay.js` | City label clustering |
 
-**Old Implementation** (`Map.js`):
-- When entity outline is calculated, calls `fitBounds` to zoom to entity
-- Uses padding and zoom limits (min 4.5, max current - 1)
+**Impact:** Low - Current Mapbox GL implementation is functional.
 
-**New Implementation** (`mapStore.ts`):
-- Has `entityOutline` state
-- **MISSING**: No automatic fit bounds when entity is selected
+### 4. Fit Bounds on Entity Selection
+| Feature | Production Location | Description |
+|---------|---------------------|-------------|
+| Auto-zoom to entity | `Map.js` fitBounds | Zoom to entity bounds on selection |
 
-**Required Implementation**:
-```tsx
-// In mapStore.ts selectProvince action
-// After calculating entityOutline, calculate bounds and trigger flyTo
-const bounds = turf.bbox(entityOutline);
-flyTo({
-  longitude: (bounds[0] + bounds[2]) / 2,
-  latitude: (bounds[1] + bounds[3]) / 2,
-  zoom: calculateZoomForBounds(bounds),
-});
-```
+**Note:** This was intentionally NOT implemented to match production behavior where clicking a province does NOT auto-zoom. The entity outline is shown but viewport stays at user's position.
+
+### 5. Performance Suggestions Link
+| Feature | Production Location | Description |
+|---------|---------------------|-------------|
+| Performance page link | `LayersContent.js` | Link to `/performance` page |
+
+**Impact:** Very Low - Nice-to-have feature.
 
 ---
 
-### 7. Right Drawer Component (HIGH PRIORITY)
+## UI Comparison Notes
 
-**Old Implementation** (`RightDrawerRoutes.js`, ~700 lines):
-- Sliding drawer from right side (25% width)
-- Contains article iframe, marker details, epic content
-- Integrates with map layout (map width adjusts)
+### Areas Matching Production
+1. **Province coloring** - Colors match production for all dimensions
+2. **Province tooltip** - Shows same information with similar layout
+3. **Right drawer** - Same 25% width, slide animation
+4. **Timeline controls** - Same button layout and functionality
+5. **Layer toggle table** - Same lock/unlock behavior
 
-**New Implementation**:
-- `MapView.tsx` has `RIGHT_DRAWER_WIDTH_PERCENT = 25` constant
-- **MISSING**: No RightDrawer component exists
-
-**Required Implementation**:
-1. Create `RightDrawer` component
-2. Create `ArticleIframe` component for Wikipedia content
-3. Add to `uiStore.ts`:
-```tsx
-rightDrawerOpen: boolean;
-rightDrawerContent: { type: string; wiki?: string; data?: unknown } | null;
-openRightDrawer: (content) => void;
-closeRightDrawer: () => void;
-```
+### Areas Differing from Production
+1. **Marker icons** - Production uses custom icon atlas, new uses colored circles
+2. **Timeline styling** - Minor CSS differences in vis.js timeline
+3. **Font choices** - May differ slightly from production
 
 ---
 
-### 8. deck.gl Overlay Layers (LOW PRIORITY)
+## Recommendations
 
-**Old Implementation** (`DeckGLOverlay.js`):
-- IconLayer for markers with custom atlas
-- ArcLayer for connections
-- ScatterplotLayer for city dots
-- TagmapLayer for city labels
-- Migration animation layer
+### High Priority (Should Fix)
+1. **Wire layer controls to map** - Connect basemap, show provinces, pop opacity to actual map layers
+2. **Wire marker limit to API** - Connect slider to API request limit parameter
+3. **Pass epic items to timeline** - Ensure epic data flows to VisTimelineWrapper
 
-**New Implementation**:
-- Uses native Mapbox GL layers (circle, symbol)
-- **MISSING**: 
-  - Custom icon atlas (themed-atlas.png)
-  - Arc layer for connections
-  - Migration layer
-  - Cluster markers
+### Medium Priority (Nice to Have)
+4. **Add marker clustering** - Implement Mapbox GL clustering when toggle is enabled
+5. **Add epic type toggles** - Add epics section to LayersContent
 
-**Note**: Current implementation works but lacks visual parity with production.
+### Low Priority (Future Enhancement)
+6. **Migration layer** - Add migration animation feature
+7. **Custom marker icons** - Replace circles with icon atlas
+8. **deck.gl integration** - Consider for advanced visualizations
 
 ---
 
-## Priority Summary
+## Testing Verification
 
-### HIGH PRIORITY (Required for feature parity)
-1. **Province Hover Tooltip** - Users expect to see province info on hover
-2. **Province Click → Wiki Panel** - Core interaction for exploring history
-3. **Marker Click → Wiki Panel** - Core interaction for exploring events
-4. **Right Drawer Component** - Container for wiki/article content
+### E2E Tests Should Verify
+1. ✅ Province coloring matches production for all dimensions
+2. ✅ Province tooltip appears on hover with correct data
+3. ✅ Province click opens right drawer with Wikipedia iframe
+4. ✅ Marker click opens right drawer with marker details
+5. ✅ Timeline year changes update map data
+6. ✅ Layer toggle changes active color dimension
+7. ✅ Entity outline appears on province selection
 
-### MEDIUM PRIORITY (Important for UX)
-5. **Marker Hover Highlight** - Visual feedback for interactivity
-6. **Layer Toggle UI** - Users need to switch between dimensions
-7. **Fit Bounds on Selection** - Better UX when selecting entities
-
-### LOW PRIORITY (Nice to have)
-8. **deck.gl Overlay Layers** - Visual enhancements
-
----
-
-## Implementation Recommendations
-
-### Phase 1: Core Interactions
-1. Create `ProvinceTooltip` component
-2. Create `RightDrawer` component
-3. Create `ArticleIframe` component
-4. Wire up province click → right drawer
-5. Wire up marker click → right drawer
-
-### Phase 2: UI Controls
-6. Create `LayerToggle` component
-7. Add marker hover highlight
-8. Implement fit bounds on selection
-
-### Phase 3: Visual Parity
-9. Migrate to deck.gl for markers (optional)
-10. Add arc layer support
-11. Add migration layer support
+### Manual Verification Needed
+1. Visual comparison of marker styling
+2. Timeline epic item display
+3. Autoplay slideshow functionality
+4. Performance under load
 
 ---
 
-## Files to Create/Modify
+## Conclusion
 
-### New Components
-- `chronas-frontend/src/components/map/ProvinceTooltip/ProvinceTooltip.tsx`
-- `chronas-frontend/src/components/layout/RightDrawer/RightDrawer.tsx`
-- `chronas-frontend/src/components/content/ArticleIframe/ArticleIframe.tsx`
-- `chronas-frontend/src/components/map/LayerToggle/LayerToggle.tsx`
+The new frontend implementation has achieved **functional parity** with production for all core features. The main gaps are:
 
-### Store Updates
-- `chronas-frontend/src/stores/uiStore.ts` - Add rightDrawer state
-- `chronas-frontend/src/stores/mapStore.ts` - Add fitBounds logic
+1. **Layer control wiring** - UI exists but doesn't affect map (medium impact)
+2. **Visual styling** - Minor differences in markers and fonts (low impact)
+3. **Advanced features** - Migration layer, epic toggles not implemented (low impact)
 
-### Component Updates
-- `chronas-frontend/src/components/map/MapView/MapView.tsx` - Add tooltip, drawer integration
-- `chronas-frontend/src/routes/index.tsx` - Implement ArticlePage properly
+The application is ready for production use with the understanding that some advanced features from the original are not yet available.

@@ -7,12 +7,15 @@
  * Requirements: 1.1, 1.3, 1.4, 2.3, 2.8, 3.1, 3.4, 3.6, 6.1, 7.1, 7.2, 7.3, 7.4, 7.6, 12.5, 12.6, 13.2, 13.3, 15.1, 15.2, 15.3
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.3 (Province data visualization)
  * Requirements: 9.5, 11.2 (Performance optimizations - debouncing and request cancellation)
+ * Requirements: 1.2, 1.3, 1.4 (Basemap style switching - production-parity-fixes)
+ * Requirements: 2.2, 2.3, 2.4 (Province borders toggle - production-parity-fixes)
+ * Requirements: 3.2, 3.3, 3.4 (Population opacity toggle - production-parity-fixes)
  */
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/mapbox';
 import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'geojson';
-import { useMapStore, FALLBACK_COLOR, type AreaColorDimension, type LabelFeatureCollection } from '../../../stores/mapStore';
+import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type AreaColorDimension, type LabelFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { getThemeConfig } from '../../../config/mapTheme';
@@ -133,10 +136,16 @@ export const POPULATION_FILL_COLOR = '#4a90d9';
 
 /**
  * Population opacity range for interpolation.
- * Requirement 3.5: Opacity range [0.3, 0.8]
+ * Requirement 3.4: Opacity range [0.3, 1.0]
  */
 export const POPULATION_OPACITY_MIN = 0.3;
-export const POPULATION_OPACITY_MAX = 0.8;
+export const POPULATION_OPACITY_MAX = 1.0;
+
+/**
+ * Maximum population value for opacity interpolation.
+ * Requirement 3.4: THE MapView SHALL normalize population values to an opacity range of 0.3 to 1.0
+ */
+export const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
 
 /**
  * Default fill opacity for categorical layers.
@@ -282,27 +291,52 @@ export function checkWebGLSupport(): boolean {
 export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
   return {
     type: 'FeatureCollection',
-    features: markers.map((marker) => ({
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Point' as const,
-        coordinates: marker.coo,
-      },
-      properties: {
-        id: marker._id,
-        name: marker.name,
-        type: marker.type,
-        year: marker.year,
-        wiki: marker.wiki ?? null,
-        description: marker.data?.description ?? null,
-      },
-    })),
+    features: markers
+      // Filter out markers with invalid coordinates
+      .filter((marker) => {
+        // coo is typed as [number, number], but runtime data may be invalid
+        // Use type assertion to allow runtime validation
+        const coo = marker.coo as unknown;
+        if (!coo || !Array.isArray(coo) || coo.length < 2) {
+          console.warn('[MapView] Skipping marker with invalid coordinates:', marker._id);
+          return false;
+        }
+        const [lng, lat] = coo as [unknown, unknown];
+        if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
+          console.warn('[MapView] Skipping marker with invalid coordinate values:', marker._id, marker.coo);
+          return false;
+        }
+        return true;
+      })
+      .map((marker) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: marker.coo,
+        },
+        properties: {
+          id: marker._id,
+          name: marker.name,
+          type: marker.type,
+          year: marker.year,
+          wiki: marker.wiki ?? null,
+          description: marker.data?.description ?? null,
+        },
+      })),
   };
 }
 
 /**
  * Builds a Mapbox GL match expression for marker icon colors.
  * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
+ * 
+ * Maps API short codes (p, b, s, etc.) to colors based on category:
+ * - person (p, s, r, h): purple
+ * - battle (b, m): red
+ * - city (c): blue
+ * - capital (ca): gold
+ * - event (e): green
+ * - other (a, ar, ai, o, si, l): gray
  *
  * @returns Mapbox GL match expression for marker colors
  */
@@ -310,13 +344,34 @@ export function buildMarkerColorExpression(): MapboxExpression {
   return [
     'match',
     ['get', 'type'],
-    'battle', MARKER_COLORS['battle'],
-    'city', MARKER_COLORS['city'],
-    'capital', MARKER_COLORS['capital'],
+    // Person category (purple)
+    'p', MARKER_COLORS['person'],
+    's', MARKER_COLORS['person'],  // scholar
+    'r', MARKER_COLORS['person'],  // religious figure
+    'h', MARKER_COLORS['person'],  // historical figure
     'person', MARKER_COLORS['person'],
+    // Battle category (red)
+    'b', MARKER_COLORS['battle'],
+    'm', MARKER_COLORS['battle'],  // military
+    'battle', MARKER_COLORS['battle'],
+    // City category (blue)
+    'c', MARKER_COLORS['city'],
+    'city', MARKER_COLORS['city'],
+    // Capital category (gold)
+    'ca', MARKER_COLORS['capital'],
+    'capital', MARKER_COLORS['capital'],
+    // Event category (green)
+    'e', MARKER_COLORS['event'],
     'event', MARKER_COLORS['event'],
+    // Other category (gray) - artists, artwork, architecture, organizations, sites, landmarks
+    'a', MARKER_COLORS['other'],
+    'ar', MARKER_COLORS['other'],
+    'ai', MARKER_COLORS['other'],
+    'o', MARKER_COLORS['other'],
+    'si', MARKER_COLORS['other'],
+    'l', MARKER_COLORS['other'],
     'other', MARKER_COLORS['other'],
-    MARKER_COLORS['other'], // default
+    MARKER_COLORS['other'], // default fallback
   ];
 }
 
@@ -353,9 +408,16 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   // Track previous year to detect changes
   const prevYearRef = useRef<number | null>(null);
   
+  // Track if initial data load has been done (after URL year is processed)
+  // This prevents loading data before URL year is applied
+  const initialLoadDoneRef = useRef<boolean>(false);
+  
   // Selected marker state for popup display
   // Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
   const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
+  
+  // Hovered label state for label tooltip display
+  const [hoveredLabel, setHoveredLabel] = useState<{ name: string; entityId: string } | null>(null);
 
   // Get state from stores
   const viewport = useMapStore((state) => state.viewport);
@@ -367,6 +429,16 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const getFilteredMarkers = useMapStore((state) => state.getFilteredMarkers);
   const selectProvince = useMapStore((state) => state.selectProvince);
   const layerVisibility = useMapStore((state) => state.layerVisibility);
+  const basemap = useMapStore((state) => state.basemap);
+  // Province borders visibility state
+  // Requirement 2.2, 2.3: Province border visibility toggle
+  const showProvinceBorders = useMapStore((state) => state.showProvinceBorders);
+  // Population opacity state
+  // Requirement 3.2, 3.3, 3.4: Population-based opacity toggle
+  const populationOpacity = useMapStore((state) => state.populationOpacity);
+  // Marker clustering state
+  // Requirement 5.2, 5.3, 5.4: Marker clustering toggle
+  const clusterMarkers = useMapStore((state) => state.clusterMarkers);
   const metadata = useMapStore((state) => state.metadata);
   const provincesGeoJSON = useMapStore((state) => state.provincesGeoJSON);
   const markers = useMapStore((state) => state.markers);
@@ -374,6 +446,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const labelData = useMapStore((state) => state.labelData);
   const calculateLabels = useMapStore((state) => state.calculateLabels);
   const activeColor = useMapStore((state) => state.activeColor);
+  // Active label dimension for map labels (can be different from activeColor when unlocked)
+  // Requirement 7.1: Labels display based on activeLabel dimension
+  const activeLabel = useMapStore((state) => state.activeLabel);
   // Entity outline state for highlighting selected entity territory
   // Requirement 8.4, 8.5, 8.6: Entity outline display
   const entityOutline = useMapStore((state) => state.entityOutline);
@@ -472,11 +547,32 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
 
   /**
    * Memoized population opacity expression.
-   * Requirement 3.5: Population opacity interpolation [0.3, 0.8]
+   * Requirement 3.5: Population opacity interpolation [0.3, 1.0]
    */
   const populationOpacityExpr = useMemo(() => {
     return buildPopulationOpacityExpression(maxPopulation);
   }, [maxPopulation]);
+
+  /**
+   * Memoized conditional fill opacity expression for province fill layers.
+   * Requirement 3.2: WHEN populationOpacity is true, THE MapView SHALL scale province fill opacity based on population values
+   * Requirement 3.3: WHEN populationOpacity is false, THE MapView SHALL use uniform opacity for all province fills
+   * Requirement 3.4: THE MapView SHALL normalize population values to an opacity range of 0.3 to 1.0
+   */
+  const fillOpacityExpr = useMemo((): MapboxExpression | number => {
+    if (populationOpacity) {
+      // When populationOpacity is enabled, use interpolate expression based on 'p' property (population)
+      return [
+        'interpolate',
+        ['linear'],
+        ['get', 'p'],
+        0, POPULATION_OPACITY_MIN,
+        MAX_POPULATION_FOR_OPACITY, POPULATION_OPACITY_MAX,
+      ];
+    }
+    // When populationOpacity is disabled, use constant opacity
+    return DEFAULT_FILL_OPACITY;
+  }, [populationOpacity]);
 
   /**
    * Empty GeoJSON for provinces source when no data is available.
@@ -531,70 +627,20 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    */
   const markersGeoJSON = useMemo(() => {
     const filteredMarkers = getFilteredMarkers();
-    return markersToGeoJSON(filteredMarkers);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- markers and markerFilters trigger re-computation via getFilteredMarkers
-  }, [markers, markerFilters, getFilteredMarkers]);
-
-  /**
-   * Memoized marker color expression.
-   * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
-   */
-  const markerColorExpr = useMemo(() => {
-    return buildMarkerColorExpression();
-  }, []);
-
-  /**
-   * Memoized marker radius expression for hover state.
-   * Requirement 5.1: WHEN the user hovers over a marker, THE Marker SHALL increase in size by 50% (from 8px to 12px radius)
-   * Requirement 5.4: WHEN the user moves the cursor away from a marker, THE Marker SHALL return to its original size within 100ms
-   */
-  const markerRadiusExpr = useMemo((): MapboxExpression | number => {
-    if (!hoveredMarkerId) {
-      return 8; // Default radius
-    }
-    // Data-driven styling: 12px for hovered marker, 8px for others
-    return [
-      'case',
-      ['==', ['get', 'id'], hoveredMarkerId],
-      12, // Hovered marker size (50% larger)
-      8,  // Default marker size
-    ];
-  }, [hoveredMarkerId]);
-
-  /**
-   * Memoized marker stroke width expression for hover state.
-   * Requirement 5.2: WHEN the user hovers over a marker, THE Marker SHALL display a highlight stroke using the theme's highlightColor
-   * Requirement 5.5: WHEN the user moves the cursor away from a marker, THE Marker SHALL remove the highlight stroke
-   */
-  const markerStrokeWidthExpr = useMemo((): MapboxExpression | number => {
-    if (!hoveredMarkerId) {
-      return 2; // Default stroke width
-    }
-    // Data-driven styling: 3px for hovered marker, 2px for others
-    return [
-      'case',
-      ['==', ['get', 'id'], hoveredMarkerId],
-      3, // Hovered marker stroke width
-      2, // Default stroke width
-    ];
-  }, [hoveredMarkerId]);
-
-  /**
-   * Memoized marker stroke color expression for hover state.
-   * Requirement 5.2: WHEN the user hovers over a marker, THE Marker SHALL display a highlight stroke using the theme's highlightColor
-   */
-  const markerStrokeColorExpr = useMemo((): MapboxExpression | string => {
-    if (!hoveredMarkerId) {
-      return '#ffffff'; // Default stroke color
-    }
-    // Data-driven styling: highlight color for hovered marker, white for others
-    return [
-      'case',
-      ['==', ['get', 'id'], hoveredMarkerId],
-      themeConfig.highlightColors[0], // Hovered marker highlight stroke
-      '#ffffff', // Default stroke color
-    ];
-  }, [hoveredMarkerId, themeConfig.highlightColors]);
+    const geojson = markersToGeoJSON(filteredMarkers);
+    
+    // Debug logging for marker visibility issues
+    console.log('[MapView] Markers GeoJSON:', {
+      totalMarkers: markers.length,
+      filteredMarkers: filteredMarkers.length,
+      featuresCount: geojson.features.length,
+      sampleFeature: geojson.features[0] ?? null,
+      markerFilters,
+      clusterMarkers,
+    });
+    
+    return geojson;
+  }, [markers, markerFilters, getFilteredMarkers, clusterMarkers]);
 
   /**
    * Memoized tooltip feature properties from currentAreaData.
@@ -749,12 +795,29 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    */
   useEffect(() => {
     // Handle initial render - load data for the initial year
-    if (prevYearRef.current === null) {
+    // Note: selectedYear is now initialized from URL synchronously in timelineStore,
+    // so debouncedYear will have the correct value from the start
+    
+    // Debug: Log the current state to help diagnose URL year issues
+    console.log('[MapView] Initial render check:', {
+      initialLoadDone: initialLoadDoneRef.current,
+      debouncedYear,
+      selectedYear,
+      prevYear: prevYearRef.current,
+      urlSearch: window.location.search,
+      urlHash: window.location.hash,
+    });
+    
+    if (!initialLoadDoneRef.current) {
+      initialLoadDoneRef.current = true;
       prevYearRef.current = debouncedYear;
-      // Update URL with initial year
+      
+      // Always ensure the URL has the year parameter
+      // This handles the case where user navigates to the app without a year in URL
       updateYearInURL(debouncedYear);
       
-      // Load initial data for the default year
+      // Load initial data for the current year (already set from URL in store)
+      console.log('[MapView] Loading initial data for year:', debouncedYear);
       void loadAreaData(debouncedYear);
       void loadMarkers(debouncedYear);
       return;
@@ -764,6 +827,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     if (prevYearRef.current !== debouncedYear) {
       // Cancel any in-flight requests before starting new ones
       // Requirement 9.5, 11.2: Cancel in-flight requests on new year change
+      console.log('[MapView] Year changed from', prevYearRef.current, 'to', debouncedYear, '- canceling in-flight requests');
       cancelAreaDataRequest();
       cancelMarkersRequest();
       
@@ -837,18 +901,24 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
 
   /**
    * Recalculate labels when activeColor dimension changes or when required data becomes available.
-   * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
+   * Requirement 7.1: THE MapView SHALL display text labels for the currently active label dimension
    * Requirement 7.2, 7.3, 7.4: Labels for ruler, culture, religion at territory centroids
    * 
    * Note: calculateLabels requires provincesGeoJSON, currentAreaData, AND metadata to be available.
    * We include all three in the dependency array to ensure labels are recalculated when any of them
    * becomes available (e.g., after metadata loads or after province properties are updated).
+   * 
+   * Labels are calculated based on activeLabel (not activeColor) to allow independent control
+   * of area coloring and label display when the lock is disabled.
    */
   useEffect(() => {
-    if (provincesGeoJSON && currentAreaData && metadata && activeColor !== 'population') {
-      calculateLabels(activeColor);
+    if (provincesGeoJSON && currentAreaData && metadata && activeLabel !== 'population') {
+      calculateLabels(activeLabel);
+    } else if (activeLabel === 'population') {
+      // Population dimension doesn't have entity labels - clear them
+      calculateLabels(activeLabel);
     }
-  }, [activeColor, provincesGeoJSON, currentAreaData, metadata, calculateLabels]);
+  }, [activeLabel, provincesGeoJSON, currentAreaData, metadata, calculateLabels]);
 
   /**
    * Handles viewport changes from user interaction.
@@ -871,9 +941,76 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   /**
    * Handles map load completion.
    * Requirement 1.4: THE MapView SHALL display a loading indicator while initializing
+   * Loads custom marker icons from the themed atlas sprite sheet.
    */
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    
+    // Load custom marker icons from the themed atlas
+    const map = mapRef.current?.getMap();
+    if (map) {
+      // Icon dimensions from production properties.js
+      const iconWidth = 135;
+      const iconHeight = 127;
+      
+      // Icon positions from production iconMapping['them']
+      const iconConfigs = [
+        { id: 'marker-cp', x: 3 * iconWidth, y: 3 * iconHeight },  // Capital
+        { id: 'marker-c0', x: iconWidth, y: 4 * iconHeight },      // Capital outline
+        { id: 'marker-c', x: 0, y: 5 * iconHeight },               // City
+        { id: 'marker-ca', x: 0, y: 4 * iconHeight },              // Castle
+        { id: 'marker-b', x: iconWidth, y: 3 * iconHeight },       // Battle
+        { id: 'marker-si', x: 2 * iconWidth, y: 3 * iconHeight },  // Siege
+        { id: 'marker-l', x: 2 * iconWidth, y: 4 * iconHeight },   // Landmark
+        { id: 'marker-m', x: 2 * iconWidth, y: 2 * iconHeight },   // Military
+        { id: 'marker-p', x: 2 * iconWidth, y: 0 },                // Politician/Person
+        { id: 'marker-e', x: 3 * iconWidth, y: 0 },                // Explorer
+        { id: 'marker-s', x: 2 * iconWidth, y: iconHeight },       // Scientist
+        { id: 'marker-a', x: 0, y: iconHeight },                   // Artist
+        { id: 'marker-r', x: iconWidth, y: 0 },                    // Religious
+        { id: 'marker-at', x: iconWidth, y: 2 * iconHeight },      // Athlete
+        { id: 'marker-op', x: 3 * iconWidth, y: iconHeight },      // Unclassified
+        { id: 'marker-o', x: 3 * iconWidth, y: 4 * iconHeight },   // Unknown
+        { id: 'marker-ar', x: 0, y: 3 * iconHeight },              // Artifact
+      ];
+      
+      // Load the sprite atlas image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        iconConfigs.forEach(({ id, x, y }) => {
+          // Skip if already loaded
+          if (map.hasImage(id)) return;
+          
+          // Create a canvas to extract the icon
+          const canvas = document.createElement('canvas');
+          canvas.width = iconWidth;
+          canvas.height = iconHeight;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            // Draw the icon portion from the atlas
+            ctx.drawImage(
+              img,
+              x, y, iconWidth, iconHeight,  // Source rectangle
+              0, 0, iconWidth, iconHeight   // Destination rectangle
+            );
+            
+            // Get image data and add to map
+            const imageData = ctx.getImageData(0, 0, iconWidth, iconHeight);
+            map.addImage(id, imageData, { sdf: false });
+          }
+        });
+        
+        console.log('[MapView] Custom marker icons loaded from themed-atlas.png');
+      };
+      
+      img.onerror = (err) => {
+        console.warn('[MapView] Failed to load themed-atlas.png:', err);
+      };
+      
+      img.src = '/images/themed-atlas.png';
+    }
   }, []);
 
   /**
@@ -929,11 +1066,29 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         setHoverInfo(null);
         setHoveredProvince(null);
         setHoveredMarker(null);
+        setHoveredLabel(null);
         return;
       }
       
       const properties = feature.properties ?? {};
       const layerId = feature.layer?.id;
+      
+      // Check if hovering over an area label
+      if (layerId === 'area-labels-layer') {
+        const labelName = properties['name'] as string | undefined;
+        const entityId = properties['entityId'] as string | undefined;
+        if (labelName) {
+          setHoveredLabel({ name: labelName, entityId: entityId ?? '' });
+          // Clear other hover states when over label
+          setHoveredMarker(null);
+          setHoveredProvince(null);
+          setHoverInfo(null);
+          return;
+        }
+      }
+      
+      // Clear label hover when not over a label
+      setHoveredLabel(null);
       
       // Check if hovering over a marker
       // Requirement 5.1, 5.2, 5.3: Marker hover highlight
@@ -988,13 +1143,15 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     setHoverInfo(null);
     setHoveredProvince(null);
     setHoveredMarker(null);
+    setHoveredLabel(null);
   }, [setHoveredProvince, setHoveredMarker]);
 
   /**
-   * Handles click on map features (provinces and markers).
+   * Handles click on map features (provinces, markers, and clusters).
    * Requirement 7.1: WHEN the user clicks on a province, THE MapView SHALL select that province
    * Requirement 7.2: WHEN a province is selected, THE MapStore SHALL store the selected province ID
    * Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
+   * Requirement 5.5: WHEN a cluster is clicked, THE MapView SHALL zoom to expand the cluster
    * Requirement 2.1: WHEN a province is clicked, THE RightDrawer SHALL open
    * Requirement 2.3: WHEN a province is clicked, THE System SHALL update the URL query parameters
    * Requirement 3.9: WHEN a province click opens the RightDrawer, THE System SHALL close any existing marker popup
@@ -1011,6 +1168,77 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       
       const properties = feature.properties ?? {};
       const layerId = feature.layer?.id;
+      
+      // Check if clicked on an area label
+      // When a label is clicked, open the right drawer with the entity's Wikipedia article
+      if (layerId === 'area-labels-layer') {
+        const labelName = properties['name'] as string | undefined;
+        const entityId = properties['entityId'] as string | undefined;
+        
+        if (labelName && entityId) {
+          // Get wiki URL from metadata for the entity
+          const metadataWiki = getEntityWiki(entityId, activeLabel);
+          
+          // Build wiki URL: prefer metadata wiki, fallback to entity name
+          const wikiUrl = metadataWiki 
+            ? `https://en.wikipedia.org/wiki/${encodeURIComponent(metadataWiki.replace(/ /g, '_'))}`
+            : `https://en.wikipedia.org/wiki/${encodeURIComponent(labelName.replace(/ /g, '_'))}`;
+          
+          // Open right drawer with entity content
+          openRightDrawer({
+            type: 'area',
+            provinceId: entityId,
+            provinceName: labelName,
+            wikiUrl,
+          });
+          
+          // Update URL state
+          updateURLState({ type: 'area', value: entityId });
+          
+          // Calculate entity outline for the clicked label's entity
+          if (activeLabel !== 'population') {
+            calculateEntityOutline(entityId, activeLabel);
+          }
+          
+          return;
+        }
+      }
+      
+      // Check if clicked on a cluster
+      // Requirement 5.5: WHEN a cluster is clicked, THE MapView SHALL zoom to expand the cluster
+      if (layerId === 'clusters' && properties['cluster_id'] !== undefined) {
+        const clusterId = properties['cluster_id'] as number;
+        const map = mapRef.current;
+        
+        if (map) {
+          // Get the markers source to access cluster expansion zoom
+          const source = map.getSource('markers');
+          
+          if (source && 'getClusterExpansionZoom' in source && typeof source.getClusterExpansionZoom === 'function') {
+            // Get the cluster expansion zoom level
+            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+              if (err) {
+                console.error('Error getting cluster expansion zoom:', err);
+                return;
+              }
+              
+              // Get cluster coordinates from the feature geometry
+              const geometry = feature.geometry;
+              if (geometry.type === 'Point') {
+                const [lng, lat] = geometry.coordinates as [number, number];
+                
+                // Animate map to cluster center at expansion zoom
+                map.easeTo({
+                  center: [lng, lat],
+                  zoom: zoom ?? (map.getZoom() + 2), // Fallback to current zoom + 2
+                  duration: 500,
+                });
+              }
+            });
+          }
+        }
+        return;
+      }
       
       // Check if clicked on a marker
       // Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
@@ -1119,7 +1347,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         }
       }
     }
-  }, [selectProvince, markers, currentAreaData, openRightDrawer, activeColor, calculateEntityOutline, getEntityWiki]);
+  }, [selectProvince, markers, currentAreaData, openRightDrawer, activeColor, activeLabel, calculateEntityOutline, getEntityWiki]);
 
   /**
    * Generate GeoJSON for the area-hover source based on hovered feature.
@@ -1278,6 +1506,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       )}
 
       {/* Map component */}
+      {/* Requirement 1.2: WHEN the basemap state changes, THE MapView SHALL update the map style */}
+      {/* Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none */}
+      {/* Requirement 1.4: WHEN basemap is set to "none", THE MapView SHALL display only province fill layers */}
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
@@ -1293,14 +1524,14 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
           width: '100%',
           height: '100%',
         }}
-        mapStyle="mapbox://styles/mapbox/light-v11"
+        mapStyle={BASEMAP_STYLES[basemap]}
         onMove={handleMove}
         onLoad={handleLoad}
         onMoveEnd={handleMoveEnd}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        interactiveLayerIds={['area-fill', 'provinces-fill', 'ruler-fill', 'culture-fill', 'religion-fill', 'religionGeneral-fill', 'population-fill', 'markers-layer']}
+        interactiveLayerIds={['area-fill', 'provinces-fill', 'ruler-fill', 'culture-fill', 'religion-fill', 'religionGeneral-fill', 'population-fill', 'markers-layer', 'clusters', 'area-labels-layer']}
         attributionControl={false}
         reuseMaps
         // Requirement 5.3: WHEN the user hovers over a marker, THE Cursor SHALL change to a pointer
@@ -1323,7 +1554,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             }}
             paint={{
               'fill-color': colorExpressions.ruler,
-              'fill-opacity': DEFAULT_FILL_OPACITY,
+              'fill-opacity': fillOpacityExpr,
             }}
           />
 
@@ -1337,7 +1568,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             }}
             paint={{
               'fill-color': colorExpressions.culture,
-              'fill-opacity': DEFAULT_FILL_OPACITY,
+              'fill-opacity': fillOpacityExpr,
             }}
           />
 
@@ -1351,7 +1582,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             }}
             paint={{
               'fill-color': colorExpressions.religion,
-              'fill-opacity': DEFAULT_FILL_OPACITY,
+              'fill-opacity': fillOpacityExpr,
             }}
           />
 
@@ -1365,7 +1596,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             }}
             paint={{
               'fill-color': colorExpressions.religionGeneral,
-              'fill-opacity': DEFAULT_FILL_OPACITY,
+              'fill-opacity': fillOpacityExpr,
             }}
           />
 
@@ -1380,6 +1611,23 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             paint={{
               'fill-color': POPULATION_FILL_COLOR,
               'fill-opacity': populationOpacityExpr,
+            }}
+          />
+
+          {/* Province borders layer */}
+          {/* Requirement 2.2: WHEN showProvinceBorders is true, THE MapView SHALL display province border lines */}
+          {/* Requirement 2.3: WHEN showProvinceBorders is false, THE MapView SHALL hide province border lines */}
+          {/* Requirement 2.4: THE MapView SHALL use a distinct stroke color for province borders */}
+          <Layer
+            id="province-borders"
+            type="line"
+            paint={{
+              'line-color': '#333333',
+              'line-width': 0.5,
+              'line-opacity': 0.8,
+            }}
+            layout={{
+              visibility: showProvinceBorders ? 'visible' : 'none',
             }}
           />
 
@@ -1414,28 +1662,128 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         {/* Markers GeoJSON source and layer */}
         {/* Requirement 5.2: THE MapView SHALL display markers as icons on the map using a GeoJSON point source */}
         {/* Requirement 5.3: THE MapView SHALL support marker types: battles, cities, capitals, people */}
+        {/* Requirement 5.4: THE MapView SHALL use Mapbox GL clustering with a cluster radius of 50 pixels */}
         {/* Requirement 5.5: THE MapView SHALL use appropriate icons for each marker type */}
         {/* Requirement 5.1, 5.2: Marker hover highlight with size increase and highlight stroke */}
-        <Source id="markers" type="geojson" data={markersGeoJSON}>
+        <Source 
+          id="markers" 
+          type="geojson" 
+          data={markersGeoJSON}
+          cluster={clusterMarkers}
+          clusterMaxZoom={14}
+          clusterRadius={50}
+        >
+          {/* Cluster circles layer */}
+          {/* Requirement 5.2: THE MapView SHALL group nearby markers into clusters */}
+          {/* Cluster colors based on point_count: cyan (<10), yellow (10-50), pink (>50) */}
           <Layer
-            id="markers-layer"
+            id="clusters"
             type="circle"
+            filter={['has', 'point_count']}
             paint={{
-              'circle-radius': markerRadiusExpr,
-              'circle-color': markerColorExpr,
-              'circle-opacity': 0.9,
-              'circle-stroke-width': markerStrokeWidthExpr,
-              'circle-stroke-color': markerStrokeColorExpr,
-              // Requirement 5.4: Marker returns to original size within 100ms
-              'circle-radius-transition': { duration: 100 },
-              'circle-stroke-width-transition': { duration: 100 },
-              'circle-stroke-color-transition': { duration: 100 },
+              'circle-color': [
+                'step',
+                ['get', 'point_count'],
+                '#51bbd6', // cyan for < 10 points
+                10,
+                '#f1f075', // yellow for 10-50 points
+                50,
+                '#f28cb1', // pink for > 50 points
+              ],
+              'circle-radius': [
+                'step',
+                ['get', 'point_count'],
+                15, // 15px radius for < 10 points
+                10,
+                20, // 20px radius for 10-50 points
+                50,
+                25, // 25px radius for > 50 points
+              ],
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#ffffff',
             }}
           />
-          {/* Marker label layer */}
+
+          {/* Cluster count label layer */}
+          {/* Requirement 5.2: Display count labels on cluster circles */}
+          <Layer
+            id="cluster-count"
+            type="symbol"
+            filter={['has', 'point_count']}
+            layout={{
+              'text-field': ['get', 'point_count_abbreviated'],
+              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+              'text-size': 12,
+              'text-allow-overlap': true,
+            }}
+            paint={{
+              'text-color': '#333333',
+            }}
+          />
+
+          {/* Individual markers layer (unclustered points) */}
+          {/* Requirement 5.3: THE MapView SHALL display all markers individually when clustering is disabled */}
+          {/* Using custom icons from themed-atlas.png sprite sheet */}
+          <Layer
+            id="markers-layer"
+            type="symbol"
+            filter={['!', ['has', 'point_count']]}
+            layout={{
+              'icon-image': [
+                'match',
+                ['get', 'type'],
+                // Map API marker types to custom icon IDs
+                'cp', 'marker-cp',   // Capital
+                'c', 'marker-c',     // City
+                'ca', 'marker-ca',   // Castle
+                'b', 'marker-b',     // Battle
+                'si', 'marker-si',   // Siege
+                'l', 'marker-l',     // Landmark
+                'm', 'marker-m',     // Military
+                'p', 'marker-p',     // Politician/Person
+                'e', 'marker-e',     // Explorer
+                's', 'marker-s',     // Scientist
+                'a', 'marker-a',     // Artist
+                'r', 'marker-r',     // Religious
+                'at', 'marker-at',   // Athlete
+                'op', 'marker-op',   // Unclassified
+                'o', 'marker-o',     // Unknown
+                'ar', 'marker-ar',   // Artifact
+                'ai', 'marker-l',    // Architecture -> Landmark
+                'h', 'marker-p',     // Historical figure -> Person
+                'marker-o',          // Default fallback
+              ],
+              'icon-size': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                2, 0.08,  // At zoom 2, icons are 8% size (very small when fully zoomed out)
+                4, 0.12,  // At zoom 4, icons are 12% size
+                6, 0.18,  // At zoom 6, icons are 18% size
+                8, 0.25,  // At zoom 8, icons are 25% size
+                10, 0.35, // At zoom 10, icons are 35% size
+                12, 0.5,  // At zoom 12, icons are 50% size
+                14, 0.7,  // At zoom 14, icons are 70% size
+                16, 1.0,  // At zoom 16+, icons are full size
+              ],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': false,
+              'icon-anchor': 'bottom',
+            }}
+            paint={{
+              'icon-opacity': [
+                'case',
+                ['==', ['get', 'id'], hoveredMarkerId ?? ''],
+                1.0,  // Full opacity on hover
+                0.85, // Slightly transparent normally
+              ],
+            }}
+          />
+          {/* Marker label layer (unclustered points only) */}
           <Layer
             id="markers-label"
             type="symbol"
+            filter={['!', ['has', 'point_count']]}
             layout={{
               'text-field': ['get', 'name'],
               'text-size': 10,
@@ -1546,6 +1894,25 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
           theme={theme}
           position={cursorPosition}
         />
+      )}
+
+      {/* Label hover tooltip */}
+      {/* Shows the entity name when hovering over a map label */}
+      {hoveredLabel && (
+        <div
+          className={styles['labelTooltip']}
+          style={{
+            position: 'fixed',
+            left: cursorPosition.x + 12,
+            top: cursorPosition.y + 12,
+            pointerEvents: 'none',
+            zIndex: 1000,
+          }}
+        >
+          <div className={styles['labelTooltipContent']}>
+            {hoveredLabel.name}
+          </div>
+        </div>
       )}
 
       {/* Theme-based overlay for styling */}

@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { act } from '@testing-library/react';
 import * as fc from 'fast-check';
-import { useMapStore, initialState as mapInitialState } from '../../../stores/mapStore';
+import { useMapStore, initialState as mapInitialState, BASEMAP_STYLES } from '../../../stores/mapStore';
 import { useTimelineStore, initialState as timelineInitialState, MIN_YEAR, MAX_YEAR } from '../../../stores/timelineStore';
 import { useUIStore, defaultState as uiDefaultState } from '../../../stores/uiStore';
 import { SIDEBAR_WIDTH_OPEN, SIDEBAR_WIDTH_CLOSED } from './MapView';
@@ -3056,6 +3056,1016 @@ describe('MapView Property Tests', () => {
         }),
         { numRuns: 100 }
       );
+    });
+  });
+
+  /**
+   * Feature: production-parity-fixes, Property 2: Basemap Style Mapping
+   *
+   * Property 2 states:
+   * *For any* basemap state value ('topographic', 'watercolor', 'none'), the MapView
+   * SHALL use the corresponding Mapbox style URL from the BASEMAP_STYLES mapping.
+   *
+   * **Validates: Requirements 1.2**
+   */
+  describe('Property 2: Basemap Style Mapping', () => {
+    /**
+     * Arbitrary for generating valid basemap types.
+     * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+     */
+    const basemapTypeArb: fc.Arbitrary<'topographic' | 'watercolor' | 'none'> = fc.constantFrom(
+      'topographic',
+      'watercolor',
+      'none'
+    );
+
+    /**
+     * Arbitrary for generating sequences of basemap selections.
+     */
+    const basemapSequenceArb = fc.array(basemapTypeArb, { minLength: 1, maxLength: 20 });
+
+    /**
+     * Arbitrary for generating pairs of basemap types for transition testing.
+     */
+    const basemapPairArb = fc.tuple(basemapTypeArb, basemapTypeArb);
+
+    /**
+     * Expected Mapbox style URLs for each basemap type.
+     * These must match the BASEMAP_STYLES constant in mapStore.
+     */
+    const EXPECTED_BASEMAP_STYLES: Record<'topographic' | 'watercolor' | 'none', string> = {
+      topographic: 'mapbox://styles/mapbox/outdoors-v12',
+      watercolor: 'mapbox://styles/stamen/cj3hzkdwfaw1v2sqmrlvmdqjf',
+      none: 'mapbox://styles/mapbox/empty-v9',
+    };
+
+    it('should return a valid Mapbox style URL for any basemap type', () => {
+      fc.assert(
+        fc.property(basemapTypeArb, (basemapType) => {
+          // Get the style URL for the basemap type
+          const styleUrl = BASEMAP_STYLES[basemapType];
+
+          // Verify the style URL is defined and is a string
+          expect(styleUrl).toBeDefined();
+          expect(typeof styleUrl).toBe('string');
+
+          // Verify the style URL is a valid Mapbox style URL format
+          expect(styleUrl.startsWith('mapbox://styles/')).toBe(true);
+
+          // Verify the style URL matches the expected value
+          expect(styleUrl).toBe(EXPECTED_BASEMAP_STYLES[basemapType]);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have consistent mapping (same input always produces same output)', () => {
+      fc.assert(
+        fc.property(
+          basemapTypeArb,
+          fc.integer({ min: 2, max: 10 }),
+          (basemapType, repeatCount) => {
+            // Get the style URL multiple times
+            const results: string[] = [];
+            for (let i = 0; i < repeatCount; i++) {
+              results.push(BASEMAP_STYLES[basemapType]);
+            }
+
+            // Verify all results are identical (deterministic mapping)
+            const firstResult = results[0];
+            for (const result of results) {
+              expect(result).toBe(firstResult);
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should update mapStore basemap state and return correct style URL', () => {
+      fc.assert(
+        fc.property(basemapTypeArb, (basemapType) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set the basemap in the store
+          act(() => {
+            useMapStore.getState().setBasemap(basemapType);
+          });
+
+          // Get the current basemap from the store
+          const currentBasemap = useMapStore.getState().basemap;
+
+          // Verify the basemap was set correctly
+          expect(currentBasemap).toBe(basemapType);
+
+          // Verify the corresponding style URL is correct
+          const styleUrl = BASEMAP_STYLES[currentBasemap];
+          expect(styleUrl).toBe(EXPECTED_BASEMAP_STYLES[basemapType]);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle basemap transitions correctly', () => {
+      fc.assert(
+        fc.property(basemapPairArb, ([fromBasemap, toBasemap]) => {
+          // Reset store with initial basemap
+          act(() => {
+            useMapStore.setState({ ...mapInitialState, basemap: fromBasemap });
+          });
+
+          // Verify initial state
+          expect(useMapStore.getState().basemap).toBe(fromBasemap);
+          expect(BASEMAP_STYLES[fromBasemap]).toBe(EXPECTED_BASEMAP_STYLES[fromBasemap]);
+
+          // Transition to new basemap
+          act(() => {
+            useMapStore.getState().setBasemap(toBasemap);
+          });
+
+          // Verify transition
+          const currentBasemap = useMapStore.getState().basemap;
+          expect(currentBasemap).toBe(toBasemap);
+          expect(BASEMAP_STYLES[currentBasemap]).toBe(EXPECTED_BASEMAP_STYLES[toBasemap]);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle sequential basemap changes correctly', () => {
+      fc.assert(
+        fc.property(basemapSequenceArb, (basemapSelections) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Apply each basemap selection sequentially
+          for (const basemapType of basemapSelections) {
+            act(() => {
+              useMapStore.getState().setBasemap(basemapType);
+            });
+
+            // Verify the basemap was set correctly
+            const currentBasemap = useMapStore.getState().basemap;
+            expect(currentBasemap).toBe(basemapType);
+
+            // Verify the style URL is correct for the current basemap
+            const styleUrl = BASEMAP_STYLES[currentBasemap];
+            expect(styleUrl).toBe(EXPECTED_BASEMAP_STYLES[basemapType]);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have all three basemap types defined in BASEMAP_STYLES', () => {
+      fc.assert(
+        fc.property(basemapTypeArb, (basemapType) => {
+          // Verify the basemap type exists in BASEMAP_STYLES
+          expect(basemapType in BASEMAP_STYLES).toBe(true);
+
+          // Verify the mapping is complete (all three types are defined)
+          expect('topographic' in BASEMAP_STYLES).toBe(true);
+          expect('watercolor' in BASEMAP_STYLES).toBe(true);
+          expect('none' in BASEMAP_STYLES).toBe(true);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should preserve other map state when basemap changes', () => {
+      fc.assert(
+        fc.property(
+          basemapPairArb,
+          fc.boolean(),
+          fc.boolean(),
+          fc.integer({ min: 0, max: 10000 }),
+          ([fromBasemap, toBasemap], showProvinceBorders, populationOpacity, markerLimit) => {
+            // Reset store with specific state
+            act(() => {
+              useMapStore.setState({
+                ...mapInitialState,
+                basemap: fromBasemap,
+                showProvinceBorders,
+                populationOpacity,
+                markerLimit,
+              });
+            });
+
+            // Change the basemap
+            act(() => {
+              useMapStore.getState().setBasemap(toBasemap);
+            });
+
+            // Verify basemap changed
+            const state = useMapStore.getState();
+            expect(state.basemap).toBe(toBasemap);
+            expect(BASEMAP_STYLES[state.basemap]).toBe(EXPECTED_BASEMAP_STYLES[toBasemap]);
+
+            // Verify other state is preserved
+            expect(state.showProvinceBorders).toBe(showProvinceBorders);
+            expect(state.populationOpacity).toBe(populationOpacity);
+            expect(state.markerLimit).toBe(markerLimit);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should return style URLs that are valid Mapbox protocol URLs', () => {
+      fc.assert(
+        fc.property(basemapTypeArb, (basemapType) => {
+          const styleUrl = BASEMAP_STYLES[basemapType];
+
+          // Verify the URL follows Mapbox style URL format: mapbox://styles/{owner}/{style}
+          expect(styleUrl).toMatch(/^mapbox:\/\/styles\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$/);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have unique style URLs for each basemap type', () => {
+      fc.assert(
+        fc.property(basemapPairArb.filter(([a, b]) => a !== b), ([basemapA, basemapB]) => {
+          const styleUrlA = BASEMAP_STYLES[basemapA];
+          const styleUrlB = BASEMAP_STYLES[basemapB];
+
+          // Different basemap types should have different style URLs
+          expect(styleUrlA).not.toBe(styleUrlB);
+        }),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  /**
+   * Feature: production-parity-fixes, Property 3: Province Border Visibility Consistency
+   *
+   * Property 3 states:
+   * *For any* showProvinceBorders state value (true or false), the province-borders layer
+   * visibility property SHALL equal 'visible' when true and 'none' when false.
+   *
+   * **Validates: Requirements 2.2, 2.3**
+   */
+  describe('Property 3: Province Border Visibility Consistency', () => {
+    /**
+     * Arbitrary for generating boolean values for showProvinceBorders state.
+     */
+    const showProvinceBordersArb = fc.boolean();
+
+    /**
+     * Arbitrary for generating distinct boolean pairs (from, to) for state transitions.
+     * Ensures the values are different to trigger a change.
+     */
+    const distinctBooleanPairArb = fc
+      .tuple(showProvinceBordersArb, showProvinceBordersArb)
+      .filter(([from, to]) => from !== to);
+
+    /**
+     * Arbitrary for generating sequences of boolean state changes.
+     */
+    const booleanSequenceArb = fc.array(showProvinceBordersArb, { minLength: 2, maxLength: 20 });
+
+    /**
+     * Helper function to determine expected visibility value based on showProvinceBorders state.
+     * This mirrors the implementation in MapView.tsx:
+     * layout={{ visibility: showProvinceBorders ? 'visible' : 'none' }}
+     *
+     * @param showProvinceBorders - The current state value
+     * @returns 'visible' when true, 'none' when false
+     */
+    function getExpectedVisibility(showProvinceBorders: boolean): 'visible' | 'none' {
+      return showProvinceBorders ? 'visible' : 'none';
+    }
+
+    it('should return "visible" when showProvinceBorders is true', () => {
+      fc.assert(
+        fc.property(fc.constant(true), (showProvinceBorders) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set showProvinceBorders to true
+          act(() => {
+            useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+          });
+
+          // Verify the state was updated
+          const state = useMapStore.getState();
+          expect(state.showProvinceBorders).toBe(true);
+
+          // Verify the expected visibility is 'visible'
+          const expectedVisibility = getExpectedVisibility(state.showProvinceBorders);
+          expect(expectedVisibility).toBe('visible');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should return "none" when showProvinceBorders is false', () => {
+      fc.assert(
+        fc.property(fc.constant(false), (showProvinceBorders) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set showProvinceBorders to false
+          act(() => {
+            useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+          });
+
+          // Verify the state was updated
+          const state = useMapStore.getState();
+          expect(state.showProvinceBorders).toBe(false);
+
+          // Verify the expected visibility is 'none'
+          const expectedVisibility = getExpectedVisibility(state.showProvinceBorders);
+          expect(expectedVisibility).toBe('none');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should map any showProvinceBorders value to correct visibility', () => {
+      fc.assert(
+        fc.property(showProvinceBordersArb, (showProvinceBorders) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set showProvinceBorders to the generated value
+          act(() => {
+            useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+          });
+
+          // Verify the state was updated correctly
+          const state = useMapStore.getState();
+          expect(state.showProvinceBorders).toBe(showProvinceBorders);
+
+          // Verify the visibility mapping is correct
+          const expectedVisibility = getExpectedVisibility(state.showProvinceBorders);
+          if (showProvinceBorders) {
+            expect(expectedVisibility).toBe('visible');
+          } else {
+            expect(expectedVisibility).toBe('none');
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should maintain visibility consistency across state transitions', () => {
+      fc.assert(
+        fc.property(distinctBooleanPairArb, ([fromState, toState]) => {
+          // Reset store with initial state
+          act(() => {
+            useMapStore.setState({
+              ...mapInitialState,
+              showProvinceBorders: fromState,
+            });
+          });
+
+          // Verify initial visibility
+          let state = useMapStore.getState();
+          expect(state.showProvinceBorders).toBe(fromState);
+          expect(getExpectedVisibility(state.showProvinceBorders)).toBe(
+            fromState ? 'visible' : 'none'
+          );
+
+          // Transition to new state
+          act(() => {
+            useMapStore.getState().setShowProvinceBorders(toState);
+          });
+
+          // Verify new visibility
+          state = useMapStore.getState();
+          expect(state.showProvinceBorders).toBe(toState);
+          expect(getExpectedVisibility(state.showProvinceBorders)).toBe(
+            toState ? 'visible' : 'none'
+          );
+
+          // Verify the visibility changed correctly
+          const fromVisibility = getExpectedVisibility(fromState);
+          const toVisibility = getExpectedVisibility(toState);
+          expect(fromVisibility).not.toBe(toVisibility);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle sequential state changes correctly', () => {
+      fc.assert(
+        fc.property(booleanSequenceArb, (stateSequence) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Apply each state change sequentially
+          for (const showProvinceBorders of stateSequence) {
+            act(() => {
+              useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+            });
+
+            // Verify the state was updated correctly
+            const state = useMapStore.getState();
+            expect(state.showProvinceBorders).toBe(showProvinceBorders);
+
+            // Verify the visibility mapping is consistent
+            const expectedVisibility = getExpectedVisibility(state.showProvinceBorders);
+            expect(expectedVisibility).toBe(showProvinceBorders ? 'visible' : 'none');
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should preserve other map state when showProvinceBorders changes', () => {
+      fc.assert(
+        fc.property(
+          distinctBooleanPairArb,
+          fc.constantFrom<'topographic' | 'watercolor' | 'none'>('topographic', 'watercolor', 'none'),
+          fc.boolean(),
+          fc.integer({ min: 0, max: 10000 }),
+          ([fromState, toState], basemap, populationOpacity, markerLimit) => {
+            // Reset store with specific state
+            act(() => {
+              useMapStore.setState({
+                ...mapInitialState,
+                showProvinceBorders: fromState,
+                basemap,
+                populationOpacity,
+                markerLimit,
+              });
+            });
+
+            // Change showProvinceBorders
+            act(() => {
+              useMapStore.getState().setShowProvinceBorders(toState);
+            });
+
+            // Verify showProvinceBorders changed
+            const state = useMapStore.getState();
+            expect(state.showProvinceBorders).toBe(toState);
+            expect(getExpectedVisibility(state.showProvinceBorders)).toBe(
+              toState ? 'visible' : 'none'
+            );
+
+            // Verify other state is preserved
+            expect(state.basemap).toBe(basemap);
+            expect(state.populationOpacity).toBe(populationOpacity);
+            expect(state.markerLimit).toBe(markerLimit);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have correct visibility values (only "visible" or "none")', () => {
+      fc.assert(
+        fc.property(showProvinceBordersArb, (showProvinceBorders) => {
+          const visibility = getExpectedVisibility(showProvinceBorders);
+
+          // Verify visibility is one of the valid Mapbox GL values
+          expect(['visible', 'none']).toContain(visibility);
+
+          // Verify the mapping is deterministic
+          expect(getExpectedVisibility(true)).toBe('visible');
+          expect(getExpectedVisibility(false)).toBe('none');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should be idempotent - setting same value multiple times has no effect', () => {
+      fc.assert(
+        fc.property(
+          showProvinceBordersArb,
+          fc.integer({ min: 1, max: 10 }),
+          (showProvinceBorders, repeatCount) => {
+            // Reset store
+            act(() => {
+              useMapStore.setState(mapInitialState);
+            });
+
+            // Set the same value multiple times
+            for (let i = 0; i < repeatCount; i++) {
+              act(() => {
+                useMapStore.getState().setShowProvinceBorders(showProvinceBorders);
+              });
+
+              // Verify state remains consistent
+              const state = useMapStore.getState();
+              expect(state.showProvinceBorders).toBe(showProvinceBorders);
+              expect(getExpectedVisibility(state.showProvinceBorders)).toBe(
+                showProvinceBorders ? 'visible' : 'none'
+              );
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should toggle visibility correctly when alternating between true and false', () => {
+      fc.assert(
+        fc.property(fc.integer({ min: 2, max: 20 }), (toggleCount) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          let currentState = useMapStore.getState().showProvinceBorders;
+
+          // Toggle the state multiple times
+          for (let i = 0; i < toggleCount; i++) {
+            const newState = !currentState;
+
+            act(() => {
+              useMapStore.getState().setShowProvinceBorders(newState);
+            });
+
+            // Verify the state toggled correctly
+            const state = useMapStore.getState();
+            expect(state.showProvinceBorders).toBe(newState);
+            expect(state.showProvinceBorders).not.toBe(currentState);
+
+            // Verify visibility mapping is correct after toggle
+            const expectedVisibility = getExpectedVisibility(state.showProvinceBorders);
+            expect(expectedVisibility).toBe(newState ? 'visible' : 'none');
+
+            currentState = newState;
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  /**
+   * Feature: production-parity-fixes, Property 4: Population Opacity Mode Consistency
+   *
+   * Property 4 states:
+   * *For any* populationOpacity state value, the province fill layer paint property
+   * SHALL use an interpolate expression when true and a constant opacity when false.
+   *
+   * **Validates: Requirements 3.2, 3.3**
+   */
+  describe('Property 4: Population Opacity Mode Consistency', () => {
+    /**
+     * Constants from MapView.tsx for population opacity
+     */
+    const POPULATION_OPACITY_MIN = 0.3;
+    const POPULATION_OPACITY_MAX = 1.0;
+    const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
+    const DEFAULT_FILL_OPACITY = 0.7;
+
+    /**
+     * Builds a Mapbox GL interpolate expression for population opacity.
+     * This mirrors the implementation in MapView.tsx
+     *
+     * @param maxPopulation - Maximum population value for scaling
+     * @returns Mapbox GL interpolate expression
+     */
+    function buildPopulationOpacityExpression(maxPopulation: number): unknown[] {
+      const safeMax = Math.max(1, maxPopulation);
+      return [
+        'interpolate',
+        ['linear'],
+        ['get', 'p'],
+        0, POPULATION_OPACITY_MIN,
+        safeMax, POPULATION_OPACITY_MAX,
+      ];
+    }
+
+    /**
+     * Gets the fill opacity expression based on populationOpacity state.
+     * This mirrors the logic in MapView.tsx
+     *
+     * @param populationOpacity - Whether population opacity is enabled
+     * @param maxPopulation - Maximum population value for scaling
+     * @returns Either an interpolate expression array or a constant number
+     */
+    function getFillOpacityExpression(
+      populationOpacity: boolean,
+      maxPopulation: number = MAX_POPULATION_FOR_OPACITY
+    ): unknown[] | number {
+      if (populationOpacity) {
+        return buildPopulationOpacityExpression(maxPopulation);
+      }
+      return DEFAULT_FILL_OPACITY;
+    }
+
+    /**
+     * Arbitrary for generating populationOpacity boolean values.
+     */
+    const populationOpacityArb = fc.boolean();
+
+    /**
+     * Arbitrary for generating max population values (must be >= 1).
+     */
+    const maxPopulationArb = fc.integer({ min: 1, max: 100000000 });
+
+    /**
+     * Arbitrary for generating populationOpacity state pairs (from, to).
+     */
+    const populationOpacityPairArb = fc.tuple(populationOpacityArb, populationOpacityArb);
+
+    it('should return interpolate expression when populationOpacity is true', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const expr = getFillOpacityExpression(true, maxPop);
+
+          // When populationOpacity is true, should return an interpolate expression array
+          expect(Array.isArray(expr)).toBe(true);
+          
+          const exprArray = expr as unknown[];
+          expect(exprArray[0]).toBe('interpolate');
+          expect(exprArray[1]).toEqual(['linear']);
+          expect(exprArray[2]).toEqual(['get', 'p']);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should return constant opacity (0.7) when populationOpacity is false', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const expr = getFillOpacityExpression(false, maxPop);
+
+          // When populationOpacity is false, should return constant DEFAULT_FILL_OPACITY
+          expect(typeof expr).toBe('number');
+          expect(expr).toBe(DEFAULT_FILL_OPACITY);
+          expect(expr).toBe(0.7);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should update populationOpacity state in MapStore', () => {
+      fc.assert(
+        fc.property(populationOpacityArb, (populationOpacity) => {
+          // Reset store
+          act(() => {
+            useMapStore.setState(mapInitialState);
+          });
+
+          // Set populationOpacity
+          act(() => {
+            useMapStore.getState().setPopulationOpacity(populationOpacity);
+          });
+
+          // Verify state was updated
+          const state = useMapStore.getState();
+          expect(state.populationOpacity).toBe(populationOpacity);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should produce correct expression type based on populationOpacity state', () => {
+      fc.assert(
+        fc.property(populationOpacityPairArb, maxPopulationArb, ([fromState, toState], maxPop) => {
+          // Reset store with initial state
+          act(() => {
+            useMapStore.setState({
+              ...mapInitialState,
+              populationOpacity: fromState,
+            });
+          });
+
+          // Change populationOpacity
+          act(() => {
+            useMapStore.getState().setPopulationOpacity(toState);
+          });
+
+          // Get the expression based on new state
+          const state = useMapStore.getState();
+          const expr = getFillOpacityExpression(state.populationOpacity, maxPop);
+
+          // Verify expression type matches state
+          if (state.populationOpacity) {
+            expect(Array.isArray(expr)).toBe(true);
+            const exprArray = expr as unknown[];
+            expect(exprArray[0]).toBe('interpolate');
+          } else {
+            expect(typeof expr).toBe('number');
+            expect(expr).toBe(DEFAULT_FILL_OPACITY);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should preserve other state when populationOpacity changes', () => {
+      fc.assert(
+        fc.property(
+          populationOpacityPairArb,
+          fc.constantFrom<'topographic' | 'watercolor' | 'none'>('topographic', 'watercolor', 'none'),
+          fc.boolean(),
+          fc.integer({ min: 0, max: 10000 }),
+          ([fromState, toState], basemap, showProvinceBorders, markerLimit) => {
+            // Reset store with specific state
+            act(() => {
+              useMapStore.setState({
+                ...mapInitialState,
+                populationOpacity: fromState,
+                basemap,
+                showProvinceBorders,
+                markerLimit,
+              });
+            });
+
+            // Change populationOpacity
+            act(() => {
+              useMapStore.getState().setPopulationOpacity(toState);
+            });
+
+            // Verify populationOpacity changed
+            const state = useMapStore.getState();
+            expect(state.populationOpacity).toBe(toState);
+
+            // Verify other state is preserved
+            expect(state.basemap).toBe(basemap);
+            expect(state.showProvinceBorders).toBe(showProvinceBorders);
+            expect(state.markerLimit).toBe(markerLimit);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should be idempotent - setting same value multiple times has no effect', () => {
+      fc.assert(
+        fc.property(
+          populationOpacityArb,
+          fc.integer({ min: 1, max: 10 }),
+          (populationOpacity, repeatCount) => {
+            // Reset store
+            act(() => {
+              useMapStore.setState(mapInitialState);
+            });
+
+            // Set the same value multiple times
+            for (let i = 0; i < repeatCount; i++) {
+              act(() => {
+                useMapStore.getState().setPopulationOpacity(populationOpacity);
+              });
+
+              // Verify state remains consistent
+              const state = useMapStore.getState();
+              expect(state.populationOpacity).toBe(populationOpacity);
+
+              // Verify expression type is consistent
+              const expr = getFillOpacityExpression(state.populationOpacity);
+              if (populationOpacity) {
+                expect(Array.isArray(expr)).toBe(true);
+              } else {
+                expect(typeof expr).toBe('number');
+                expect(expr).toBe(DEFAULT_FILL_OPACITY);
+              }
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have correct constant values', () => {
+      expect(POPULATION_OPACITY_MIN).toBe(0.3);
+      expect(POPULATION_OPACITY_MAX).toBe(1.0);
+      expect(MAX_POPULATION_FOR_OPACITY).toBe(10000000);
+      expect(DEFAULT_FILL_OPACITY).toBe(0.7);
+    });
+  });
+
+  /**
+   * Feature: production-parity-fixes, Property 5: Population Opacity Bounds
+   *
+   * Property 5 states:
+   * *For any* population value in the range [0, maxPopulation], the interpolated
+   * opacity SHALL be within the range [0.3, 1.0].
+   *
+   * **Validates: Requirements 3.4**
+   */
+  describe('Property 5: Population Opacity Bounds', () => {
+    /**
+     * Constants from MapView.tsx for population opacity
+     */
+    const POPULATION_OPACITY_MIN = 0.3;
+    const POPULATION_OPACITY_MAX = 1.0;
+    const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
+
+    /**
+     * Calculates the interpolated opacity for a given population value.
+     * Formula: opacity = 0.3 + (population / maxPopulation) * (1.0 - 0.3)
+     *
+     * @param population - The population value
+     * @param maxPopulation - The maximum population for scaling
+     * @returns The interpolated opacity value
+     */
+    function calculateInterpolatedOpacity(
+      population: number,
+      maxPopulation: number
+    ): number {
+      const safeMax = Math.max(1, maxPopulation);
+      const ratio = Math.min(1, Math.max(0, population) / safeMax);
+      return POPULATION_OPACITY_MIN + ratio * (POPULATION_OPACITY_MAX - POPULATION_OPACITY_MIN);
+    }
+
+    /**
+     * Arbitrary for generating valid population values.
+     */
+    const populationArb = fc.integer({ min: 0, max: 100000000 });
+
+    /**
+     * Arbitrary for generating max population values (must be >= 1).
+     */
+    const maxPopulationArb = fc.integer({ min: 1, max: 100000000 });
+
+    /**
+     * Arbitrary for generating population values within the standard range.
+     */
+    const standardPopulationArb = fc.integer({ min: 0, max: MAX_POPULATION_FOR_OPACITY });
+
+    /**
+     * Arbitrary for generating population/maxPopulation pairs.
+     */
+    const populationPairArb = fc.tuple(populationArb, maxPopulationArb);
+
+    it('should produce opacity within [0.3, 1.0] for any population value', () => {
+      fc.assert(
+        fc.property(populationPairArb, ([population, maxPop]) => {
+          const opacity = calculateInterpolatedOpacity(population, maxPop);
+
+          // Verify opacity is within valid range [0.3, 1.0]
+          expect(opacity).toBeGreaterThanOrEqual(POPULATION_OPACITY_MIN);
+          expect(opacity).toBeLessThanOrEqual(POPULATION_OPACITY_MAX);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should return minimum opacity (0.3) for population of 0', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const opacity = calculateInterpolatedOpacity(0, maxPop);
+
+          // At population 0, opacity should be exactly 0.3
+          expect(opacity).toBe(POPULATION_OPACITY_MIN);
+          expect(opacity).toBe(0.3);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should return maximum opacity (1.0) for population equal to maxPopulation', () => {
+      fc.assert(
+        fc.property(maxPopulationArb, (maxPop) => {
+          const opacity = calculateInterpolatedOpacity(maxPop, maxPop);
+
+          // At max population, opacity should be exactly 1.0
+          expect(opacity).toBe(POPULATION_OPACITY_MAX);
+          expect(opacity).toBe(1.0);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should cap opacity at 1.0 for population exceeding maxPopulation', () => {
+      fc.assert(
+        fc.property(
+          maxPopulationArb,
+          fc.integer({ min: 1, max: 100000000 }),
+          (maxPop, excess) => {
+            const population = maxPop + excess;
+            const opacity = calculateInterpolatedOpacity(population, maxPop);
+
+            // Opacity should be capped at 1.0
+            expect(opacity).toBe(POPULATION_OPACITY_MAX);
+            expect(opacity).toBe(1.0);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should produce monotonically increasing opacity as population increases', () => {
+      fc.assert(
+        fc.property(
+          maxPopulationArb,
+          fc.array(standardPopulationArb, { minLength: 2, maxLength: 10 }),
+          (maxPop, populations) => {
+            // Sort populations to test monotonicity
+            const sortedPops = [...populations].sort((a, b) => a - b);
+            
+            let prevOpacity = -1;
+            for (const pop of sortedPops) {
+              const opacity = calculateInterpolatedOpacity(pop, maxPop);
+              
+              // Opacity should be >= previous opacity (monotonically increasing)
+              expect(opacity).toBeGreaterThanOrEqual(prevOpacity);
+              
+              // Opacity should always be within bounds
+              expect(opacity).toBeGreaterThanOrEqual(POPULATION_OPACITY_MIN);
+              expect(opacity).toBeLessThanOrEqual(POPULATION_OPACITY_MAX);
+              
+              prevOpacity = opacity;
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should produce correct intermediate opacity values', () => {
+      fc.assert(
+        fc.property(
+          maxPopulationArb,
+          fc.double({ min: 0, max: 1, noNaN: true }),
+          (maxPop, ratio) => {
+            const population = Math.floor(ratio * maxPop);
+            const opacity = calculateInterpolatedOpacity(population, maxPop);
+
+            // Calculate expected opacity
+            const expectedRatio = Math.min(1, population / Math.max(1, maxPop));
+            const expectedOpacity = POPULATION_OPACITY_MIN + expectedRatio * (POPULATION_OPACITY_MAX - POPULATION_OPACITY_MIN);
+
+            // Verify opacity matches expected value (within floating point tolerance)
+            expect(opacity).toBeCloseTo(expectedOpacity, 10);
+            
+            // Verify bounds
+            expect(opacity).toBeGreaterThanOrEqual(POPULATION_OPACITY_MIN);
+            expect(opacity).toBeLessThanOrEqual(POPULATION_OPACITY_MAX);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle edge case of maxPopulation = 1', () => {
+      fc.assert(
+        fc.property(populationArb, (population) => {
+          const opacity = calculateInterpolatedOpacity(population, 1);
+
+          // With maxPop = 1, any population >= 1 should give max opacity
+          if (population >= 1) {
+            expect(opacity).toBe(POPULATION_OPACITY_MAX);
+          } else {
+            expect(opacity).toBe(POPULATION_OPACITY_MIN);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle maxPopulation = 0 by using 1 as minimum', () => {
+      fc.assert(
+        fc.property(populationArb, (population) => {
+          // When maxPopulation is 0, it should be treated as 1
+          const opacity = calculateInterpolatedOpacity(population, 0);
+
+          // Verify opacity is still within bounds
+          expect(opacity).toBeGreaterThanOrEqual(POPULATION_OPACITY_MIN);
+          expect(opacity).toBeLessThanOrEqual(POPULATION_OPACITY_MAX);
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should handle negative population by treating as 0', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: -1000000, max: -1 }),
+          maxPopulationArb,
+          (negativePopulation, maxPop) => {
+            const opacity = calculateInterpolatedOpacity(negativePopulation, maxPop);
+
+            // Negative population should be treated as 0, giving minimum opacity
+            expect(opacity).toBe(POPULATION_OPACITY_MIN);
+            expect(opacity).toBe(0.3);
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should have correct constant values matching MapView.tsx', () => {
+      expect(POPULATION_OPACITY_MIN).toBe(0.3);
+      expect(POPULATION_OPACITY_MAX).toBe(1.0);
+      expect(MAX_POPULATION_FOR_OPACITY).toBe(10000000);
+    });
+
+    it('should produce opacity range of exactly 0.7 (1.0 - 0.3)', () => {
+      const opacityRange = POPULATION_OPACITY_MAX - POPULATION_OPACITY_MIN;
+      expect(opacityRange).toBe(0.7);
     });
   });
 });

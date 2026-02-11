@@ -630,12 +630,14 @@ describe('MarkerDrawerContent', () => {
       );
     });
 
-    it('should render ArticleIframe without wiki URL', () => {
+    it('should construct wiki URL from marker._id when wiki property is missing', () => {
+      // Production behavior: when marker.wiki is undefined, use marker._id to construct URL
       render(<MarkerDrawerContent marker={SAMPLE_MARKER_NO_WIKI} />);
 
       const iframe = screen.getByTestId('mock-article-iframe');
       expect(iframe).toBeInTheDocument();
-      expect(iframe).not.toHaveAttribute('data-url');
+      // URL should be constructed from marker._id (event_unknown)
+      expect(iframe).toHaveAttribute('data-url', 'https://en.wikipedia.org/wiki/event_unknown');
     });
 
     it('should have article section with aria-label', () => {
