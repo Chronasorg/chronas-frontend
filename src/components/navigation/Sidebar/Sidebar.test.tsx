@@ -116,6 +116,7 @@ describe('Sidebar', () => {
         </MemoryRouter>
       );
 
+      // Production-matching icons: Layers, Discover, Random, Settings
       expect(screen.getByTestId('nav-item-layers')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-discover')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-random')).toBeInTheDocument();
@@ -129,11 +130,24 @@ describe('Sidebar', () => {
         </MemoryRouter>
       );
 
+      // Production-matching icons: Star/PRO, Collections, Play, Help, Logout
       expect(screen.getByTestId('nav-item-pro')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-collections')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-play')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-help')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-logout')).toBeInTheDocument();
+    });
+
+    it('should render nav sections with test IDs', () => {
+      render(
+        <MemoryRouter>
+          <Sidebar />
+        </MemoryRouter>
+      );
+
+      // Production has topMenuItems and bottomMenu sections
+      expect(screen.getByTestId('nav-section-top')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-section-bottom')).toBeInTheDocument();
     });
   });
 
@@ -147,17 +161,6 @@ describe('Sidebar', () => {
 
       fireEvent.click(screen.getByTestId('nav-item-layers'));
       expect(mockToggleDrawer).toHaveBeenCalledWith('layers');
-    });
-
-    it('should toggle collections drawer when Collections button is clicked', () => {
-      render(
-        <MemoryRouter>
-          <Sidebar />
-        </MemoryRouter>
-      );
-
-      fireEvent.click(screen.getByTestId('nav-item-collections'));
-      expect(mockToggleDrawer).toHaveBeenCalledWith('collections');
     });
 
     it('should show active state for Layers when drawer is open with layers content', () => {

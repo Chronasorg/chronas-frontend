@@ -16,6 +16,7 @@ import {
   mapSubtypeToEpicType,
   createDateFromYear,
   transformApiResponseToEpicItem,
+  toWikipediaUrl,
   parseYearFromQueryString,
   MIN_YEAR,
   MAX_YEAR,
@@ -1125,6 +1126,32 @@ describe('createDateFromYear utility', () => {
   });
 });
 
+describe('toWikipediaUrl utility', () => {
+  it('should convert article name to full Wikipedia URL', () => {
+    expect(toWikipediaUrl('Roman_Empire')).toBe('https://en.wikipedia.org/wiki/Roman_Empire');
+  });
+
+  it('should handle URL-encoded article names', () => {
+    expect(toWikipediaUrl('Archimedes%27_screw')).toBe('https://en.wikipedia.org/wiki/Archimedes%27_screw');
+  });
+
+  it('should return full URL as-is when already a https URL', () => {
+    expect(toWikipediaUrl('https://en.wikipedia.org/wiki/Test')).toBe('https://en.wikipedia.org/wiki/Test');
+  });
+
+  it('should return full URL as-is when already a http URL', () => {
+    expect(toWikipediaUrl('http://en.wikipedia.org/wiki/Test')).toBe('http://en.wikipedia.org/wiki/Test');
+  });
+
+  it('should return empty string for empty input', () => {
+    expect(toWikipediaUrl('')).toBe('');
+  });
+
+  it('should handle simple article names', () => {
+    expect(toWikipediaUrl('Cannon')).toBe('https://en.wikipedia.org/wiki/Cannon');
+  });
+});
+
 describe('transformApiResponseToEpicItem utility', () => {
   it('should transform a complete API response to EpicItem', () => {
     const apiItem: EpicApiResponse = {
@@ -1238,6 +1265,20 @@ describe('transformApiResponseToEpicItem utility', () => {
     const result = transformApiResponseToEpicItem(apiItem);
 
     expect(result.wiki).toBe('https://wiki.from.data');
+  });
+
+  it('should convert article name to full Wikipedia URL', () => {
+    const apiItem: EpicApiResponse = {
+      _id: 'test-item',
+      subtype: 'ei',
+      data: {
+        wiki: 'Roman_Empire',
+      },
+    };
+
+    const result = transformApiResponseToEpicItem(apiItem);
+
+    expect(result.wiki).toBe('https://en.wikipedia.org/wiki/Roman_Empire');
   });
 
   it('should fall back to root wiki when data.wiki is not available', () => {

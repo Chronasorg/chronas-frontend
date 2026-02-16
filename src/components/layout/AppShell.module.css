@@ -5,7 +5,8 @@
 
 .shell {
   display: grid;
-  grid-template-rows: var(--header-height, 64px) 1fr var(--footer-height, 48px);
+  /* No header, no footer - production uses sidebar logo as branding */
+  grid-template-rows: 1fr;
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
@@ -21,9 +22,9 @@
   z-index: 1; /* Ensure body is below fixed timeline */
 }
 
-/* Account for fixed sidebar width (56px) */
+/* Sidebar is fixed position, no padding needed on body */
 .sidebarOpen .body {
-  padding-left: 56px;
+  padding-left: 0;
 }
 
 .sidebarClosed .body {
@@ -41,10 +42,10 @@
   height: 100%;
 }
 
-/* Responsive: Desktop - always show sidebar */
+/* Responsive: Desktop - sidebar is fixed, no padding needed */
 @media (min-width: 768px) {
   .shell .body {
-    padding-left: 56px;
+    padding-left: 0;
   }
 }
 

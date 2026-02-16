@@ -1,14 +1,22 @@
 /**
  * Logo Component
  *
- * Displays the Chronas logo SVG with theme-appropriate colors.
+ * Displays the Chronas logo as inline SVG for CSS styling.
  * Links to the /info route when clicked.
+ * Matches production styling (light theme).
  *
- * Requirements: 2.1, 2.2, 2.3
+ * Production reference: chronas/src/components/menu/Menu.js
+ * - Uses SVG from /images/newLogo10.svg with react-inlinesvg
+ * - Has logoMenuContainer + lightTheme classes
+ * - CSS targets svg g { fill: #1f1f1f } for light theme
+ * - marginBottom: 24px, width: 50px
+ *
+ * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
  */
 
 import { Link } from 'react-router-dom';
 import styles from './Logo.module.css';
+import { LOGO_SVG_PATHS } from './logoSvgPaths';
 
 /**
  * Logo component props
@@ -21,59 +29,14 @@ export interface LogoProps {
 }
 
 /**
- * Chronas Logo SVG component.
- * Based on the original logo from chronas/public/images/newLogo10.svg
- */
-function ChronasLogoSVG() {
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      className={styles['logo-svg'] ?? ''}
-      aria-hidden="true"
-    >
-      {/* Outer circle */}
-      <circle
-        cx="50"
-        cy="50"
-        r="45"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-      />
-      {/* Inner design - stylized C */}
-      <path
-        d="M65 30 C45 30, 30 40, 30 50 C30 60, 45 70, 65 70"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      {/* Horizontal line through center */}
-      <line
-        x1="35"
-        y1="50"
-        x2="70"
-        y2="50"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-      {/* Small decorative dots */}
-      <circle cx="25" cy="50" r="3" fill="currentColor" />
-      <circle cx="75" cy="50" r="3" fill="currentColor" />
-    </svg>
-  );
-}
-
-/**
  * Logo component that displays the Chronas logo and links to /info.
- *
- * @param props - Logo props
- * @returns The logo element
+ * Uses inline SVG so CSS can style the fill color for light/dark themes.
  */
 export function Logo({ className, testId }: LogoProps) {
   const combinedClassName = [
     styles['logo'] ?? '',
+    styles['logoMenuContainer'] ?? '',
+    styles['lightTheme'] ?? '',
     className ?? '',
   ].filter(Boolean).join(' ');
 
@@ -84,7 +47,6 @@ export function Logo({ className, testId }: LogoProps) {
       aria-label="Chronas - Go to info page"
       data-testid={testId}
       onClick={() => {
-        // Match legacy behavior of setting info section
         try {
           localStorage.setItem('chs_info_section', 'welcome');
         } catch {
@@ -92,7 +54,22 @@ export function Logo({ className, testId }: LogoProps) {
         }
       }}
     >
-      <ChronasLogoSVG />
+      <svg
+        version="1.0"
+        xmlns="http://www.w3.org/2000/svg"
+        width="50px"
+        height="50px"
+        viewBox="0 0 14930 16000"
+        preserveAspectRatio="xMidYMid meet"
+        className={styles['logo-svg'] ?? ''}
+        aria-hidden="true"
+      >
+        <g id="layer101" fill="currentColor" stroke="none">
+          {LOGO_SVG_PATHS.map((d, i) => (
+            <path key={i} d={d} />
+          ))}
+        </g>
+      </svg>
     </Link>
   );
 }

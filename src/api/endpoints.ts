@@ -123,6 +123,12 @@ export const EPICS = {
    * Requirements: 6.1
    */
   GET_ALL: '/metadata?type=e&end=3000&subtype=ew,ei,ps',
+  /**
+   * Get linked content for an epic item.
+   * Returns map features with coordinates for battles, events, etc.
+   * Used to fly the map to show epic-related locations.
+   */
+  GET_LINKED: (epicId: string) => `/metadata/links/getLinked?source=1:${encodeURIComponent(epicId)}`,
 } as const;
 
 // ============================================================================

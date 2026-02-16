@@ -1,7 +1,14 @@
 /**
  * NavItem Component Styles
  *
- * Requirements: 3.1-3.7, 4.1-4.9, 8.2, 8.3
+ * Production reference: chronas/src/components/menu/Menu.js
+ * Theme colors from: chronas/src/properties.js (light theme)
+ * 
+ * Light theme colors:
+ * - foreColors[0]: #6a6a6a (default icon color)
+ * - highlightColors[0]: rgb(173, 135, 27) (hover/active color)
+ *
+ * Requirements: 2.4, 3.1-3.7, 4.1-4.9, 8.2, 8.3
  */
 
 .nav-item {
@@ -16,28 +23,46 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--chronas-fore-1);
+  /* Production foreColors[0]: #6a6a6a */
+  color: #6a6a6a;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
+/* Hover state - production highlightColors[0] */
 .nav-item:hover:not(.nav-item--disabled) {
-  background-color: var(--chronas-back-2);
+  background-color: rgba(0, 0, 0, 0.05);
+  /* Production highlightColors[0]: rgb(173, 135, 27) */
+  color: rgb(173, 135, 27);
+}
+
+/* Active hover state - slightly darker */
+.nav-item:hover:not(.nav-item--disabled):active {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(0.98);
 }
 
 .nav-item:focus-visible {
-  outline: 2px solid var(--chronas-highlight);
+  /* Production highlightColors[0] */
+  outline: 2px solid rgb(173, 135, 27);
   outline-offset: 2px;
 }
 
+/* Active/selected state - production highlightColors[0] */
 .nav-item--active {
-  background-color: var(--chronas-back-2);
-  color: var(--chronas-highlight);
+  background-color: rgba(0, 0, 0, 0.08);
+  /* Production highlightColors[0]: rgb(173, 135, 27) */
+  color: rgb(173, 135, 27);
 }
 
+.nav-item--active:hover:not(.nav-item--disabled) {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Highlighted state - production highlightColors[0] */
 .nav-item--highlighted {
-  color: var(--chronas-highlight);
+  color: rgb(173, 135, 27);
 }
 
 .nav-item--disabled {
@@ -45,6 +70,7 @@
   cursor: not-allowed;
 }
 
+/* Icon container - consistent sizing */
 .nav-item__icon {
   display: flex;
   align-items: center;
@@ -53,10 +79,12 @@
   height: 24px;
 }
 
+/* SVG icon styling - consistent sizing */
 .nav-item__icon svg {
   width: 24px;
   height: 24px;
   fill: currentColor;
+  transition: fill 0.2s ease;
 }
 
 .nav-item__badge {
@@ -70,8 +98,9 @@
   font-weight: 600;
   line-height: 18px;
   text-align: center;
-  color: var(--chronas-back-1);
-  background-color: var(--chronas-highlight);
+  color: #fff;
+  /* Production highlightColors[0] */
+  background-color: rgb(173, 135, 27);
   border-radius: 9px;
-  border: 1px solid var(--chronas-back-1);
+  border: 1px solid #fafafa;
 }

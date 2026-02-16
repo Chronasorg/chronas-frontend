@@ -1,116 +1,146 @@
 /**
  * Sidebar Component Styles
  *
- * Theme-aware sidebar using CSS custom properties.
- * Requirements: 1.1-1.6, 7.1-7.5, 8.1-8.4
+ * Production-matching light theme sidebar.
+ * Requirements: 1.1-1.6, 8.1-8.6, 9.1-9.4
+ * 
+ * Production reference: chronas/src/components/menu/Sidebar.js
+ * Theme colors from: chronas/src/properties.js (light theme)
  */
 
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
+  /* Extend to full height - timeline is transparent so sidebar shows through */
   bottom: 0;
-  width: 56px;
-  background-color: var(--chronas-back-1);
-  border-right: 1px solid var(--chronas-border);
-  z-index: var(--z-fixed, 300);
+  /* Production width: 50px */
+  width: 50px;
+  /* Production gradient: linear-gradient(180deg,#fff 0,#F2F2F2) */
+  background: linear-gradient(180deg, #fff 0%, #F2F2F2 100%);
+  background-color: #ffffff;
+  /* Production foreColor[0]: #6a6a6a */
+  color: #6a6a6a;
+  /* Production z-index: 10000 */
+  z-index: 10000;
   display: flex;
   flex-direction: column;
-  transition: transform var(--transition-base), width var(--transition-base);
+  border-radius: 0;
+  transition: margin 350ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
+  /* Production padding: 8px 4px */
+  padding: 8px 4px;
 }
 
 .sidebar.open {
-  transform: translateX(0);
+  margin-left: 0;
 }
 
 .sidebar.closed {
-  transform: translateX(-100%);
+  margin-left: -50px;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: var(--spacing-xs);
+  /* No extra padding - sidebar already has padding */
+  padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 .logoSection {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-sm) 0;
-  border-bottom: 1px solid var(--chronas-border);
-  margin-bottom: var(--spacing-sm);
+  /* Production marginBottom: 24px on logo */
+  margin-bottom: 24px;
+  /* Ensure logo is visible and not clipped */
+  flex-shrink: 0;
+  min-height: 50px;
 }
 
 .topSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-xs);
+  justify-content: flex-start;
+  flex: 1;
+  /* Production padding: 8px 4px */
+  padding: 8px 4px;
+  gap: 4px;
 }
 
 .spacer {
   flex: 1;
-  min-height: var(--spacing-lg);
+  min-height: 16px;
 }
 
 .bottomSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding-bottom: var(--spacing-sm);
+  justify-content: flex-end;
+  /* Production padding: 8px 4px */
+  padding: 8px 4px;
+  gap: 4px;
 }
 
 .avatarSection {
-  margin-top: var(--spacing-sm);
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--chronas-border);
+  margin-top: 8px;
+}
+
+/* Separator line between icon groups */
+.separator {
+  width: 32px;
+  height: 1px;
+  /* Production borderColors: rgba(200,200,200,100) */
+  background-color: rgba(200, 200, 200, 0.4);
+  margin: 8px 0;
 }
 
 .toggleButton {
   display: none;
   position: absolute;
-  right: -32px;
+  right: -28px;
   top: 50%;
   transform: translateY(-50%);
   width: 28px;
   height: 48px;
-  background-color: var(--chronas-back-1);
-  border: 1px solid var(--chronas-border);
+  background: linear-gradient(180deg, #fff 0%, #F2F2F2 100%);
+  border: 1px solid rgba(200, 200, 200, 0.4);
   border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: var(--chronas-fore-1);
+  border-radius: 0 4px 4px 0;
+  color: #6a6a6a;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition-fast);
+  transition: color 0.2s ease;
 }
 
 .toggleButton:hover {
-  background-color: var(--chronas-back-2);
+  /* Production highlightColors: rgb(173, 135, 27) */
+  color: rgb(173, 135, 27);
 }
 
 .toggleButton:focus-visible {
-  outline: 2px solid var(--chronas-highlight);
+  outline: 2px solid rgb(173, 135, 27);
   outline-offset: 2px;
 }
 
 /* Responsive: Mobile */
 @media (max-width: 767px) {
   .sidebar {
-    z-index: var(--z-modal, 500);
+    z-index: 10001;
   }
 
   .sidebar.closed {
-    transform: translateX(-100%);
+    margin-left: -50px;
   }
 
   .sidebar.open {
-    transform: translateX(0);
+    margin-left: 0;
   }
 
   .toggleButton {
@@ -121,10 +151,10 @@
 /* Desktop: Always visible */
 @media (min-width: 768px) {
   .sidebar {
-    transform: translateX(0);
+    margin-left: 0;
   }
 
   .sidebar.closed {
-    transform: translateX(0);
+    margin-left: 0;
   }
 }

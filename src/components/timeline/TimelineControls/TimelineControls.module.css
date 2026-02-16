@@ -1,22 +1,23 @@
 /**
  * TimelineControls Component Styles
  *
- * Implements control buttons with circular backgrounds, drop-shadows,
- * and tooltips. Positioned at left: 64px with vertical stacking.
+ * Implements control buttons with circular dark backgrounds, drop-shadows,
+ * and tooltips. Positioned on the left side of the timeline.
  *
- * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10
+ * Requirements: 1.2, 4.2, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10
  */
 
-/* Main container - positioned at left: 64px (Requirement 6.1) */
+/* Main container - production uses position: fixed for each button individually
+ * We use a fixed container to group them */
 .timelineControls {
-  position: absolute;
+  position: fixed;
   left: 64px;
-  bottom: 16px;
+  bottom: 0;
   
-  /* Vertical stacking with 8px gap (Requirement 6.2) */
+  /* Vertical stacking */
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: column-reverse;
+  gap: 0;
   
   /* Ensure controls are above timeline content */
   z-index: 10;
@@ -31,51 +32,53 @@
   pointer-events: auto;
 }
 
-/* Control button - circular background (Requirement 6.7) */
+/* Production button positions (from bottom):
+ * Reset: bottom 24px
+ * Expand: bottom 52px
+ * Search: bottom 80px
+ * Autoplay: bottom 109px
+ * Each button is 48x48 with 12px padding = 24px icon */
+
+/* Control button - matches production exactly */
 .controlButton {
   /* Reset button styles */
-  border: none;
-  margin: 0;
-  padding: 0;
-  
-  /* Circular shape - 32px diameter (Requirement 6.7) */
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  
-  /* Theme-aware background color (Requirement 6.8) */
-  background-color: var(--chronas-back-1, #ffffff);
-  
-  /* Theme-aware icon color (Requirement 6.8) */
-  color: var(--chronas-fore-1, #6a6a6a);
-  
-  /* Drop-shadow for visibility (Requirement 6.9) */
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.15),
-    0 1px 2px rgba(0, 0, 0, 0.1);
-  
-  /* Center icon content */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  /* Interactive styling */
+  border: 10px;
+  box-sizing: border-box;
+  display: inline-block;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   cursor: pointer;
-  transition: 
-    background-color 150ms ease,
-    color 150ms ease,
-    transform 150ms ease,
-    box-shadow 150ms ease;
+  text-decoration: none;
+  margin: 0;
+  padding: 12px;
+  outline: none;
+  font-size: 0;
+  font-weight: inherit;
+  position: relative;
+  overflow: visible;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  width: 48px;
+  height: 48px;
+  background: none;
 }
 
-/* Hover state (Requirement 6.8 - highlight color) */
-.controlButton:hover:not(:disabled) {
-  background-color: var(--chronas-back-2, #F2F2F2);
+/* The SVG icon inside the button */
+.controlButton svg {
+  display: inline-block;
+  color: rgb(106, 106, 106);
+  fill: currentColor;
+  height: 24px;
+  width: 24px;
+  user-select: none;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  background: rgb(255, 255, 255);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+/* Hover state - production uses highlight color on hover */
+.controlButton:hover:not(:disabled) svg {
   color: var(--chronas-highlight, rgb(173, 135, 27));
-  transform: scale(1.05);
-  box-shadow: 
-    0 3px 6px rgba(0, 0, 0, 0.2),
-    0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* Focus state for accessibility */
@@ -99,24 +102,17 @@
 
 .controlButton.disabled:hover,
 .controlButton:disabled:hover {
-  background-color: var(--chronas-back-1, #ffffff);
-  color: var(--chronas-fore-1, #6a6a6a);
-  transform: none;
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.15),
-    0 1px 2px rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+
+.controlButton.disabled svg,
+.controlButton:disabled svg {
+  opacity: 0.4;
 }
 
 /* Active state for autoplay button when playing */
-.controlButton.active {
-  background-color: var(--chronas-highlight, rgb(173, 135, 27));
-  color: var(--chronas-back-1, #ffffff);
-}
-
-.controlButton.active:hover:not(:disabled) {
-  background-color: var(--chronas-highlight, rgb(173, 135, 27));
-  color: var(--chronas-back-1, #ffffff);
-  filter: brightness(1.1);
+.controlButton.active svg {
+  color: var(--chronas-highlight, rgb(173, 135, 27));
 }
 
 /* Tooltip styles (Requirement 6.10) */
@@ -168,23 +164,25 @@
   visibility: visible;
 }
 
-/* Dark theme adjustments */
+/* Dark theme adjustments - buttons already dark, minimal changes needed */
 [data-theme='dark'] .controlButton {
-  background-color: var(--chronas-back-1, #333);
-  color: var(--chronas-fore-1, #F2F2F2);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.2);
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme='dark'] .controlButton:hover:not(:disabled) {
-  background-color: var(--chronas-back-2, #171717);
+  background-color: rgba(0, 0, 0, 0.9);
   color: var(--chronas-highlight, rgba(173, 135, 27));
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 [data-theme='dark'] .controlButton.active {
   background-color: var(--chronas-highlight, rgba(173, 135, 27));
-  color: var(--chronas-back-1, #333);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 [data-theme='dark'] .tooltip {
@@ -198,16 +196,18 @@
 
 /* Luther theme adjustments */
 [data-theme='luther'] .controlButton {
-  background-color: var(--chronas-back-1, #011c31);
+  background-color: rgba(1, 28, 49, 0.85);
   color: var(--chronas-fore-1, #fff3d3);
+  border-color: rgba(255, 243, 211, 0.15);
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.4),
-    0 1px 2px rgba(0, 0, 0, 0.3);
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme='luther'] .controlButton:hover:not(:disabled) {
-  background-color: var(--chronas-back-2, #451c2e);
+  background-color: rgba(1, 28, 49, 0.95);
   color: var(--chronas-highlight, rgba(69, 28, 46, 200));
+  border-color: rgba(255, 243, 211, 0.25);
 }
 
 [data-theme='luther'] .controlButton.active {
@@ -227,21 +227,21 @@
 /* Responsive adjustments */
 @media (max-width: 767px) {
   .timelineControls {
-    /* Move closer to edge on mobile */
-    left: 16px;
+    /* Keep after sidebar on mobile */
+    left: 60px;
     bottom: 12px;
     gap: 6px;
   }
   
   .controlButton {
-    /* Slightly smaller on mobile */
-    width: 28px;
-    height: 28px;
+    /* Slightly smaller on mobile but still touch-friendly */
+    width: 36px;
+    height: 36px;
   }
   
   .controlButton svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
   }
   
   .tooltip {

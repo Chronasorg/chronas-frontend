@@ -2,35 +2,40 @@
  * YearMarkerLabel Styles
  * 
  * Styles for the year label displayed on the timeline marker.
- * Matches production .currentYearLabel styling from mapTimeline.scss
+ * Matches production styling - year in a box on the timeline bar.
  */
 
 .yearLabel {
   /* Reset button styles */
-  pointer-events: all;
-  background: none;
-  border: 0;
+  pointer-events: all !important;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
   cursor: pointer;
   
-  /* Typography - matches production */
-  font-size: 28px;
-  font-weight: 500;
-  color: var(--chronas-fore-2, #494949);
-  text-shadow: 0.03em 0 4px white, 0.03em 0 4px white, 0.03em 0 4px white, 0.03em 0 4px white;
+  /* Typography - matching production box style */
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 6px 12px;
   
-  /* Positioning */
+  /* Positioning - on the timeline marker, above the drag handle */
   position: absolute;
-  top: 0;
-  left: 4px;
-  margin-top: 8px;
-  z-index: 1000;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
   
-  /* Remove focus outline but keep accessible */
-  outline: none;
+  /* Shadow for depth */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  
+  /* Transition */
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .yearLabel:hover {
-  color: var(--chronas-highlight, #4a90d9);
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .yearLabel:focus-visible {
@@ -41,39 +46,25 @@
 /* Suggested year indicator (appears above main year on hover) */
 .suggestedYear {
   position: absolute;
-  margin-top: -36px;
-  left: 0;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   transition: opacity 0.3s ease;
 }
 
 .arrowIcon {
-  height: 32px;
-  width: 32px;
-  position: absolute;
-  top: 5px;
-  left: -6px;
-  color: rgba(255, 255, 255, 0.9);
+  height: 16px;
+  width: 16px;
+  color: rgba(255, 255, 255, 0.8);
   filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
 .suggestedYearText {
-  font-size: 18px;
-  position: absolute;
-  left: 0;
-  top: -8px;
-  color: var(--chronas-fore-2, #494949);
-  text-shadow: 0.03em 0 4px white, 0.03em 0 4px white;
-}
-
-/* Dark theme adjustments */
-:global([data-theme="dark"]) .yearLabel {
-  color: var(--chronas-fore-2, #e0e0e0);
-  text-shadow: 0.03em 0 4px rgba(0, 0, 0, 0.8), 0.03em 0 4px rgba(0, 0, 0, 0.8);
-}
-
-:global([data-theme="dark"]) .suggestedYearText {
-  color: var(--chronas-fore-2, #e0e0e0);
-  text-shadow: 0.03em 0 4px rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }

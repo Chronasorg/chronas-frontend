@@ -20,15 +20,17 @@
   background: transparent !important;
   visibility: visible !important;
   width: 100% !important;
-  height: 100% !important;
+  height: 132px !important;
   cursor: ew-resize;
   pointer-events: all;
+  overflow: visible !important;
 }
 
 /* CRITICAL: Override ALL vis-timeline panel backgrounds */
 .container :global(.vis-panel) {
   background: transparent !important;
   background-color: transparent !important;
+  overflow: visible !important;
 }
 
 .container :global(.vis-panel.vis-center) {
@@ -36,22 +38,30 @@
   background: transparent !important;
   pointer-events: all;
   cursor: ew-resize;
-  top: 30px !important;
-  height: 100px !important;
+  /* Match production exactly: top: 24px, height: 84px */
+  top: 24px !important;
+  height: 84px !important;
   z-index: 5;
+  overflow: visible !important;
 }
 
 .container :global(.vis-panel.vis-bottom) {
   background-color: transparent !important;
   background: transparent !important;
   pointer-events: none;
-  top: 82px !important;
+  /* Year labels panel - positioned to show below epic items */
+  top: 100px !important;
+  height: 32px !important;
+  overflow: visible !important;
 }
 
 .container :global(.vis-panel.vis-top) {
   background-color: transparent !important;
   background: transparent !important;
   pointer-events: none;
+  /* Ensure time axis labels are visible at top */
+  height: auto !important;
+  min-height: 24px;
 }
 
 .container :global(.vis-panel.vis-left),
@@ -86,12 +96,19 @@
   width: 4px;
   cursor: default;
   z-index: 10;
+  overflow: visible !important;
 }
 
 /* Selected year marker - matches production .vis-custom-time.selectedYear */
 .container :global(.vis-custom-time.selectedYear) {
-  z-index: 2;
+  z-index: 10;
   transition: left 100ms cubic-bezier(0.4, 0, 0.2, 1), right 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible !important;
+}
+
+/* Ensure the drag handle doesn't block the year label button */
+.container :global(.vis-custom-time.selectedYear > div:first-child) {
+  z-index: 1;
 }
 
 /* ============================================
@@ -118,9 +135,7 @@
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
+  overflow: visible;
 }
 
 /* Hover effects for epic items */
@@ -152,8 +167,8 @@
 .container :global(.vis-item.vis-range),
 .container :global(.vis-item.epic-item.vis-range) {
   border-radius: 3px;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
   background-color: rgba(255, 255, 255, 0.4) !important;
 }
@@ -170,18 +185,26 @@
 
 /* ============================================
  * Time Axis Styling - Match Production
+ * Year labels must be visible in collapsed mode
  * ============================================ */
 
 .container :global(.vis-time-axis .vis-text) {
   color: var(--chronas-fore-1, #6a6a6a);
-  font-size: 11px;
+  font-size: 12px;
   text-shadow: 0.03em 0 4px #fff, 0.03em 0 4px #fff;
   font-weight: 600;
 }
 
+/* Minor labels (year numbers) - visible at bottom of timeline */
 .container :global(.vis-text.vis-minor) {
-  padding-left: 14px;
-  padding-top: 24px;
+  padding-left: 4px;
+  padding-top: 2px;
+}
+
+/* Major labels (century markers) */
+.container :global(.vis-text.vis-major) {
+  font-weight: 700;
+  font-size: 13px;
 }
 
 .container :global(.vis-time-axis .vis-grid.vis-minor) {
@@ -190,6 +213,15 @@
 
 .container :global(.vis-time-axis .vis-grid.vis-major) {
   border-color: var(--chronas-border, rgba(200, 200, 200, 0.5));
+}
+
+/* Vertical grid lines - match production: top: 24px */
+.container :global(.vis-time-axis .vis-grid.vis-vertical) {
+  position: absolute;
+  border-left: 1px solid;
+  top: 24px !important;
+  height: 80px;
+  border-color: #e5e5e5;
 }
 
 /* Panel borders */
@@ -210,7 +242,7 @@
 .container :global(.vis-panel.vis-background.vis-horizontal) {
   background: transparent !important;
   background-color: transparent !important;
-  top: 9px !important;
+  top: 24px !important;
 }
 
 /* Content area must be transparent */
@@ -312,8 +344,8 @@
   background-color: rgba(255, 255, 255, 0.4) !important;
   border: 1px solid rgba(122, 0, 0, 0.28) !important;
   cursor: pointer;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -335,8 +367,8 @@
   background-color: rgba(255, 255, 255, 0.4) !important;
   border: 2px solid rgba(0, 140, 36, 0.2) !important;
   cursor: pointer;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -358,8 +390,8 @@
   background-color: transparent !important;
   border-color: transparent !important;
   pointer-events: none;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -372,8 +404,8 @@
   background-color: transparent !important;
   border-color: transparent !important;
   pointer-events: none;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -386,8 +418,8 @@
   background-color: rgba(255, 255, 255, 0.4) !important;
   border: 2px solid rgba(0, 128, 0, 0.2) !important;
   cursor: pointer;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -396,8 +428,8 @@
   background-color: rgba(255, 255, 255, 0.4) !important;
   border: 2px solid rgba(255, 165, 0, 0.2) !important;
   cursor: pointer;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -406,16 +438,16 @@
   background-color: rgba(255, 255, 255, 0.4) !important;
   border: 2px solid rgba(255, 255, 255, 0.2) !important;
   cursor: pointer;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
 /* Battle epic items (eb) - transparent background */
 .container :global(.vis-item.timelineItem_eb) {
   background: transparent !important;
-  height: 30px !important;
-  line-height: 15px;
+  height: 20px !important;
+  line-height: 18px;
   margin-top: 2px;
 }
 
@@ -427,4 +459,140 @@
 
 :global(.extendedTimeline) .container :global(.vis-item.timelineItem_ew) {
   background-color: white !important;
+}
+
+/* ============================================
+ * Epic Item Icon Styling
+ * Matches production main.scss icon classes
+ * ============================================ */
+
+/* War container - wrapper for epic item content */
+.container :global(.warContainer) {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Transparent tick images - used as icon backgrounds */
+.container :global(.tsTicks) {
+  display: inherit;
+}
+
+/* War icon styling */
+.container :global(.warIcon) {
+  margin-right: 0;
+  height: 16px;
+  width: 16px;
+  background: url(/images/abstract-atlas.png) -1px -460px;
+  background-size: 60px 119px;
+  margin-top: -36px;
+  margin-left: -7px;
+}
+
+.container :global(.warIcon.tsTicks) {
+  display: inherit;
+}
+
+.container :global(.warIcon.timelineTooltipIcon) {
+  margin: 0;
+  opacity: 1;
+}
+
+/* Discovery icon styling */
+.container :global(.discoveryIcon) {
+  pointer-events: all;
+  margin-right: 0;
+  height: 20px;
+  width: 16px;
+  background: url(/images/abstract-atlas.png) -30px -322px;
+  background-size: 60px 119px;
+  margin-top: 9px;
+  margin-left: -7px;
+  opacity: 0.6;
+}
+
+.container :global(.discoveryIcon.tsTicks) {
+  display: inherit;
+}
+
+.container :global(.discoveryIcon.timelineTooltipIcon) {
+  margin: 0;
+  opacity: 1;
+}
+
+.container :global(.discoveryIcon:hover) {
+  opacity: 1;
+}
+
+.container :global(.warContainer .discoveryIcon) {
+  filter: drop-shadow(rgb(0, 0, 0) 0px 0px 2px);
+}
+
+/* Person icon styling - variant 1 */
+.container :global(.esIcon1) {
+  pointer-events: all;
+  margin-right: 0;
+  height: 15px;
+  width: 8px;
+  background: url(/images/abstract-atlas.png) -26px -460px;
+  background-size: 90px 119px;
+  margin-top: -39px;
+  margin-left: -7px;
+  opacity: 0.6;
+}
+
+/* Person icon styling - variant 2 */
+.container :global(.esIcon2) {
+  pointer-events: all;
+  margin-right: 0;
+  height: 15px;
+  width: 8px;
+  background: url(/images/abstract-atlas.png) -28px -460px;
+  background-size: 70px 119px;
+  margin-top: -39px;
+  margin-left: -7px;
+  opacity: 0.6;
+}
+
+/* Person icon styling - base */
+.container :global(.esIcon) {
+  margin-right: 0;
+  height: 16px;
+  width: 16px;
+  background: url(/images/abstract-atlas.png) -56px -442px;
+  background-size: 74px 119px;
+  margin-top: -36px;
+  margin-left: -7px;
+  opacity: 0.6;
+}
+
+.container :global(.esIcon.tsTicks),
+.container :global(.esIcon1.tsTicks),
+.container :global(.esIcon2.tsTicks) {
+  display: inherit;
+}
+
+.container :global(.esIcon.timelineTooltipIcon),
+.container :global(.esIcon1.timelineTooltipIcon),
+.container :global(.esIcon2.timelineTooltipIcon) {
+  margin: 0;
+  opacity: 1;
+}
+
+/* Battle icon styling */
+.container :global(.battleIcon1) {
+  margin-right: 0;
+  margin-left: 32%;
+  height: 38px;
+  width: 15px;
+  background: url(/images/abstract-atlas.png) -30px -200px;
+  background-size: 121px 278px;
+}
+
+.container :global(.battleIcon2) {
+  margin-right: 0;
+  margin-left: 75%;
+  height: 38px;
+  width: 15px;
+  background: url(/images/abstract-atlas.png) -45px -200px;
+  background-size: 121px 278px;
 }

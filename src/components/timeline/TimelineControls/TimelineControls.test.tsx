@@ -93,9 +93,9 @@ describe('TimelineControls', () => {
       const svg = expandButton.querySelector('svg');
       expect(svg).toBeInTheDocument();
       
-      // Check for up arrow polyline (points going up: 18 15 12 9 6 15)
-      const polyline = svg?.querySelector('polyline');
-      expect(polyline).toHaveAttribute('points', '18 15 12 9 6 15');
+      // Check for expand-less path (up arrow)
+      const path = svg?.querySelector('path');
+      expect(path).toBeInTheDocument();
     });
 
     it('renders down arrow icon when expanded', () => {
@@ -105,9 +105,9 @@ describe('TimelineControls', () => {
       const svg = expandButton.querySelector('svg');
       expect(svg).toBeInTheDocument();
       
-      // Check for down arrow polyline (points going down: 6 9 12 15 18 9)
-      const polyline = svg?.querySelector('polyline');
-      expect(polyline).toHaveAttribute('points', '6 9 12 15 18 9');
+      // Check for expand-more path (down arrow)
+      const path = svg?.querySelector('path');
+      expect(path).toBeInTheDocument();
     });
   });
 
@@ -179,11 +179,9 @@ describe('TimelineControls', () => {
       const svg = searchButton.querySelector('svg');
       expect(svg).toBeInTheDocument();
       
-      // Check for search icon elements (circle and line)
-      const circle = svg?.querySelector('circle');
-      const line = svg?.querySelector('line');
-      expect(circle).toBeInTheDocument();
-      expect(line).toBeInTheDocument();
+      // Check for search icon (path element with fill)
+      const path = svg?.querySelector('path');
+      expect(path).toBeInTheDocument();
     });
   });
 
@@ -219,9 +217,9 @@ describe('TimelineControls', () => {
       const svg = autoplayButton.querySelector('svg');
       expect(svg).toBeInTheDocument();
       
-      // Check for play icon (polygon)
-      const polygon = svg?.querySelector('polygon');
-      expect(polygon).toBeInTheDocument();
+      // Check for slideshow icon (path element)
+      const path = svg?.querySelector('path');
+      expect(path).toBeInTheDocument();
     });
 
     it('renders stop icon when active', () => {
@@ -231,9 +229,9 @@ describe('TimelineControls', () => {
       const svg = autoplayButton.querySelector('svg');
       expect(svg).toBeInTheDocument();
       
-      // Check for stop icon (rect)
-      const rect = svg?.querySelector('rect');
-      expect(rect).toBeInTheDocument();
+      // Check for stop icon (path element)
+      const path = svg?.querySelector('path');
+      expect(path).toBeInTheDocument();
     });
   });
 

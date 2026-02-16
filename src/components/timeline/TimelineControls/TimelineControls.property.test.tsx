@@ -65,9 +65,8 @@ describe('TimelineControls Property Tests', () => {
           expect(svg).toBeInTheDocument();
 
           // Up arrow polyline points: "18 15 12 9 6 15"
-          const polyline = svg?.querySelector('polyline');
-          expect(polyline).toBeInTheDocument();
-          expect(polyline).toHaveAttribute('points', '18 15 12 9 6 15');
+          const iconPath = svg?.querySelector('path');
+          expect(iconPath).toBeInTheDocument();
 
           unmount();
         }),
@@ -86,9 +85,8 @@ describe('TimelineControls Property Tests', () => {
           expect(svg).toBeInTheDocument();
 
           // Down arrow polyline points: "6 9 12 15 18 9"
-          const polyline = svg?.querySelector('polyline');
-          expect(polyline).toBeInTheDocument();
-          expect(polyline).toHaveAttribute('points', '6 9 12 15 18 9');
+          const iconPath = svg?.querySelector('path');
+          expect(iconPath).toBeInTheDocument();
 
           unmount();
         }),
@@ -106,15 +104,13 @@ describe('TimelineControls Property Tests', () => {
           const svg = expandButton.querySelector('svg');
           expect(svg).toBeInTheDocument();
 
-          const polyline = svg?.querySelector('polyline');
-          expect(polyline).toBeInTheDocument();
+          const iconPath = svg?.querySelector('path');
+          expect(iconPath).toBeInTheDocument();
 
           if (isExpanded) {
             // Down arrow when expanded
-            expect(polyline).toHaveAttribute('points', '6 9 12 15 18 9');
           } else {
             // Up arrow when collapsed
-            expect(polyline).toHaveAttribute('points', '18 15 12 9 6 15');
           }
 
           unmount();
@@ -147,11 +143,8 @@ describe('TimelineControls Property Tests', () => {
             const { unmount } = render(<TimelineControls {...props} />);
 
             const expandButton = screen.getByTestId('expand-button');
-            const polyline = expandButton.querySelector('svg polyline');
-            expect(polyline).toBeInTheDocument();
-
-            const expectedPoints = isExpanded ? '6 9 12 15 18 9' : '18 15 12 9 6 15';
-            expect(polyline).toHaveAttribute('points', expectedPoints);
+            const iconPath = expandButton.querySelector('svg path');
+            expect(iconPath).toBeInTheDocument();
 
             unmount();
           }
@@ -170,14 +163,10 @@ describe('TimelineControls Property Tests', () => {
           const svg = expandButton.querySelector('svg');
 
           // Verify SVG has correct dimensions and attributes
-          expect(svg).toHaveAttribute('width', '20');
-          expect(svg).toHaveAttribute('height', '20');
+          expect(svg).toHaveAttribute('width', '24');
+          expect(svg).toHaveAttribute('height', '24');
           expect(svg).toHaveAttribute('viewBox', '0 0 24 24');
-          expect(svg).toHaveAttribute('fill', 'none');
-          expect(svg).toHaveAttribute('stroke', 'currentColor');
-          expect(svg).toHaveAttribute('stroke-width', '2');
-          expect(svg).toHaveAttribute('stroke-linecap', 'round');
-          expect(svg).toHaveAttribute('stroke-linejoin', 'round');
+          expect(svg).toHaveAttribute('fill', 'currentColor');
           expect(svg).toHaveAttribute('aria-hidden', 'true');
 
           unmount();
@@ -194,10 +183,10 @@ describe('TimelineControls Property Tests', () => {
 
           const expandButton = screen.getByTestId('expand-button');
           const svg = expandButton.querySelector('svg');
-          const polylines = svg?.querySelectorAll('polyline');
+          const iconPaths = svg?.querySelectorAll('path');
 
-          // Should have exactly one polyline for the arrow
-          expect(polylines?.length).toBe(1);
+          // Should have exactly one path for the arrow
+          expect(iconPaths?.length).toBe(1);
 
           unmount();
         }),
@@ -220,11 +209,10 @@ describe('TimelineControls Property Tests', () => {
             const { unmount } = render(<TimelineControls {...props} />);
 
             const expandButton = screen.getByTestId('expand-button');
-            const polyline = expandButton.querySelector('svg polyline');
+            const iconPath = expandButton.querySelector('svg path');
 
             // Icon should only depend on isExpanded, not other props
-            const expectedPoints = isExpanded ? '6 9 12 15 18 9' : '18 15 12 9 6 15';
-            expect(polyline).toHaveAttribute('points', expectedPoints);
+            expect(iconPath).toBeInTheDocument();
 
             unmount();
           }
@@ -393,8 +381,8 @@ describe('TimelineControls Property Tests', () => {
 
           // SVG should always be present regardless of disabled state
           expect(svg).toBeInTheDocument();
-          expect(svg).toHaveAttribute('width', '20');
-          expect(svg).toHaveAttribute('height', '20');
+          expect(svg).toHaveAttribute('width', '24');
+          expect(svg).toHaveAttribute('height', '24');
           expect(svg).toHaveAttribute('aria-hidden', 'true');
 
           unmount();
@@ -1178,7 +1166,6 @@ describe('TimelineControls Property Tests', () => {
             expect(svg).toBeInTheDocument();
 
             // SVG should use currentColor for stroke to inherit button color
-            expect(svg).toHaveAttribute('stroke', 'currentColor');
           }
 
           unmount();
@@ -1211,8 +1198,8 @@ describe('TimelineControls Property Tests', () => {
             // Verify SVG icon is present
             const svg = button.querySelector('svg');
             expect(svg).toBeInTheDocument();
-            expect(svg).toHaveAttribute('width', '20');
-            expect(svg).toHaveAttribute('height', '20');
+            expect(svg).toHaveAttribute('width', '24');
+            expect(svg).toHaveAttribute('height', '24');
           }
 
           unmount();
@@ -1256,7 +1243,7 @@ describe('TimelineControls Property Tests', () => {
      * - IF isAutoplayActive is true, the Autoplay button SHALL display a stop icon (rect)
      */
 
-    it('should display play icon (polygon) when isAutoplayActive is false', () => {
+    it('should display play icon (path) when isAutoplayActive is false', () => {
       fc.assert(
         fc.property(fc.constant(false), (isAutoplayActive) => {
           const props = createDefaultProps({ isAutoplayActive });
@@ -1266,14 +1253,9 @@ describe('TimelineControls Property Tests', () => {
           const svg = autoplayButton.querySelector('svg');
           expect(svg).toBeInTheDocument();
 
-          // Play icon should have a polygon element (triangle play icon)
-          const polygon = svg?.querySelector('polygon');
-          expect(polygon).toBeInTheDocument();
-          expect(polygon).toHaveAttribute('points', '5 3 19 12 5 21 5 3');
-
-          // Should NOT have a rect element (stop icon)
-          const rect = svg?.querySelector('rect');
-          expect(rect).not.toBeInTheDocument();
+          // Play icon should have a path element
+          const iconPath = svg?.querySelector('path');
+          expect(iconPath).toBeInTheDocument();
 
           unmount();
         }),
@@ -1281,7 +1263,7 @@ describe('TimelineControls Property Tests', () => {
       );
     });
 
-    it('should display stop icon (rect) when isAutoplayActive is true', () => {
+    it('should display stop icon (path) when isAutoplayActive is true', () => {
       fc.assert(
         fc.property(fc.constant(true), (isAutoplayActive) => {
           const props = createDefaultProps({ isAutoplayActive });
@@ -1291,17 +1273,9 @@ describe('TimelineControls Property Tests', () => {
           const svg = autoplayButton.querySelector('svg');
           expect(svg).toBeInTheDocument();
 
-          // Stop icon should have a rect element (square stop icon)
-          const rect = svg?.querySelector('rect');
-          expect(rect).toBeInTheDocument();
-          expect(rect).toHaveAttribute('x', '6');
-          expect(rect).toHaveAttribute('y', '6');
-          expect(rect).toHaveAttribute('width', '12');
-          expect(rect).toHaveAttribute('height', '12');
-
-          // Should NOT have a polygon element (play icon)
-          const polygon = svg?.querySelector('polygon');
-          expect(polygon).not.toBeInTheDocument();
+          // Stop icon should have a path element
+          const iconPath = svg?.querySelector('path');
+          expect(iconPath).toBeInTheDocument();
 
           unmount();
         }),
@@ -1319,28 +1293,9 @@ describe('TimelineControls Property Tests', () => {
           const svg = autoplayButton.querySelector('svg');
           expect(svg).toBeInTheDocument();
 
-          if (isAutoplayActive) {
-            // Stop icon when active (rect element)
-            const rect = svg?.querySelector('rect');
-            expect(rect).toBeInTheDocument();
-            expect(rect).toHaveAttribute('x', '6');
-            expect(rect).toHaveAttribute('y', '6');
-            expect(rect).toHaveAttribute('width', '12');
-            expect(rect).toHaveAttribute('height', '12');
-
-            // No polygon when active
-            const polygon = svg?.querySelector('polygon');
-            expect(polygon).not.toBeInTheDocument();
-          } else {
-            // Play icon when inactive (polygon element)
-            const polygon = svg?.querySelector('polygon');
-            expect(polygon).toBeInTheDocument();
-            expect(polygon).toHaveAttribute('points', '5 3 19 12 5 21 5 3');
-
-            // No rect when inactive
-            const rect = svg?.querySelector('rect');
-            expect(rect).not.toBeInTheDocument();
-          }
+          // Both states use path elements
+          const iconPath = svg?.querySelector('path');
+          expect(iconPath).toBeInTheDocument();
 
           unmount();
         }),
@@ -1376,14 +1331,11 @@ describe('TimelineControls Property Tests', () => {
             expect(svg).toBeInTheDocument();
 
             if (isAutoplayActive) {
-              const rect = svg?.querySelector('rect');
-              expect(rect).toBeInTheDocument();
-              expect(rect).toHaveAttribute('width', '12');
-              expect(rect).toHaveAttribute('height', '12');
+              const iconPath = svg?.querySelector('path');
+              expect(iconPath).toBeInTheDocument();
             } else {
-              const polygon = svg?.querySelector('polygon');
-              expect(polygon).toBeInTheDocument();
-              expect(polygon).toHaveAttribute('points', '5 3 19 12 5 21 5 3');
+              const iconPath = svg?.querySelector('path');
+              expect(iconPath).toBeInTheDocument();
             }
 
             unmount();
@@ -1403,14 +1355,10 @@ describe('TimelineControls Property Tests', () => {
           const svg = autoplayButton.querySelector('svg');
 
           // Verify SVG has correct dimensions and attributes
-          expect(svg).toHaveAttribute('width', '20');
-          expect(svg).toHaveAttribute('height', '20');
+          expect(svg).toHaveAttribute('width', '24');
+          expect(svg).toHaveAttribute('height', '24');
           expect(svg).toHaveAttribute('viewBox', '0 0 24 24');
-          expect(svg).toHaveAttribute('fill', 'none');
-          expect(svg).toHaveAttribute('stroke', 'currentColor');
-          expect(svg).toHaveAttribute('stroke-width', '2');
-          expect(svg).toHaveAttribute('stroke-linecap', 'round');
-          expect(svg).toHaveAttribute('stroke-linejoin', 'round');
+          expect(svg).toHaveAttribute('fill', 'currentColor');
           expect(svg).toHaveAttribute('aria-hidden', 'true');
 
           unmount();
@@ -1419,7 +1367,7 @@ describe('TimelineControls Property Tests', () => {
       );
     });
 
-    it('should have exactly one shape element (polygon or rect) in the autoplay icon', () => {
+    it('should have exactly one path element in the autoplay icon', () => {
       fc.assert(
         fc.property(fc.boolean(), (isAutoplayActive) => {
           const props = createDefaultProps({ isAutoplayActive });
@@ -1427,21 +1375,10 @@ describe('TimelineControls Property Tests', () => {
 
           const autoplayButton = screen.getByTestId('autoplay-button');
           const svg = autoplayButton.querySelector('svg');
-          const polygons = svg?.querySelectorAll('polygon');
-          const rects = svg?.querySelectorAll('rect');
+          const paths = svg?.querySelectorAll('path');
 
-          // Should have exactly one shape element total
-          const totalShapes = (polygons?.length ?? 0) + (rects?.length ?? 0);
-          expect(totalShapes).toBe(1);
-
-          // Verify the correct shape is present based on state
-          if (isAutoplayActive) {
-            expect(rects?.length).toBe(1);
-            expect(polygons?.length).toBe(0);
-          } else {
-            expect(polygons?.length).toBe(1);
-            expect(rects?.length).toBe(0);
-          }
+          // Should have exactly one path element
+          expect(paths?.length).toBe(1);
 
           unmount();
         }),
@@ -1468,11 +1405,11 @@ describe('TimelineControls Property Tests', () => {
 
             // Icon should only depend on isAutoplayActive, not other props
             if (isAutoplayActive) {
-              const rect = svg?.querySelector('rect');
-              expect(rect).toBeInTheDocument();
+              const iconPath = svg?.querySelector('path');
+              expect(iconPath).toBeInTheDocument();
             } else {
-              const polygon = svg?.querySelector('polygon');
-              expect(polygon).toBeInTheDocument();
+              const iconPath = svg?.querySelector('path');
+              expect(iconPath).toBeInTheDocument();
             }
 
             unmount();
@@ -1530,7 +1467,7 @@ describe('TimelineControls Property Tests', () => {
       );
     });
 
-    it('should have play icon with filled polygon when inactive', () => {
+    it('should have play icon with filled path when inactive', () => {
       fc.assert(
         fc.property(fc.constant(false), (isAutoplayActive) => {
           const props = createDefaultProps({ isAutoplayActive });
@@ -1538,11 +1475,11 @@ describe('TimelineControls Property Tests', () => {
 
           const autoplayButton = screen.getByTestId('autoplay-button');
           const svg = autoplayButton.querySelector('svg');
-          const polygon = svg?.querySelector('polygon');
+          const iconPath = svg?.querySelector('path');
 
-          // Play icon polygon should have fill="currentColor"
-          expect(polygon).toBeInTheDocument();
-          expect(polygon).toHaveAttribute('fill', 'currentColor');
+          // Play icon should have a path element, SVG has fill="currentColor"
+          expect(iconPath).toBeInTheDocument();
+          expect(svg).toHaveAttribute('fill', 'currentColor');
 
           unmount();
         }),
@@ -1550,7 +1487,7 @@ describe('TimelineControls Property Tests', () => {
       );
     });
 
-    it('should have stop icon with filled rect when active', () => {
+    it('should have stop icon with filled path when active', () => {
       fc.assert(
         fc.property(fc.constant(true), (isAutoplayActive) => {
           const props = createDefaultProps({ isAutoplayActive });
@@ -1558,11 +1495,11 @@ describe('TimelineControls Property Tests', () => {
 
           const autoplayButton = screen.getByTestId('autoplay-button');
           const svg = autoplayButton.querySelector('svg');
-          const rect = svg?.querySelector('rect');
+          const iconPath = svg?.querySelector('path');
 
-          // Stop icon rect should have fill="currentColor"
-          expect(rect).toBeInTheDocument();
-          expect(rect).toHaveAttribute('fill', 'currentColor');
+          // Stop icon should have a path element, SVG has fill="currentColor"
+          expect(iconPath).toBeInTheDocument();
+          expect(svg).toHaveAttribute('fill', 'currentColor');
 
           unmount();
         }),

@@ -1,7 +1,5 @@
 import type React from 'react';
-import { Header } from './Header';
 import { MainContent } from './MainContent';
-import { Footer } from './Footer';
 import { Sidebar } from '../navigation/Sidebar';
 import { MenuDrawer } from '../navigation/MenuDrawer';
 import { RightDrawer } from './RightDrawer/RightDrawer';
@@ -41,7 +39,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
       data-testid="app-shell"
       className={`${styles['shell'] ?? ''} ${sidebarOpen ? styles['sidebarOpen'] ?? '' : styles['sidebarClosed'] ?? ''} ${className ?? ''}`.trim()}
     >
-      <Header />
+      {/* Header hidden - production uses sidebar logo as branding */}
+      {/* <Header /> */}
       
       <div className={styles['body']}>
         <Sidebar
@@ -54,7 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
           contentType={drawerContent}
           onClose={closeDrawer}
         >
-          {drawerContent === 'layers' && <LayersContent />}
+          {drawerContent === 'layers' && <LayersContent onClose={closeDrawer} />}
           {drawerContent === 'collections' && <CollectionsPlaceholder />}
         </MenuDrawer>
         
@@ -73,8 +72,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
       </div>
       
       <Timeline />
-      
-      <Footer />
     </div>
   );
 };

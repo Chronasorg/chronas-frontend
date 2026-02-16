@@ -433,7 +433,7 @@ describe('MapView Property Tests', () => {
           if (sidebarOpen) {
             expect(expectedLeftOffset).toBe(156); // Requirement 15.1
           } else {
-            expect(expectedLeftOffset).toBe(56); // Requirement 15.2
+            expect(expectedLeftOffset).toBe(50); // Requirement 15.2
           }
         }),
         { numRuns: 100 }
@@ -501,7 +501,7 @@ describe('MapView Property Tests', () => {
 
           // Verify the expected left offset
           const expectedLeftOffset = toState ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
-          expect(expectedLeftOffset).toBe(toState ? 156 : 56);
+          expect(expectedLeftOffset).toBe(toState ? 156 : 50);
         }),
         { numRuns: 100 }
       );
@@ -527,7 +527,7 @@ describe('MapView Property Tests', () => {
 
             // Verify the expected left offset
             const expectedLeftOffset = sidebarOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
-            expect(expectedLeftOffset).toBe(sidebarOpen ? 156 : 56);
+            expect(expectedLeftOffset).toBe(sidebarOpen ? 156 : 50);
           }
         }),
         { numRuns: 100 }
@@ -570,7 +570,7 @@ describe('MapView Property Tests', () => {
     it('should have correct sidebar width constants', () => {
       // Verify the constants match the requirements
       expect(SIDEBAR_WIDTH_OPEN).toBe(156); // Requirement 15.1
-      expect(SIDEBAR_WIDTH_CLOSED).toBe(56); // Requirement 15.2
+      expect(SIDEBAR_WIDTH_CLOSED).toBe(50); // Requirement 15.2
     });
   });
 
@@ -1130,8 +1130,8 @@ describe('MapView Property Tests', () => {
             expect(sidebarWidth).toBe(156); // SIDEBAR_WIDTH_OPEN
             expect(expectedViewportWidth).toBe(dimensions.width - 156);
           } else {
-            expect(sidebarWidth).toBe(56); // SIDEBAR_WIDTH_CLOSED
-            expect(expectedViewportWidth).toBe(dimensions.width - 56);
+            expect(sidebarWidth).toBe(50); // SIDEBAR_WIDTH_CLOSED
+            expect(expectedViewportWidth).toBe(dimensions.width - 50);
           }
 
           // Verify viewport width is always positive

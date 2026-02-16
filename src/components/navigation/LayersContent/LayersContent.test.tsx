@@ -99,11 +99,45 @@ describe('LayersContent', () => {
       expect(screen.getByTestId('layers-content')).toBeInTheDocument();
     });
 
+    it('should render LAYERS header', () => {
+      render(<LayersContent />);
+      expect(screen.getByTestId('layers-header')).toBeInTheDocument();
+      expect(screen.getByText('Layers')).toBeInTheDocument();
+    });
+
+    it('should render collapse button when onClose is provided', () => {
+      const onClose = vi.fn();
+      render(<LayersContent onClose={onClose} />);
+      expect(screen.getByTestId('layers-collapse-button')).toBeInTheDocument();
+    });
+
+    it('should not render collapse button when onClose is not provided', () => {
+      render(<LayersContent />);
+      expect(screen.queryByTestId('layers-collapse-button')).not.toBeInTheDocument();
+    });
+
+    it('should call onClose when collapse button is clicked', () => {
+      const onClose = vi.fn();
+      render(<LayersContent onClose={onClose} />);
+      
+      const collapseButton = screen.getByTestId('layers-collapse-button');
+      fireEvent.click(collapseButton);
+      
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
     it('should render General section expanded by default', () => {
       render(<LayersContent />);
       const generalSection = screen.getByTestId('general-section');
       expect(generalSection).toBeInTheDocument();
       expect(screen.getByTestId('general-section-content')).toBeInTheDocument();
+    });
+
+    it('should render GENERAL section with uppercase title', () => {
+      render(<LayersContent />);
+      // The section title should be "GENERAL" (uppercase)
+      const generalToggle = screen.getByTestId('general-section-toggle');
+      expect(generalToggle).toHaveTextContent('GENERAL');
     });
 
     it('should render Area subsection expanded by default', () => {
@@ -416,7 +450,7 @@ describe('LayersContent', () => {
      * Province Borders Toggle Tests (Requirement 2.1)
      *
      * Verifies that:
-     * - Show provinces checkbox reflects store state
+     * - Show provinces toggle switch reflects store state
      * - Toggling calls setShowProvinceBorders action
      */
     describe('Province Borders Toggle (Requirement 2.1)', () => {
@@ -426,8 +460,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('show-provinces-toggle')).getByRole('checkbox');
-        expect(checkbox).toBeChecked();
+        const toggle = within(screen.getByTestId('show-provinces-toggle')).getByRole('switch');
+        expect(toggle).toHaveAttribute('aria-checked', 'true');
       });
 
       it('should reflect store state when showProvinceBorders is false', () => {
@@ -442,8 +476,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('show-provinces-toggle')).getByRole('checkbox');
-        expect(checkbox).not.toBeChecked();
+        const toggle = within(screen.getByTestId('show-provinces-toggle')).getByRole('switch');
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
       });
 
       it('should call setShowProvinceBorders(false) when unchecking', () => {
@@ -452,8 +486,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('show-provinces-toggle')).getByRole('checkbox');
-        fireEvent.click(checkbox);
+        const toggle = within(screen.getByTestId('show-provinces-toggle')).getByRole('switch');
+        fireEvent.click(toggle);
         
         expect(mockMapState.setShowProvinceBorders).toHaveBeenCalledWith(false);
       });
@@ -470,8 +504,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('show-provinces-toggle')).getByRole('checkbox');
-        fireEvent.click(checkbox);
+        const toggle = within(screen.getByTestId('show-provinces-toggle')).getByRole('switch');
+        fireEvent.click(toggle);
         
         expect(hiddenBordersState.setShowProvinceBorders).toHaveBeenCalledWith(true);
       });
@@ -481,7 +515,7 @@ describe('LayersContent', () => {
      * Population Opacity Toggle Tests (Requirement 3.1)
      *
      * Verifies that:
-     * - Pop opacity checkbox reflects store state
+     * - Pop opacity toggle switch reflects store state
      * - Toggling calls setPopulationOpacity action
      */
     describe('Population Opacity Toggle (Requirement 3.1)', () => {
@@ -491,8 +525,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('pop-opacity-toggle')).getByRole('checkbox');
-        expect(checkbox).not.toBeChecked();
+        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
       });
 
       it('should reflect store state when populationOpacity is true', () => {
@@ -507,8 +541,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('pop-opacity-toggle')).getByRole('checkbox');
-        expect(checkbox).toBeChecked();
+        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
+        expect(toggle).toHaveAttribute('aria-checked', 'true');
       });
 
       it('should call setPopulationOpacity(true) when checking', () => {
@@ -517,8 +551,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('pop-opacity-toggle')).getByRole('checkbox');
-        fireEvent.click(checkbox);
+        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
+        fireEvent.click(toggle);
         
         expect(mockMapState.setPopulationOpacity).toHaveBeenCalledWith(true);
       });
@@ -535,8 +569,8 @@ describe('LayersContent', () => {
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
         
-        const checkbox = within(screen.getByTestId('pop-opacity-toggle')).getByRole('checkbox');
-        fireEvent.click(checkbox);
+        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
+        fireEvent.click(toggle);
         
         expect(opacityEnabledState.setPopulationOpacity).toHaveBeenCalledWith(false);
       });
@@ -628,15 +662,15 @@ describe('LayersContent', () => {
      * Cluster Markers Toggle Tests (Requirement 5.1)
      *
      * Verifies that:
-     * - Cluster checkbox reflects store state
+     * - Cluster toggle switch reflects store state
      * - Toggling calls setClusterMarkers action
      */
     describe('Cluster Markers Toggle (Requirement 5.1)', () => {
       it('should reflect store state when clusterMarkers is false', () => {
         render(<LayersContent />);
         
-        const checkbox = within(screen.getByTestId('cluster-markers-toggle')).getByRole('checkbox');
-        expect(checkbox).not.toBeChecked();
+        const toggle = within(screen.getByTestId('cluster-markers-toggle')).getByRole('switch');
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
       });
 
       it('should reflect store state when clusterMarkers is true', () => {
@@ -648,15 +682,15 @@ describe('LayersContent', () => {
 
         render(<LayersContent />);
         
-        const checkbox = within(screen.getByTestId('cluster-markers-toggle')).getByRole('checkbox');
-        expect(checkbox).toBeChecked();
+        const toggle = within(screen.getByTestId('cluster-markers-toggle')).getByRole('switch');
+        expect(toggle).toHaveAttribute('aria-checked', 'true');
       });
 
       it('should call setClusterMarkers(true) when checking', () => {
         render(<LayersContent />);
         
-        const checkbox = within(screen.getByTestId('cluster-markers-toggle')).getByRole('checkbox');
-        fireEvent.click(checkbox);
+        const toggle = within(screen.getByTestId('cluster-markers-toggle')).getByRole('switch');
+        fireEvent.click(toggle);
         
         expect(mockMapState.setClusterMarkers).toHaveBeenCalledWith(true);
       });
@@ -670,8 +704,8 @@ describe('LayersContent', () => {
 
         render(<LayersContent />);
         
-        const checkbox = within(screen.getByTestId('cluster-markers-toggle')).getByRole('checkbox');
-        fireEvent.click(checkbox);
+        const toggle = within(screen.getByTestId('cluster-markers-toggle')).getByRole('switch');
+        fireEvent.click(toggle);
         
         expect(clusterEnabledState.setClusterMarkers).toHaveBeenCalledWith(false);
       });

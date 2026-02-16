@@ -1800,7 +1800,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
     const state = get();
 
     if (!state.provincesGeoJSON) {
-      console.warn('updateProvinceProperties: No provinces GeoJSON available');
+      // Silently return - provinces GeoJSON will be loaded later
       return;
     }
 

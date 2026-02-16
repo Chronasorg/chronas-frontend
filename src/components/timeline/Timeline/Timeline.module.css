@@ -14,54 +14,32 @@
   left: 0;
   right: 0;
   width: 100%;
-  
-  /* Background - completely transparent to show epic items */
-  background-color: transparent !important;
-  background: none !important;
-  border-top: none;
-  
-  /* Z-index: above map content and main content, but below modals */
+  background: transparent;
   z-index: var(--z-timeline, 350);
-  
-  /* Height transition: 500ms ease-in-out as per requirements */
   transition: height 500ms ease-in-out;
-  
-  /* Prevent content overflow during transition */
   overflow: visible;
-  
-  /* Box sizing for consistent sizing */
   box-sizing: border-box;
-  
-  /* Ensure pointer events work */
-  pointer-events: auto;
-  
-  /* Exclude from grid layout */
-  grid-row: none;
-  grid-column: none;
+  pointer-events: none;
 }
 
-/* Collapsed state - 120px height */
+/* Collapsed state */
 .collapsed {
-  height: 120px;
+  height: 132px;
 }
 
-/* Expanded state - 400px height */
+/* Expanded state */
 .expanded {
   height: 400px;
 }
 
-/* Content wrapper */
+/* Content wrapper - no padding, transparent */
 .content {
   position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  padding: var(--spacing-sm, 0.5rem);
   box-sizing: border-box;
-  background: transparent !important;
-  background-color: transparent !important;
+  /* Enable pointer events on content while container is transparent */
+  pointer-events: auto;
 }
 
 /* Year display container - removed, year now shown on marker */
@@ -69,16 +47,13 @@
   display: none;
 }
 
-/* Vis.js Timeline container - takes full width with space for controls */
+/* Vis.js Timeline container - full width, no margin */
 .visTimeline {
-  flex: 1;
-  min-height: 80px;
-  height: 100%;
   width: 100%;
+  height: 100%;
   position: relative;
-  margin-left: 60px; /* Space for controls on the left */
-  background: transparent !important;
-  background-color: transparent !important;
+  /* Enable pointer events for timeline interaction */
+  pointer-events: auto;
 }
 
 /* Placeholder content (temporary until sub-components are added) */
@@ -132,5 +107,112 @@
 @media print {
   .timeline {
     display: none;
+  }
+}
+
+
+/* Search Epics button - positioned on the right side of timeline (Requirement 1.5) */
+.searchEpicsButton {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  
+  /* Reset button styles */
+  border: none;
+  margin: 0;
+  
+  /* Button styling matching production */
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: rgba(255, 255, 255, 0.9);
+  
+  /* Typography */
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: inherit;
+  
+  /* Border and shadow */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+  
+  /* Interactive styling */
+  cursor: pointer;
+  transition: 
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+  
+  /* Ensure button is above timeline content */
+  z-index: 10;
+}
+
+.searchEpicsButton:hover {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--chronas-highlight, rgb(173, 135, 27));
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.searchEpicsButton:focus-visible {
+  outline: 2px solid var(--chronas-highlight, rgb(173, 135, 27));
+  outline-offset: 2px;
+}
+
+.searchEpicsButton:active {
+  transform: scale(0.98);
+}
+
+/* Epic search container - positioned above the button */
+.epicSearchContainer {
+  position: absolute;
+  right: 16px;
+  bottom: 56px;
+  z-index: 1000;
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .searchEpicsButton {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='dark'] .searchEpicsButton:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: var(--chronas-highlight, rgb(173, 135, 27));
+}
+
+/* Luther theme adjustments */
+[data-theme='luther'] .searchEpicsButton {
+  background-color: rgba(1, 28, 49, 0.85);
+  color: var(--chronas-fore-1, #fff3d3);
+  border-color: rgba(255, 243, 211, 0.15);
+}
+
+[data-theme='luther'] .searchEpicsButton:hover {
+  background-color: rgba(1, 28, 49, 0.95);
+  color: var(--chronas-highlight, rgba(69, 28, 46, 200));
+  border-color: rgba(255, 243, 211, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .searchEpicsButton {
+    right: 8px;
+    bottom: 12px;
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  
+  .epicSearchContainer {
+    right: 8px;
+    bottom: 48px;
   }
 }

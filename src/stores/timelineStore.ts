@@ -12,6 +12,32 @@ import { apiClient } from '../api/client';
 import { EPICS } from '../api/endpoints';
 
 /**
+ * Epic linked content response from API
+ */
+export interface EpicLinkedResponse {
+  map: EpicLinkedFeature[];
+  media?: unknown[];
+}
+
+/**
+ * Feature from epic linked content
+ */
+export interface EpicLinkedFeature {
+  type: 'Feature';
+  properties: {
+    n?: string;  // name
+    w?: string;  // wiki
+    y?: number;  // year
+    t?: string;  // type
+    ct?: string; // content type
+  };
+  geometry: {
+    type?: 'Point';
+    coordinates?: [number, number]; // [longitude, latitude]
+  };
+}
+
+/**
  * Year range constants
  */
 export const MIN_YEAR = -2000;
@@ -56,6 +82,13 @@ export interface AutoplayConfig {
   /** Whether to repeat when reaching end year */
   repeat: boolean;
 }
+
+/**
+ * Battles-by-wars mapping from API
+ * Key: war epic ID (e.g., "e_Bosnian_War")
+ * Value: Array of [battleName, battleYear] tuples
+ */
+export type BattlesMapping = Record<string, [string, number][]>;
 
 /**
  * Epic item interface for timeline display
@@ -128,6 +161,8 @@ export interface TimelineState {
   autoplayConfig: AutoplayConfig;
   /** Epic items loaded from API */
   epicItems: EpicItem[];
+  /** Battles-by-wars mapping from API */
+  battlesMapping: BattlesMapping;
   /** Filter state for epic types - Requirements: 7.3, 7.4 */
   epicFilters: Record<EpicType, boolean>;
   /** Whether epic search is open */
@@ -319,6 +354,7 @@ export const initialState: TimelineState = {
   isAutoplayActive: false,
   autoplayConfig: { ...defaultAutoplayConfig },
   epicItems: [],
+  battlesMapping: {},
   epicFilters: { ...defaultEpicFilters },
   isSearchOpen: false,
   isAutoplayMenuOpen: false,
@@ -394,6 +430,64 @@ export function createDateFromYear(year: number): Date {
 }
 
 /**
+ * Wikipedia base URL for constructing full article URLs
+ */
+const WIKIPEDIA_BASE_URL = 'https://en.wikipedia.org/wiki/';
+
+/**
+ * Converts a wiki article name to a full Wikipedia URL.
+ * Handles cases where the wiki field is already a full URL.
+ *
+ * @param wikiArticle - The wiki article name or URL
+ * @returns The full Wikipedia URL
+ */
+export function toWikipediaUrl(wikiArticle: string): string {
+  if (!wikiArticle) {
+    return '';
+  }
+  // If it's already a full URL, return as-is
+  if (wikiArticle.startsWith('http://') || wikiArticle.startsWith('https://')) {
+    return wikiArticle;
+  }
+  // Otherwise, construct the full Wikipedia URL
+  return `${WIKIPEDIA_BASE_URL}${wikiArticle}`;
+}
+
+/**
+ * Fetches linked content for an epic item and extracts coordinates.
+ * Used to fly the map to show epic-related locations.
+ *
+ * @param epicId - The epic item ID (e.g., "e_Mongol_invasion_of_Rus'")
+ * @returns Promise with array of [longitude, latitude] coordinates, or empty array on error
+ */
+export async function fetchEpicCoordinates(epicId: string): Promise<[number, number][]> {
+  try {
+    console.log('[Timeline] Fetching linked content for epic:', epicId);
+    const response = await apiClient.get<EpicLinkedResponse>(EPICS.GET_LINKED(epicId));
+    
+    if (!Array.isArray(response.map) || response.map.length === 0) {
+      console.log('[Timeline] No linked content found for epic');
+      return [];
+    }
+    
+    // Extract coordinates from features that have them
+    const coordinates: [number, number][] = [];
+    for (const feature of response.map) {
+      const coords = feature.geometry.coordinates;
+      if (coords && Array.isArray(coords)) {
+        coordinates.push(coords);
+      }
+    }
+    
+    console.log('[Timeline] Found', String(coordinates.length), 'coordinates for epic');
+    return coordinates;
+  } catch (error) {
+    console.error('[Timeline] Failed to fetch epic coordinates:', error);
+    return [];
+  }
+}
+
+/**
  * Transforms an API response item to an EpicItem.
  * Requirements: 6.1
  *
@@ -404,7 +498,8 @@ export function transformApiResponseToEpicItem(apiItem: EpicApiResponse): EpicIt
   const startYear = apiItem.data.start ?? apiItem.year ?? 0;
   const endYear = apiItem.data.end ?? startYear + 1;
   const title = apiItem.name ?? apiItem.data.title ?? apiItem._id;
-  const wiki = apiItem.data.wiki ?? apiItem.wiki ?? '';
+  const wikiArticle = apiItem.data.wiki ?? apiItem.wiki ?? '';
+  const wiki = toWikipediaUrl(wikiArticle);
 
   return {
     id: apiItem._id,
@@ -597,6 +692,15 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       
       console.log('[Timeline] API response received, total items:', Array.isArray(response) ? response.length : 0);
       
+      // Extract battles-by-wars mapping (first element if it's not an epic item)
+      let battlesMapping: BattlesMapping = {};
+      if (response.length > 0) {
+        const firstItem = response[0];
+        if (firstItem !== null && typeof firstItem === 'object' && !('_id' in firstItem)) {
+          battlesMapping = firstItem as BattlesMapping;
+        }
+      }
+      
       // Filter out any non-epic objects (like the battles-by-wars mapping)
       // and transform to EpicItem format
       const epicItems = response
@@ -614,7 +718,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         console.log('[Timeline] Sample epic item:', epicItems[0]);
       }
       
-      set({ epicItems });
+      set({ epicItems, battlesMapping });
     } catch (error) {
       // Log error but don't throw - set empty array on failure
       console.error('[Timeline] Failed to load epic items:', error);

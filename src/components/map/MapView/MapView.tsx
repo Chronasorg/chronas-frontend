@@ -18,6 +18,7 @@ import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'g
 import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type AreaColorDimension, type LabelFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
+import { useNavigationStore } from '../../../stores/navigationStore';
 import { getThemeConfig } from '../../../config/mapTheme';
 import { updateYearInURL } from '../../../utils/mapUtils';
 import { updateURLState } from '../../../utils/urlStateUtils';
@@ -95,7 +96,7 @@ export interface HoverInfo {
  * Requirement 15.2: WHEN the menu drawer closes, THE MapView SHALL adjust its left offset to 56px
  */
 export const SIDEBAR_WIDTH_OPEN = 156;
-export const SIDEBAR_WIDTH_CLOSED = 56;
+export const SIDEBAR_WIDTH_CLOSED = 50;
 
 /**
  * Right drawer width for layout calculations
@@ -289,7 +290,8 @@ export function checkWebGLSupport(): boolean {
  * @returns GeoJSON FeatureCollection of Point features
  */
 export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
-  return {
+  let skippedCount = 0;
+  const result: FeatureCollection<Point> = {
     type: 'FeatureCollection',
     features: markers
       // Filter out markers with invalid coordinates
@@ -298,12 +300,12 @@ export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
         // Use type assertion to allow runtime validation
         const coo = marker.coo as unknown;
         if (!coo || !Array.isArray(coo) || coo.length < 2) {
-          console.warn('[MapView] Skipping marker with invalid coordinates:', marker._id);
+          skippedCount++;
           return false;
         }
         const [lng, lat] = coo as [unknown, unknown];
         if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
-          console.warn('[MapView] Skipping marker with invalid coordinate values:', marker._id, marker.coo);
+          skippedCount++;
           return false;
         }
         return true;
@@ -324,6 +326,10 @@ export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
         },
       })),
   };
+  if (skippedCount > 0) {
+    console.log(`[MapView] Skipped ${String(skippedCount)} markers with invalid coordinates`);
+  }
+  return result;
 }
 
 /**
@@ -468,7 +474,6 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const setHoveredMarker = useMapStore((state) => state.setHoveredMarker);
   const getEntityWiki = useMapStore((state) => state.getEntityWiki);
   const theme = useUIStore((state) => state.theme);
-  const sidebarOpen = useUIStore((state) => state.sidebarOpen);
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
   // Right drawer state for width adjustment
   // Requirement 2.2: WHEN the RightDrawer opens, THE MapView SHALL reduce its width by 25%
@@ -476,6 +481,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   // Track previous right drawer state to detect changes
   const prevRightDrawerOpenRef = useRef<boolean>(rightDrawerOpen);
   const selectedYear = useTimelineStore((state) => state.selectedYear);
+
+  // Menu drawer state for map left offset
+  const drawerOpen = useNavigationStore((state) => state.drawerOpen);
 
   // Get cancel functions for request cancellation
   // Requirement 9.5, 11.2: Cancel in-flight requests on new year change
@@ -759,7 +767,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
      * The viewport width is reduced by the sidebar width.
      */
     const handleResize = () => {
-      const sidebarWidth = sidebarOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
+      const sidebarWidth = drawerOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
       const newWidth = window.innerWidth - sidebarWidth;
       const newHeight = window.innerHeight;
 
@@ -781,7 +789,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [sidebarOpen, setViewport]);
+  }, [drawerOpen, setViewport]);
 
   /**
    * Subscribe to selectedYear changes and trigger data fetch.
@@ -954,54 +962,62 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       const iconHeight = 127;
       
       // Icon positions from production iconMapping['them']
-      const iconConfigs = [
-        { id: 'marker-cp', x: 3 * iconWidth, y: 3 * iconHeight },  // Capital
-        { id: 'marker-c0', x: iconWidth, y: 4 * iconHeight },      // Capital outline
-        { id: 'marker-c', x: 0, y: 5 * iconHeight },               // City
-        { id: 'marker-ca', x: 0, y: 4 * iconHeight },              // Castle
-        { id: 'marker-b', x: iconWidth, y: 3 * iconHeight },       // Battle
-        { id: 'marker-si', x: 2 * iconWidth, y: 3 * iconHeight },  // Siege
-        { id: 'marker-l', x: 2 * iconWidth, y: 4 * iconHeight },   // Landmark
-        { id: 'marker-m', x: 2 * iconWidth, y: 2 * iconHeight },   // Military
-        { id: 'marker-p', x: 2 * iconWidth, y: 0 },                // Politician/Person
-        { id: 'marker-e', x: 3 * iconWidth, y: 0 },                // Explorer
-        { id: 'marker-s', x: 2 * iconWidth, y: iconHeight },       // Scientist
-        { id: 'marker-a', x: 0, y: iconHeight },                   // Artist
-        { id: 'marker-r', x: iconWidth, y: 0 },                    // Religious
-        { id: 'marker-at', x: iconWidth, y: 2 * iconHeight },      // Athlete
-        { id: 'marker-op', x: 3 * iconWidth, y: iconHeight },      // Unclassified
-        { id: 'marker-o', x: 3 * iconWidth, y: 4 * iconHeight },   // Unknown
-        { id: 'marker-ar', x: 0, y: 3 * iconHeight },              // Artifact
-      ];
+      const iconConfigs: Record<string, { x: number; y: number }> = {
+        'marker-cp': { x: 3 * iconWidth, y: 3 * iconHeight },  // Capital
+        'marker-c0': { x: iconWidth, y: 4 * iconHeight },      // Capital outline
+        'marker-c': { x: 0, y: 5 * iconHeight },               // City
+        'marker-ca': { x: 0, y: 4 * iconHeight },              // Castle
+        'marker-b': { x: iconWidth, y: 3 * iconHeight },       // Battle
+        'marker-si': { x: 2 * iconWidth, y: 3 * iconHeight },  // Siege
+        'marker-l': { x: 2 * iconWidth, y: 4 * iconHeight },   // Landmark
+        'marker-m': { x: 2 * iconWidth, y: 2 * iconHeight },   // Military
+        'marker-p': { x: 2 * iconWidth, y: 0 },                // Politician/Person
+        'marker-e': { x: 3 * iconWidth, y: 0 },                // Explorer
+        'marker-s': { x: 2 * iconWidth, y: iconHeight },       // Scientist
+        'marker-a': { x: 0, y: iconHeight },                   // Artist
+        'marker-r': { x: iconWidth, y: 0 },                    // Religious
+        'marker-at': { x: iconWidth, y: 2 * iconHeight },      // Athlete
+        'marker-op': { x: 3 * iconWidth, y: iconHeight },      // Unclassified
+        'marker-o': { x: 3 * iconWidth, y: 4 * iconHeight },   // Unknown
+        'marker-ar': { x: 0, y: 3 * iconHeight },              // Artifact
+        'marker-ai': { x: 2 * iconWidth, y: 4 * iconHeight },  // Architecture (same as landmark)
+        'marker-h': { x: 2 * iconWidth, y: 0 },                // Historical figure (same as person)
+      };
+      
+      // Track loaded atlas image for on-demand icon extraction
+      let atlasImage: HTMLImageElement | null = null;
+      
+      const addIconFromAtlas = (id: string, img: HTMLImageElement) => {
+        if (map.hasImage(id)) return;
+        const config = iconConfigs[id];
+        if (!config) return;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = iconWidth;
+        canvas.height = iconHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, config.x, config.y, iconWidth, iconHeight, 0, 0, iconWidth, iconHeight);
+          const imageData = ctx.getImageData(0, 0, iconWidth, iconHeight);
+          map.addImage(id, imageData, { sdf: false });
+        }
+      };
+      
+      // Handle missing images on-demand (fixes race condition)
+      map.on('styleimagemissing', (e: { id: string }) => {
+        if (atlasImage && iconConfigs[e.id]) {
+          addIconFromAtlas(e.id, atlasImage);
+        }
+      });
       
       // Load the sprite atlas image
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        iconConfigs.forEach(({ id, x, y }) => {
-          // Skip if already loaded
-          if (map.hasImage(id)) return;
-          
-          // Create a canvas to extract the icon
-          const canvas = document.createElement('canvas');
-          canvas.width = iconWidth;
-          canvas.height = iconHeight;
-          const ctx = canvas.getContext('2d');
-          
-          if (ctx) {
-            // Draw the icon portion from the atlas
-            ctx.drawImage(
-              img,
-              x, y, iconWidth, iconHeight,  // Source rectangle
-              0, 0, iconWidth, iconHeight   // Destination rectangle
-            );
-            
-            // Get image data and add to map
-            const imageData = ctx.getImageData(0, 0, iconWidth, iconHeight);
-            map.addImage(id, imageData, { sdf: false });
-          }
+        atlasImage = img;
+        Object.keys(iconConfigs).forEach((id) => {
+          addIconFromAtlas(id, img);
         });
-        
         console.log('[MapView] Custom marker icons loaded from themed-atlas.png');
       };
       
@@ -1418,10 +1434,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
 
   /**
    * Calculate sidebar layout offsets.
-   * Requirement 15.1: WHEN the menu drawer opens, THE MapView SHALL adjust its left offset to 156px
-   * Requirement 15.2: WHEN the menu drawer closes, THE MapView SHALL adjust its left offset to 56px
+   * Sidebar is always 50px. When the menu drawer is open, add its width.
    */
-  const leftOffset = sidebarOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
+  const leftOffset = drawerOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
 
   /**
    * Calculate right offset for right drawer.
@@ -1435,7 +1450,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       ref={containerRef}
       className={containerClassName} 
       data-theme={theme}
-      data-sidebar-open={sidebarOpen}
+      data-sidebar-open={drawerOpen}
       data-right-drawer-open={rightDrawerOpen}
       style={{
         left: `${String(leftOffset)}px`,

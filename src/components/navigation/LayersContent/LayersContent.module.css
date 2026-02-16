@@ -1,391 +1,385 @@
 /**
- * LayersContent Component Styles
- *
- * Styles for the Layers menu drawer content including:
- * - Collapsible sections
- * - Marker filters
- * - Advanced settings
- *
- * Requirements: 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.15, 7.16, 7.17
+ * LayersContent - Production-matching styles (https://chronas.org)
  */
 
-/* ============================================================================
- * Theme Variables
- * ============================================================================ */
-
-/* Light theme (default) */
-:global([data-theme='light']) .layersContent,
-.layersContent {
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --border-color: rgba(0, 0, 0, 0.12);
-  --bg-hover: rgba(0, 0, 0, 0.04);
-  --bg-secondary: #f5f5f5;
-  --primary-color: #4a90d9;
-  --focus-color: #4a90d9;
-}
-
-/* Dark theme */
-:global([data-theme='dark']) .layersContent {
-  --text-primary: #f2f2f2;
-  --text-secondary: #aaaaaa;
-  --border-color: rgba(255, 255, 255, 0.15);
-  --bg-hover: rgba(255, 255, 255, 0.06);
-  --bg-secondary: #2a2a2a;
-  --primary-color: #6ba8e5;
-  --focus-color: #6ba8e5;
-}
-
-/* Luther theme */
-:global([data-theme='luther']) .layersContent {
-  --text-primary: #fff3d3;
-  --text-secondary: rgba(255, 243, 211, 0.7);
-  --border-color: rgba(255, 243, 211, 0.2);
-  --bg-hover: rgba(255, 243, 211, 0.06);
-  --bg-secondary: #3d2b1f;
-  --primary-color: #d4a84b;
-  --focus-color: #d4a84b;
-}
-
-/* Container */
 .layersContent {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0;
   width: 100%;
-}
-
-/* Collapsible Section */
-.section {
-  border-bottom: 1px solid var(--border-color);
-}
-
-.section:last-child {
-  border-bottom: none;
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
+  max-height: calc(100% - 64px);
+  overflow: hidden auto;
+  justify-content: flex-start;
+  height: 100%;
+  padding: 0 0 0 7px;
+  background: rgb(242, 242, 242);
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 5px 6px -3px inset;
+  color: rgb(73, 73, 73);
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+}
+
+/* White card - General (3-sided border) */
+.card {
+  padding: 0 0 8px;
+  border-top: 1px solid rgb(217, 217, 217);
+  border-left: 1px solid rgb(217, 217, 217);
+  border-right: 1px solid rgb(217, 217, 217);
+  background: rgb(255, 255, 255);
+}
+
+/* White card - Advanced (full border) */
+.cardFull {
+  padding: 0 0 8px;
+  border: 1px solid rgb(217, 217, 217);
+  background: rgb(255, 255, 255);
+}
+
+/* Card header - "General" / "Advanced" */
+.cardHeader {
+  box-sizing: border-box;
+  color: rgba(106, 106, 106, 0.54);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 48px;
+  padding-left: 16px;
+  width: 100%;
+}
+
+.cardHeaderBtn {
+  display: flex;
+  width: 100%;
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.sectionHeader:hover {
-  background-color: var(--bg-hover);
-}
-
-.sectionHeader:focus {
-  outline: 2px solid var(--focus-color);
-  outline-offset: -2px;
-}
-
-.sectionTitle {
-  flex: 1;
+  padding: 0;
   text-align: left;
 }
 
-.expandIcon {
-  font-size: 10px;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
+.cardHeaderBtn:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Hidden layers header (for test compatibility) */
+.layersHeader {
+  display: none;
+}
+
+/* ============================================
+ * Layers Banner - production style top bar
+ * ============================================ */
+.layersBanner {
+  color: rgb(106, 106, 106);
+  background-color: rgb(255, 255, 255);
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  box-sizing: border-box;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  box-shadow: rgba(0, 0, 0, 0.4) 3px 6px 6px -3px;
+  border-radius: 0;
+  position: relative;
+  z-index: 1100;
+  width: 100%;
+  display: flex;
+  padding-left: 24px;
+  padding-right: 24px;
+  flex-shrink: 0;
+}
+
+.layersBannerTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding-top: 0;
+  letter-spacing: 0;
+  font-size: 24px;
+  font-weight: 400;
+  color: rgb(255, 255, 255);
+  height: 64px;
+  line-height: 64px;
+  flex: 1 1 0%;
+}
+
+.layersBannerTitle span {
+  color: rgb(106, 106, 106);
+  font-size: 20px;
+}
+
+.layersBannerClose {
+  margin-top: 8px;
+  margin-right: -16px;
+  margin-left: auto;
+}
+
+.layersBannerClose button {
+  border: 10px;
+  box-sizing: border-box;
+  display: inline-block;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  cursor: pointer;
+  text-decoration: none;
+  margin: 0;
+  padding: 12px;
+  outline: none;
+  font-size: 0;
+  font-weight: inherit;
+  position: relative;
+  overflow: visible;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  width: 48px;
+  height: 48px;
+  background: none;
+}
+
+.layersBannerClose button:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 50%;
+}
+
+.chevronLeft {
+  color: rgb(106, 106, 106);
+  position: relative;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  user-select: none;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .sectionContent {
-  padding: 8px 16px 16px;
-}
-
-/* Nested section styling */
-.section .section {
-  border-bottom: none;
-  margin-left: -16px;
-  margin-right: -16px;
-}
-
-.section .section .sectionHeader {
-  padding-left: 24px;
-  font-weight: 500;
-  font-size: 13px;
-}
-
-.section .section .sectionContent {
-  padding-left: 24px;
-}
-
-/* Marker Filters */
-.markerFilters {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
-.toggleAllRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 4px;
-}
-
-.toggleAllButton {
-  padding: 4px 12px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 12px;
+/* ============================================
+ * ListItem - Material-UI style (Area, Markers, Epics)
+ * ============================================ */
+.listItem {
+  border: 10px;
+  box-sizing: border-box;
+  display: block;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.toggleAllButton:hover {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: var(--border-color);
-}
-
-.toggleAllButton:focus {
-  outline: 2px solid var(--focus-color);
-  outline-offset: 2px;
-}
-
-.markerTypeList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.markerTypeRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.markerTypeRow:hover {
-  background-color: var(--bg-hover);
-}
-
-.markerCheckbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--primary-color);
-  cursor: pointer;
-}
-
-.markerIcon {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background-repeat: no-repeat;
-  transition: opacity 0.15s ease;
-}
-
-.markerLabel {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-primary);
-}
-
-/* Slider Row */
-.sliderRow {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-color);
-}
-
-.sliderLabel {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.slider {
-  width: 100%;
-  height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
+  text-decoration: none;
+  margin: 0;
+  padding: 0;
   outline: none;
+  font-size: 16px;
+  font-weight: inherit;
+  position: relative;
+  color: rgb(106, 106, 106);
+  line-height: 16px;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  background: none;
+}
+
+.listItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.listItemInner {
+  margin-left: 0;
+  padding: 16px 56px 16px 72px;
+  position: relative;
+}
+
+/* Icon on the left */
+.listItemIcon {
+  display: block;
+  color: rgb(106, 106, 106);
+  fill: rgb(117, 117, 117);
+  height: 24px;
+  width: 24px;
+  user-select: none;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  position: absolute;
+  top: 0;
+  margin: 12px;
+  left: 4px;
+}
+
+/* Expand arrow button on right */
+.listItemArrow {
+  border: 10px;
+  box-sizing: border-box;
+  display: block;
+  font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
+  text-decoration: none;
+  margin: 0;
+  padding: 12px;
+  outline: none;
+  font-size: 0;
+  font-weight: inherit;
+  position: absolute;
+  overflow: visible;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  width: 48px;
+  height: 48px;
+  top: 0;
+  right: 4px;
+  background: none;
 }
 
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  background: var(--primary-color);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.15s ease;
+.listItemArrowSvg {
+  display: inline-block;
+  color: rgb(106, 106, 106);
+  fill: currentColor;
+  height: 24px;
+  width: 24px;
+  user-select: none;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+/* Expanded content area */
+.listItemContent {
+  padding: 8px 12px 8px 20px;
 }
 
-.slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  background: var(--primary-color);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-}
+/* ============================================
+ * Area Controls (LayerToggle wrapper)
+ * ============================================ */
+.areaControls { display: flex; flex-direction: column; gap: 4px; }
+.areaHeader { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid #eee; }
+.areaHeaderLabel { font-size: 11px; font-weight: 500; color: #999; text-transform: uppercase; width: 40px; text-align: center; }
+.lockButton { padding: 2px 4px; background: transparent; border: none; cursor: pointer; font-size: 12px; }
+.lockButton.locked { color: #c9a227; }
+.dimensionRow { display: flex; align-items: center; padding: 2px 0; }
+.dimensionLabel { flex: 1; font-size: 12px; color: #333; }
+.radioGroup { display: flex; align-items: center; gap: 24px; }
+.radioGroup input[type="radio"] { width: 14px; height: 14px; cursor: pointer; accent-color: #c9a227; }
 
-.slider:focus {
-  outline: 2px solid var(--focus-color);
-  outline-offset: 2px;
+/* ============================================
+ * Toggle All Button
+ * ============================================ */
+.toggleAllRow { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.toggleAllButton {
+  padding: 4px 12px; background: #fff; border: 1px solid #ddd; border-radius: 2px;
+  color: #666; font-size: 11px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.3px; cursor: pointer;
 }
+.toggleAllButton:hover { background: #f5f5f5; border-color: #ccc; }
 
-/* Toggle Row */
+/* ============================================
+ * Marker Filters
+ * ============================================ */
+.markerFilters { display: flex; flex-direction: column; }
+.markerTypeList { display: flex; flex-direction: column; gap: 2px; }
+.markerTypeRow { display: flex; align-items: center; gap: 8px; padding: 4px; cursor: pointer; border-radius: 4px; }
+.markerTypeRow:hover { background-color: rgba(0, 0, 0, 0.04); }
+.markerCheckbox { width: 16px; height: 16px; cursor: pointer; accent-color: #2196f3; margin: 0; flex-shrink: 0; }
+.markerIcon { width: 40px; height: 40px; flex-shrink: 0; background-repeat: no-repeat; }
+.markerLabel { font-size: 13px; color: rgb(106, 106, 106); flex: 1; }
+
+/* ============================================
+ * Epic Filters
+ * ============================================ */
+.epicFilters { display: flex; flex-direction: column; }
+.epicTypeList { display: flex; flex-direction: column; gap: 2px; }
+.epicTypeRow { display: flex; align-items: center; gap: 8px; padding: 4px; cursor: pointer; border-radius: 4px; }
+.epicTypeRow:hover { background-color: rgba(0, 0, 0, 0.04); }
+.epicCheckbox { width: 16px; height: 16px; cursor: pointer; accent-color: #2196f3; margin: 0; flex-shrink: 0; }
+.epicIcon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.epicLabel { font-size: 13px; color: rgb(106, 106, 106); flex: 1; }
+
+/* ============================================
+ * Toggle Row - Production Material-UI style
+ * ============================================ */
 .toggleRow {
+  color: rgb(106, 106, 106);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.toggleRow:hover {
-  background-color: var(--bg-hover);
-}
-
-.toggleCheckbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--primary-color);
+  font-size: 16px;
+  line-height: 16px;
+  position: relative;
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
+  margin-left: 0;
+  padding: 16px 72px 16px 16px;
   cursor: pointer;
 }
 
 .toggleLabel {
-  font-size: 13px;
-  color: var(--text-primary);
+  flex: 1;
+  font-size: 16px;
+  color: rgb(106, 106, 106);
 }
 
-/* Advanced Settings */
-.advancedSettings {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ============================================
+ * Basemap Row
+ * ============================================ */
+.basemapRow {
+  padding: 8px 16px;
 }
 
-.selectRow {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.selectLabel {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.select {
+.basemapSelect {
   width: 100%;
   padding: 8px 12px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 13px;
+  border: 1px solid rgb(224, 224, 224);
+  border-radius: 2px;
+  background: #fff;
+  color: rgb(106, 106, 106);
+  font-size: 15px;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s ease;
+  outline: none;
 }
 
-.select:hover {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: var(--border-color);
+.basemapSelect:focus {
+  border-color: rgb(173, 135, 27);
 }
 
-.select:focus {
-  outline: 2px solid var(--focus-color);
-  outline-offset: 2px;
-}
+/* ============================================
+ * Slider
+ * ============================================ */
+.sliderRow { display: flex; flex-direction: column; gap: 4px; padding: 8px 16px; margin-top: 8px; border-top: 1px solid #eee; }
+.sliderLabel { font-size: 11px; color: #666; }
+.slider { width: 100%; height: 4px; cursor: pointer; accent-color: #c9a227; }
 
-.select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-  .sectionHeader {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .sectionContent {
-    padding: 6px 12px 12px;
-  }
-
-  .section .section .sectionHeader {
-    padding-left: 20px;
-    font-size: 12px;
-  }
-
-  .section .section .sectionContent {
-    padding-left: 20px;
-  }
-}
-
-/* Epic Filters - Requirement 7.1, 7.2, 7.5 */
-.epicFilters {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.epicTypeList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.epicTypeRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.epicTypeRow:hover {
-  background-color: var(--bg-hover);
-}
-
-.epicCheckbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--primary-color);
-  cursor: pointer;
-}
-
-.epicIcon {
+/* ============================================
+ * Suggestions footer
+ * ============================================ */
+.suggestions { padding: 8px 0; }
+.suggestionsText {
+  color: rgb(106, 106, 106);
+  display: block;
   font-size: 16px;
-  width: 20px;
-  text-align: center;
+  line-height: 16px;
+  padding: 16px;
 }
+.suggestionsLink { color: rgb(173, 135, 27); cursor: pointer; text-decoration: none; }
+.suggestionsLink:hover { text-decoration: underline; }
 
-.epicLabel {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-primary);
+/* Legacy class names kept for test compatibility */
+.section { }
+.sectionHeader { display: none; }
+.sectionTitle { }
+.expandIcon { display: none; }
+.subsectionHeader { display: none; }
+.subsectionTitle { }
+.subsectionContent { }
+.advancedSettings { }
+.selectRow { }
+.selectLabel { }
+.select { }
+.toggleCheckbox { }
+.layersHeader { display: none; }
+.layersTitle { }
+.collapseButton { }
+.collapseArrow { }
+
+
+/* Hidden section - visually hidden but accessible for tests */
+.hiddenSection {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

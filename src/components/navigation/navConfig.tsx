@@ -4,7 +4,17 @@
  * Defines the navigation items for the sidebar.
  * Each item specifies its icon, label, route or action, and visibility conditions.
  *
- * Requirements: 3.1-3.4, 4.1-4.7
+ * Requirements: 3.1-3.4, 4.1-4.7, 2.2
+ *
+ * Production reference icons (https://chronas.org) - Material-UI icons:
+ * Top section: Layers, Discover (compass), Random (dice), Settings (gear)
+ * Bottom section: Star (PRO), Collections, Play (gamepad), Help, Logout (power)
+ *
+ * Icon styling from production:
+ * - viewBox="0 0 24 24"
+ * - color: rgb(106, 106, 106)
+ * - fill: currentcolor
+ * - height: 24px, width: 24px
  */
 
 import type React from 'react';
@@ -42,102 +52,82 @@ export interface NavItemConfig {
 
 /**
  * SVG Icon components for navigation items.
- * These are inline SVGs to avoid external dependencies.
+ * These are the EXACT Material-UI icon paths from production (https://chronas.org).
+ * Extracted from production HTML.
  */
 
-/** Layers icon - stacked layers */
+/** Layers icon - Material-UI maps/layers (EXACT production path) */
 export const LayersIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 2 7 12 12 22 7 12 2" />
-    <polyline points="2 17 12 22 22 17" />
-    <polyline points="2 12 12 17 22 12" />
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z" />
   </svg>
 );
 
-/** Explore/Discover icon - compass */
-export const ExploreIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+/** Discover icon - Material-UI action/explore compass (EXACT production path) */
+export const DiscoverIcon = (): React.ReactNode => (
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M12 10.9c-.61 0-1.1.49-1.1 1.1s.49 1.1 1.1 1.1c.61 0 1.1-.49 1.1-1.1s-.49-1.1-1.1-1.1zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.19 12.19L6 18l3.81-8.19L18 6l-3.81 8.19z" />
   </svg>
 );
 
-/** Casino/Random icon - dice */
-export const CasinoIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-    <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" />
-    <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" />
-    <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" />
-    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+/** Random icon - Material-UI places/casino dice (EXACT production path) */
+export const RandomIcon = (): React.ReactNode => (
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z" />
   </svg>
 );
 
-/** Settings icon - gear */
+/** Settings icon - Material-UI action/settings gear (EXACT production path) */
 export const SettingsIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" />
   </svg>
 );
 
-/** Star icon - PRO */
+/** Star icon - Material-UI action/grade (EXACT production path) */
 export const StarIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
   </svg>
 );
 
-/** Forum/Community icon - message bubbles */
-export const ForumIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
-/** Collections/Folder icon */
+/** Collections icon - Material-UI image/collections-bookmark (EXACT production path) */
 export const CollectionsIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 10l-2.5-1.5L15 12V4h5v8z" />
   </svg>
 );
 
-/** Game/Play icon - gamepad */
-export const GameIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="6" y1="12" x2="10" y2="12" />
-    <line x1="8" y1="10" x2="8" y2="14" />
-    <circle cx="15" cy="13" r="1" fill="currentColor" />
-    <circle cx="18" cy="11" r="1" fill="currentColor" />
-    <rect x="2" y="6" width="20" height="12" rx="2" />
+/** Play icon - Material-UI hardware/videogame-asset gamepad (EXACT production path) */
+export const PlayIcon = (): React.ReactNode => (
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
   </svg>
 );
 
-/** Help icon - question mark circle */
+/** Help icon - Material-UI action/help (EXACT production path) */
 export const HelpIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
   </svg>
 );
 
-/** Logout icon - log out arrow */
+/** Logout icon - Material-UI action/power-settings-new (EXACT production path) */
 export const LogoutIcon = (): React.ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-    <polyline points="16 17 21 12 16 7" />
-    <line x1="21" y1="12" x2="9" y2="12" />
+  <svg viewBox="0 0 24 24" style={{ display: 'inline-block', fill: 'currentcolor', height: '24px', width: '24px', userSelect: 'none' }}>
+    <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z" />
   </svg>
 );
 
 /**
  * Navigation items configuration.
  * Defines all items in the sidebar with their properties.
+ * Order matches production (https://chronas.org):
+ * Top: Layers, Discover, Random, Settings
+ * Bottom: Star (PRO), Collections, Play, Help, Logout
  */
 export const NAV_ITEMS: NavItemConfig[] = [
-  // Top section
+  // Top section - matches production order exactly
   {
     id: 'layers',
     icon: LayersIcon(),
@@ -147,27 +137,27 @@ export const NAV_ITEMS: NavItemConfig[] = [
   },
   {
     id: 'discover',
-    icon: ExploreIcon(),
+    icon: DiscoverIcon(),
     label: 'Discover',
     to: '/discover',
     section: 'top',
   },
   {
     id: 'random',
-    icon: CasinoIcon(),
-    label: 'Random',
+    icon: RandomIcon(),
+    label: 'Random Article',
     action: 'random',
     section: 'top',
   },
   {
     id: 'settings',
     icon: SettingsIcon(),
-    label: 'Settings',
+    label: 'Configuration',
     to: '/configuration',
     section: 'top',
   },
 
-  // Bottom section
+  // Bottom section - matches production order exactly
   {
     id: 'pro',
     icon: StarIcon(),
@@ -175,14 +165,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     to: '/pro',
     section: 'bottom',
     highlightWhenPro: true,
-  },
-  {
-    id: 'community',
-    icon: ForumIcon(),
-    label: 'Community',
-    to: '/community/general',
-    section: 'bottom',
-    showWhenAuth: true,
   },
   {
     id: 'collections',
@@ -193,7 +175,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
   },
   {
     id: 'play',
-    icon: GameIcon(),
+    icon: PlayIcon(),
     label: 'Play',
     to: '/play',
     section: 'bottom',

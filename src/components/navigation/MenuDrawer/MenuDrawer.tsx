@@ -3,6 +3,9 @@
  *
  * A slide-out panel for displaying Layers or Collections content.
  * Positioned to the right of the sidebar.
+ * 
+ * - Layers: Light theme, no header (LayersContent has its own)
+ * - Collections: Dark theme, with header
  *
  * Requirements: 6.1-6.9
  */
@@ -42,6 +45,7 @@ function getTitle(contentType: 'layers' | 'collections' | null): string {
 /**
  * MenuDrawer component that slides out from the left side.
  * Displays a header with title and close button, and a scrollable content area.
+ * Uses light theme for Layers (matching production), dark theme for Collections.
  */
 export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   isOpen,
@@ -54,12 +58,17 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Determine if using light theme (for Layers)
+  const isLightTheme = contentType === 'layers';
+  // Hide header for Layers (LayersContent has its own header)
+  const hideHeader = contentType === 'layers';
+
   // Focus trap and focus management
   useEffect(() => {
-    if (isOpen && closeButtonRef.current) {
+    if (isOpen && closeButtonRef.current && !hideHeader) {
       closeButtonRef.current.focus();
     }
-  }, [isOpen]);
+  }, [isOpen, hideHeader]);
 
   // Handle escape key to close
   useEffect(() => {
@@ -78,7 +87,18 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   const drawerClass = [
     styles['drawer'],
     isOpen && styles['open'],
+    isLightTheme && styles['light'],
     className,
+  ].filter(Boolean).join(' ');
+
+  const headerClass = [
+    styles['header'],
+    hideHeader && styles['headerHidden'],
+  ].filter(Boolean).join(' ');
+
+  const contentClass = [
+    styles['content'],
+    !isLightTheme && styles['padded'],
   ].filter(Boolean).join(' ');
 
   const title = getTitle(contentType);
@@ -93,7 +113,7 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
       aria-hidden={!isOpen}
       data-testid={testId}
     >
-      <div className={styles['header']}>
+      <div className={headerClass}>
         <h2 className={styles['title']} data-testid={`${testId}-title`}>
           {title}
         </h2>
@@ -121,7 +141,7 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
         </button>
       </div>
       <div
-        className={styles['content']}
+        className={contentClass}
         data-testid={`${testId}-content`}
       >
         {children}

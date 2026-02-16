@@ -113,95 +113,45 @@ const ControlButton: React.FC<ControlButtonProps> = ({
 };
 
 /**
- * Expand/Collapse Icon Component
- * Shows up arrow when collapsed, down arrow when expanded (Requirement 6.3)
+ * Expand/Collapse Icon Component - Material-UI expand-less / expand-more
  */
 const ExpandIcon: React.FC<{ isExpanded: boolean }> = ({ isExpanded }) => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
     {isExpanded ? (
-      // Down arrow when expanded
-      <polyline points="6 9 12 15 18 9" />
+      <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
     ) : (
-      // Up arrow when collapsed
-      <polyline points="18 15 12 9 6 15" />
+      <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z" />
     )}
   </svg>
 );
 
 /**
- * Reset Icon Component
+ * Reset Icon Component - Material-UI av/replay
  */
 const ResetIcon: React.FC = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
+    <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
   </svg>
 );
 
 /**
- * Search Icon Component
+ * Search Icon Component - Material-UI action/search
  */
 const SearchIcon: React.FC = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
   </svg>
 );
 
 /**
- * Autoplay Icon Component
- * Shows play icon when inactive, stop icon when active (Requirement 9.8)
+ * Autoplay Icon Component - Material-UI image/slideshow (play) / av/stop
  */
 const AutoplayIcon: React.FC<{ isActive: boolean }> = ({ isActive }) => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
     {isActive ? (
-      // Stop icon when active
-      <rect x="6" y="6" width="12" height="12" fill="currentColor" />
+      <path d="M6 6h12v12H6z" />
     ) : (
-      // Play/slideshow icon when inactive
-      <>
-        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
-      </>
+      <path d="M10 8v8l5-4-5-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
     )}
   </svg>
 );

@@ -38,7 +38,8 @@ test.describe('Deployment Verification', () => {
     
     // Check that main layout areas exist
     await expect(page.getByTestId('app-shell')).toBeVisible();
-    await expect(page.getByTestId('header')).toBeVisible();
+    // Production has sidebar instead of header - check for navigation sidebar
+    await expect(page.getByTestId('navigation-sidebar')).toBeVisible();
   });
 
   test('should load JavaScript bundles correctly', async ({ page }) => {
@@ -328,5 +329,32 @@ test.describe('Map Integration Checks', () => {
     }
     
     expect(mapboxRequests.length).toBeGreaterThan(0);
+  });
+
+  test('should display timeline year labels', async ({ page }) => {
+    await page.goto(`${BASE_URL}/?year=1000`, { waitUntil: 'networkidle' });
+    
+    // Wait for vis-timeline to initialize and render year labels
+    await page.waitForTimeout(5000);
+    
+    // Check that year label elements exist in the vis-timeline bottom panel
+    const yearLabels = await page.locator('.vis-text.vis-minor').count();
+    console.log(`   Timeline year labels found: ${String(yearLabels)}`);
+    
+    // Should have multiple year labels visible
+    expect(yearLabels).toBeGreaterThan(5);
+  });
+
+  test('should have clickable year marker label', async ({ page }) => {
+    await page.goto(`${BASE_URL}/?year=1000`, { waitUntil: 'networkidle' });
+    
+    // Wait for vis-timeline to render
+    await page.waitForTimeout(5000);
+    
+    // Check that the year marker label exists
+    const yearMarker = page.locator('.vis-custom-time.selectedYear');
+    const count = await yearMarker.count();
+    console.log(`   Year marker elements found: ${String(count)}`);
+    expect(count).toBeGreaterThan(0);
   });
 });

@@ -265,8 +265,8 @@ describe('Timeline Component', () => {
   });
 
   describe('Constants', () => {
-    it('exports TIMELINE_HEIGHT_COLLAPSED as 120', () => {
-      expect(TIMELINE_HEIGHT_COLLAPSED).toBe(120);
+    it('exports TIMELINE_HEIGHT_COLLAPSED as 132', () => {
+      expect(TIMELINE_HEIGHT_COLLAPSED).toBe(132);
     });
 
     it('exports TIMELINE_HEIGHT_EXPANDED as 400', () => {

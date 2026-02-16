@@ -29,6 +29,7 @@ export interface TimelineOptions {
   horizontalScroll?: boolean;
   zoomable?: boolean;
   moveable?: boolean;
+  timeAxis?: { scale: 'millisecond' | 'second' | 'minute' | 'hour' | 'weekday' | 'day' | 'week' | 'month' | 'year'; step: number };
 }
 
 export interface TimelineItem {

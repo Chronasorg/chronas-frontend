@@ -128,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   /**
-   * Render a navigation item.
+   * Render a navigation item with optional separator.
    */
   const renderNavItem = (item: NavItemConfig) => {
     if (!isItemVisible(item)) {
@@ -136,16 +136,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
 
     return (
-      <NavItem
-        key={item.id}
-        icon={item.icon}
-        label={item.label}
-        to={item.to}
-        onClick={item.action ? () => handleItemClick(item) : undefined}
-        isActive={isItemActive(item)}
-        isHighlighted={isItemHighlighted(item)}
-        testId={`nav-item-${item.id}`}
-      />
+      <React.Fragment key={item.id}>
+        <NavItem
+          icon={item.icon}
+          label={item.label}
+          to={item.to}
+          onClick={item.action ? () => handleItemClick(item) : undefined}
+          isActive={isItemActive(item)}
+          isHighlighted={isItemHighlighted(item)}
+          testId={`nav-item-${item.id}`}
+        />
+      </React.Fragment>
     );
   };
 
@@ -170,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Top navigation items */}
-        <nav className={styles['topSection']} aria-label="Primary navigation">
+        <nav className={styles['topSection']} aria-label="Primary navigation" data-testid="nav-section-top">
           {topItems.map(renderNavItem)}
         </nav>
 
@@ -178,7 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={styles['spacer']} />
 
         {/* Bottom navigation items */}
-        <nav className={styles['bottomSection']} aria-label="Secondary navigation">
+        <nav className={styles['bottomSection']} aria-label="Secondary navigation" data-testid="nav-section-bottom">
           {bottomItems.map(renderNavItem)}
 
           {/* User avatar (shown when authenticated) */}

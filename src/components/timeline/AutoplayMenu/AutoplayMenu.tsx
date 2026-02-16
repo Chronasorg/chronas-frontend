@@ -3,8 +3,9 @@
  *
  * Configuration panel for autoplay/slideshow feature.
  * Positioned as a Paper/card above the autoplay button.
+ * Styled to match production (https://chronas.org) with dark theme.
  *
- * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
+ * Requirements: 1.3, 4.3, 5.2, 5.5, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
  */
 
 import type React from 'react';
@@ -69,8 +70,8 @@ const CloseIcon: React.FC = () => (
  */
 const PlayIcon: React.FC = () => (
   <svg
-    width="18"
-    height="18"
+    width="16"
+    height="16"
     viewBox="0 0 24 24"
     fill="currentColor"
     aria-hidden="true"
@@ -98,13 +99,18 @@ function parseNumericInput(value: string, defaultValue: number): number {
  * AutoplayMenu Component
  *
  * A Paper/card component for configuring autoplay settings.
+ * Styled to match production with dark theme and two-column layout.
+ *
  * - Paper/card positioned above autoplay button (Requirement 9.1)
+ * - "AUTOPLAY" header with "CHANGES YEAR BY STEP SIZE" subtitle (Requirement 1.3, 5.2)
  * - Start year input with default 1 (Requirement 9.2)
  * - End year input with default 2000 (Requirement 9.3)
  * - Step size input with default 25 years (Requirement 9.4)
  * - Delay input with default 1 second (Requirement 9.5)
  * - Repeat checkbox with default checked (Requirement 9.6)
- * - "Start Slideshow" button (Requirement 9.7)
+ * - "START SLIDESHOW" button with play icon (Requirement 9.7)
+ * - Two-column input layout (Requirement 5.5)
+ * - Dark theme styling (Requirement 4.3)
  *
  * @param props - AutoplayMenu component props
  * @returns AutoplayMenu React component
@@ -289,9 +295,12 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
       data-testid="autoplay-menu"
       onKeyDown={handleKeyDown}
     >
-      {/* Header with title and close button */}
+      {/* Header with title and close button (Requirement 1.3, 5.2) */}
       <div className={styles['header']}>
-        <h3 className={styles['title']}>Slideshow Settings</h3>
+        <div className={styles['headerContent']}>
+          <h3 className={styles['title']} data-testid="autoplay-menu-title">AUTOPLAY</h3>
+          <span className={styles['subtitle']} data-testid="autoplay-menu-subtitle">CHANGES YEAR BY STEP SIZE</span>
+        </div>
         <button
           type="button"
           className={styles['closeButton']}
@@ -303,96 +312,80 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
         </button>
       </div>
 
-      {/* Configuration form */}
+      {/* Configuration form with two-column layout (Requirement 5.5) */}
       <div className={styles['content']}>
-        {/* Start Year Input (Requirement 9.2) */}
-        <div className={styles['inputGroup']}>
-          <label htmlFor="autoplay-start-year" className={styles['label']}>
-            Start Year
-          </label>
-          <input
-            ref={startYearRef}
-            id="autoplay-start-year"
-            type="number"
-            className={styles['input']}
-            value={startYearInput}
-            onChange={handleStartYearChange}
-            onBlur={handleStartYearBlur}
-            min={MIN_YEAR}
-            max={MAX_YEAR}
-            aria-describedby="start-year-hint"
-            data-testid="autoplay-start-year"
-          />
-          <span id="start-year-hint" className={styles['hint']}>
-            {MIN_YEAR} to {MAX_YEAR}
-          </span>
+        {/* Row 1: Start Year / End Year (Requirements 9.2, 9.3) */}
+        <div className={styles['inputRow']}>
+          <div className={styles['inputGroup']}>
+            <label htmlFor="autoplay-start-year" className={styles['label']}>
+              Start Year
+            </label>
+            <input
+              ref={startYearRef}
+              id="autoplay-start-year"
+              type="number"
+              className={styles['input']}
+              value={startYearInput}
+              onChange={handleStartYearChange}
+              onBlur={handleStartYearBlur}
+              min={MIN_YEAR}
+              max={MAX_YEAR}
+              data-testid="autoplay-start-year"
+            />
+          </div>
+          <div className={styles['inputGroup']}>
+            <label htmlFor="autoplay-end-year" className={styles['label']}>
+              End Year
+            </label>
+            <input
+              id="autoplay-end-year"
+              type="number"
+              className={styles['input']}
+              value={endYearInput}
+              onChange={handleEndYearChange}
+              onBlur={handleEndYearBlur}
+              min={MIN_YEAR}
+              max={MAX_YEAR}
+              data-testid="autoplay-end-year"
+            />
+          </div>
         </div>
 
-        {/* End Year Input (Requirement 9.3) */}
-        <div className={styles['inputGroup']}>
-          <label htmlFor="autoplay-end-year" className={styles['label']}>
-            End Year
-          </label>
-          <input
-            id="autoplay-end-year"
-            type="number"
-            className={styles['input']}
-            value={endYearInput}
-            onChange={handleEndYearChange}
-            onBlur={handleEndYearBlur}
-            min={MIN_YEAR}
-            max={MAX_YEAR}
-            aria-describedby="end-year-hint"
-            data-testid="autoplay-end-year"
-          />
-          <span id="end-year-hint" className={styles['hint']}>
-            {MIN_YEAR} to {MAX_YEAR}
-          </span>
-        </div>
-
-        {/* Step Size Input (Requirement 9.4) */}
-        <div className={styles['inputGroup']}>
-          <label htmlFor="autoplay-step-size" className={styles['label']}>
-            Step Size (years)
-          </label>
-          <input
-            id="autoplay-step-size"
-            type="number"
-            className={styles['input']}
-            value={stepSizeInput}
-            onChange={handleStepSizeChange}
-            onBlur={handleStepSizeBlur}
-            min={MIN_STEP_SIZE}
-            max={MAX_STEP_SIZE}
-            aria-describedby="step-size-hint"
-            data-testid="autoplay-step-size"
-          />
-          <span id="step-size-hint" className={styles['hint']}>
-            {MIN_STEP_SIZE} to {MAX_STEP_SIZE} years
-          </span>
-        </div>
-
-        {/* Delay Input (Requirement 9.5) */}
-        <div className={styles['inputGroup']}>
-          <label htmlFor="autoplay-delay" className={styles['label']}>
-            Delay (seconds)
-          </label>
-          <input
-            id="autoplay-delay"
-            type="number"
-            className={styles['input']}
-            value={delayInput}
-            onChange={handleDelayChange}
-            onBlur={handleDelayBlur}
-            min={MIN_DELAY_SECONDS}
-            max={MAX_DELAY_SECONDS}
-            step="0.1"
-            aria-describedby="delay-hint"
-            data-testid="autoplay-delay"
-          />
-          <span id="delay-hint" className={styles['hint']}>
-            {MIN_DELAY_SECONDS} to {MAX_DELAY_SECONDS} seconds
-          </span>
+        {/* Row 2: Step Size / Delay (Requirements 9.4, 9.5) */}
+        <div className={styles['inputRow']}>
+          <div className={styles['inputGroup']}>
+            <label htmlFor="autoplay-step-size" className={styles['label']}>
+              Step Size in Years
+            </label>
+            <input
+              id="autoplay-step-size"
+              type="number"
+              className={styles['input']}
+              value={stepSizeInput}
+              onChange={handleStepSizeChange}
+              onBlur={handleStepSizeBlur}
+              min={MIN_STEP_SIZE}
+              max={MAX_STEP_SIZE}
+              data-testid="autoplay-step-size"
+            />
+          </div>
+          <div className={styles['inputGroup']}>
+            <label htmlFor="autoplay-delay" className={styles['label']}>
+              Delay in Sec
+            </label>
+            <input
+              id="autoplay-delay"
+              type="number"
+              className={styles['input']}
+              value={delayInput}
+              onChange={handleDelayChange}
+              onBlur={handleDelayBlur}
+              min={MIN_DELAY_SECONDS}
+              max={MAX_DELAY_SECONDS}
+              step="0.1"
+              data-testid="autoplay-delay"
+            />
+          </div>
         </div>
 
         {/* Repeat Checkbox (Requirement 9.6) */}
@@ -405,7 +398,7 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
               onChange={handleRepeatChange}
               data-testid="autoplay-repeat"
             />
-            <span className={styles['checkboxText']}>Repeat slideshow</span>
+            <span className={styles['checkboxText']}>Repeat</span>
           </label>
         </div>
       </div>
@@ -420,7 +413,7 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
           data-testid="autoplay-start-button"
         >
           <PlayIcon />
-          <span>Start Slideshow</span>
+          <span>START SLIDESHOW</span>
         </button>
       </div>
     </div>

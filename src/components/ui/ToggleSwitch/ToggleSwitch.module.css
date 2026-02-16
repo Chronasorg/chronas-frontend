@@ -1,0 +1,81 @@
+/**
+ * ToggleSwitch Component Styles
+ *
+ * Pill-shaped track with circular knob, matching production styling.
+ * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5
+ */
+
+.toggleSwitch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggleSwitch.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background-color: #ccc;
+  transition: background-color 200ms ease;
+}
+
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 200ms ease;
+}
+
+/* OFF state - gray track */
+.off .track {
+  background-color: #ccc;
+}
+
+.off .knob {
+  transform: translateX(0);
+}
+
+/* ON state - blue track */
+.on .track {
+  background-color: #2196F3;
+}
+
+.on .knob {
+  transform: translateX(16px);
+}
+
+/* Hidden native checkbox */
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus state */
+.toggleSwitch:focus-visible .track {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+/* Hover state */
+.toggleSwitch:not(.disabled):hover .track {
+  filter: brightness(0.95);
+}

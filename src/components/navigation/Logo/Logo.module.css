@@ -1,33 +1,74 @@
 /**
  * Logo Component Styles
  *
- * Requirements: 2.1, 2.2, 2.3, 2.4
+ * Production reference: chronas/src/components/menu/Menu.js
+ * mainLogo: {
+ *   marginBottom: '24px',
+ *   width: '50px',
+ *   color: 'rgb(255, 255, 255)',
+ *   marginLeft: '-6px',
+ *   marginTop: '-8px',
+ * }
+ *
+ * Production CSS (main.scss lines 627-633):
+ * .logoMenuContainer.lightTheme svg g { fill: #1f1f1f; }
+ *
+ * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
  */
 
 .logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  color: var(--chronas-fore-1);
+  /* Production: marginBottom: 24px - handled by logoSection in Sidebar */
+  margin-bottom: 0;
+  /* Production: width: 50px */
+  width: 50px;
+  /* Remove negative margins that cause clipping issues */
+  margin-left: 0;
+  margin-top: 0;
+  padding: 0;
   text-decoration: none;
-  border-radius: 8px;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition: transform 0.15s ease;
+  /* Light theme color - will be inherited by SVG using currentColor */
+  color: #1f1f1f;
 }
 
 .logo:hover {
-  color: var(--chronas-highlight);
   transform: scale(1.05);
 }
 
 .logo:focus-visible {
-  outline: 2px solid var(--chronas-highlight);
+  outline: 2px solid rgb(173, 135, 27);
   outline-offset: 2px;
 }
 
+/* Production class: logoMenuContainer */
+.logoMenuContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/**
+ * Production class: lightTheme
+ * Production CSS: .logoMenuContainer.lightTheme svg g { fill: #1f1f1f; }
+ * We use currentColor in the SVG so it inherits from the parent color property
+ */
+.lightTheme {
+  color: #1f1f1f;
+}
+
+/* SVG styling */
 .logo-svg {
-  width: 40px;
-  height: 40px;
+  /* Production: width: 50px */
+  width: 50px;
+  height: auto;
+  display: block;
+}
+
+/* Ensure the SVG g element inherits color via currentColor */
+.lightTheme .logo-svg g {
+  fill: currentColor;
 }
