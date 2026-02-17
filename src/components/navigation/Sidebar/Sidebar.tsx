@@ -140,10 +140,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           icon={item.icon}
           label={item.label}
-          to={item.to}
-          onClick={item.action ? () => handleItemClick(item) : undefined}
+          to={item.disabled ? undefined : item.to}
+          onClick={item.action && !item.disabled ? () => handleItemClick(item) : undefined}
           isActive={isItemActive(item)}
           isHighlighted={isItemHighlighted(item)}
+          disabled={item.disabled === true}
           testId={`nav-item-${item.id}`}
         />
       </React.Fragment>

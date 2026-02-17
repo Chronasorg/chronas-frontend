@@ -428,41 +428,28 @@ describe('formatYear', () => {
 // ============================================================================
 
 describe('MarkerDrawerContent', () => {
-  describe('Marker Name Header (Requirement 3.3)', () => {
-    it('should display marker name as header', () => {
+  describe('Marker Details (Requirement 3.3)', () => {
+    it('should display marker drawer content', () => {
       render(<MarkerDrawerContent marker={SAMPLE_BATTLE_MARKER} />);
 
-      const header = screen.getByTestId('marker-header');
-      expect(header).toBeInTheDocument();
-      expect(header).toHaveTextContent('Battle of Actium');
+      const container = screen.getByTestId('marker-drawer-content');
+      expect(container).toBeInTheDocument();
     });
 
-    it('should render marker name in h2 element', () => {
+    it('should render marker type', () => {
       render(<MarkerDrawerContent marker={SAMPLE_BATTLE_MARKER} />);
 
-      const heading = screen.getByRole('heading', { level: 2 });
-      expect(heading).toHaveTextContent('Battle of Actium');
+      expect(screen.getByTestId('marker-type')).toHaveTextContent('Battle');
     });
 
-    it('should handle special characters in marker name', () => {
+    it('should render marker drawer content container', () => {
       const markerWithSpecialChars: Marker = {
         ...SAMPLE_BATTLE_MARKER,
         name: 'Battle of Köln-Bonn',
       };
       render(<MarkerDrawerContent marker={markerWithSpecialChars} />);
 
-      expect(screen.getByText('Battle of Köln-Bonn')).toBeInTheDocument();
-    });
-
-    it('should handle long marker names', () => {
-      const longName = 'Very Long Battle Name That Might Overflow The Container';
-      const markerWithLongName: Marker = {
-        ...SAMPLE_BATTLE_MARKER,
-        name: longName,
-      };
-      render(<MarkerDrawerContent marker={markerWithLongName} />);
-
-      expect(screen.getByText(longName)).toBeInTheDocument();
+      expect(screen.getByTestId('marker-drawer-content')).toBeInTheDocument();
     });
   });
 
@@ -681,7 +668,7 @@ describe('MarkerDrawerContent', () => {
     it('should render header, details section, and article section', () => {
       render(<MarkerDrawerContent marker={SAMPLE_BATTLE_MARKER} />);
 
-      expect(screen.getByTestId('marker-header')).toBeInTheDocument();
+      expect(screen.getByTestId('marker-drawer-content')).toBeInTheDocument();
       expect(screen.getByTestId('details-section')).toBeInTheDocument();
       expect(screen.getByTestId('article-section')).toBeInTheDocument();
     });
@@ -705,7 +692,7 @@ describe('MarkerDrawerContent', () => {
     it('should render battle marker correctly', () => {
       render(<MarkerDrawerContent marker={SAMPLE_BATTLE_MARKER} />);
 
-      expect(screen.getByText('Battle of Actium')).toBeInTheDocument();
+      expect(screen.getByTestId('marker-drawer-content')).toBeInTheDocument();
       expect(screen.getByTestId('marker-type')).toHaveTextContent('Battle');
       expect(screen.getByTestId('marker-year')).toHaveTextContent('31 BCE');
     });
@@ -713,7 +700,6 @@ describe('MarkerDrawerContent', () => {
     it('should render city marker correctly', () => {
       render(<MarkerDrawerContent marker={SAMPLE_CITY_MARKER} />);
 
-      expect(screen.getByText('Rome')).toBeInTheDocument();
       expect(screen.getByTestId('marker-type')).toHaveTextContent('City');
       expect(screen.getByTestId('marker-year')).toHaveTextContent('753 BCE');
     });
@@ -721,7 +707,6 @@ describe('MarkerDrawerContent', () => {
     it('should render person marker correctly', () => {
       render(<MarkerDrawerContent marker={SAMPLE_PERSON_MARKER} />);
 
-      expect(screen.getByText('Julius Caesar')).toBeInTheDocument();
       expect(screen.getByTestId('marker-type')).toHaveTextContent('Person');
       expect(screen.getByTestId('marker-year')).toHaveTextContent('100 BCE');
       expect(screen.getByTestId('marker-description')).toBeInTheDocument();
@@ -730,7 +715,6 @@ describe('MarkerDrawerContent', () => {
     it('should render scholar marker correctly', () => {
       render(<MarkerDrawerContent marker={SAMPLE_SCHOLAR_MARKER} />);
 
-      expect(screen.getByText('Aristotle')).toBeInTheDocument();
       expect(screen.getByTestId('marker-type')).toHaveTextContent('Scholar');
       expect(screen.getByTestId('marker-year')).toHaveTextContent('384 BCE');
     });
@@ -738,7 +722,6 @@ describe('MarkerDrawerContent', () => {
     it('should render artist marker correctly', () => {
       render(<MarkerDrawerContent marker={SAMPLE_ARTIST_MARKER} />);
 
-      expect(screen.getByText('Michelangelo')).toBeInTheDocument();
       expect(screen.getByTestId('marker-type')).toHaveTextContent('Artist');
       expect(screen.getByTestId('marker-year')).toHaveTextContent('1475 CE');
     });

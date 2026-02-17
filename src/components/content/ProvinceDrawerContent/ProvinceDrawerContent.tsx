@@ -226,11 +226,6 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
 
   return (
     <div className={styles['container']} data-testid="province-drawer-content">
-      {/* Province name header - Requirement 2.4 */}
-      <header className={styles['header']} data-testid="province-header">
-        <h2 className={styles['provinceName']}>{provinceId}</h2>
-      </header>
-
       {/* Entity details section - Requirement 2.5 */}
       <section
         className={styles['entitySection']}

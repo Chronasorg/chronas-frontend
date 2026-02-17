@@ -268,12 +268,11 @@ describe('ProvinceDrawerContent', () => {
         />
       );
 
-      const header = screen.getByTestId('province-header');
-      expect(header).toBeInTheDocument();
-      expect(header).toHaveTextContent('Italia');
+      const container = screen.getByTestId('province-drawer-content');
+      expect(container).toBeInTheDocument();
     });
 
-    it('should render province name in h2 element', () => {
+    it('should render entity section', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Gallia"
@@ -282,11 +281,10 @@ describe('ProvinceDrawerContent', () => {
         />
       );
 
-      const heading = screen.getByRole('heading', { level: 2 });
-      expect(heading).toHaveTextContent('Gallia');
+      expect(screen.getByTestId('entity-section')).toBeInTheDocument();
     });
 
-    it('should handle special characters in province name', () => {
+    it('should render province drawer content container', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Köln-Bonn"
@@ -295,20 +293,7 @@ describe('ProvinceDrawerContent', () => {
         />
       );
 
-      expect(screen.getByText('Köln-Bonn')).toBeInTheDocument();
-    });
-
-    it('should handle long province names', () => {
-      const longName = 'Very Long Province Name That Might Overflow';
-      render(
-        <ProvinceDrawerContent
-          provinceId={longName}
-          provinceData={SAMPLE_PROVINCE_DATA}
-          metadata={SAMPLE_METADATA}
-        />
-      );
-
-      expect(screen.getByText(longName)).toBeInTheDocument();
+      expect(screen.getByTestId('province-drawer-content')).toBeInTheDocument();
     });
   });
 
@@ -699,7 +684,7 @@ describe('ProvinceDrawerContent', () => {
         />
       );
 
-      expect(screen.getByTestId('province-header')).toBeInTheDocument();
+      expect(screen.getByTestId('province-drawer-content')).toBeInTheDocument();
       expect(screen.getByTestId('entity-section')).toBeInTheDocument();
       expect(screen.getByTestId('article-section')).toBeInTheDocument();
     });

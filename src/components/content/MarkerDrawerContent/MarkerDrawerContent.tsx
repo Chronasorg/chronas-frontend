@@ -213,11 +213,6 @@ export const MarkerDrawerContent: React.FC<MarkerDrawerContentProps> = ({
 
   return (
     <div className={styles['container']} data-testid="marker-drawer-content">
-      {/* Marker name header - Requirement 3.3 */}
-      <header className={styles['header']} data-testid="marker-header">
-        <h2 className={styles['markerName']}>{marker.name}</h2>
-      </header>
-
       {/* Marker details section - Requirements 3.4, 3.5, 3.6 */}
       <section
         className={styles['detailsSection']}

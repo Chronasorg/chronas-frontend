@@ -48,6 +48,8 @@ export interface NavItemConfig {
   highlightWhenPro?: boolean;
   /** Whether to highlight when user is authenticated */
   highlightWhenAuth?: boolean;
+  /** Whether the item is disabled (not yet implemented) */
+  disabled?: boolean;
 }
 
 /**
@@ -141,6 +143,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Discover',
     to: '/discover',
     section: 'top',
+    disabled: true,
   },
   {
     id: 'random',
@@ -148,6 +151,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Random Article',
     action: 'random',
     section: 'top',
+    disabled: true,
   },
   {
     id: 'settings',
@@ -155,6 +159,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Configuration',
     to: '/configuration',
     section: 'top',
+    disabled: true,
   },
 
   // Bottom section - matches production order exactly
@@ -165,6 +170,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     to: '/pro',
     section: 'bottom',
     highlightWhenPro: true,
+    disabled: true,
   },
   {
     id: 'collections',
@@ -172,6 +178,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Collections',
     action: 'collections',
     section: 'bottom',
+    disabled: true,
   },
   {
     id: 'play',
@@ -179,6 +186,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Play',
     to: '/play',
     section: 'bottom',
+    disabled: true,
   },
   {
     id: 'help',
@@ -186,6 +194,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Help',
     to: '/info',
     section: 'bottom',
+    disabled: true,
   },
   {
     id: 'logout',

@@ -839,8 +839,8 @@ export function clampZoom(zoom: number, minZoom = 0, maxZoom = 22): number {
  * Font size calculation constants for label sizing.
  * Requirement 7.6: THE MapView SHALL use appropriate font sizing based on the entity's territory size
  */
-export const LABEL_FONT_SIZE_MIN = 8;
-export const LABEL_FONT_SIZE_MAX = 24;
+export const LABEL_FONT_SIZE_MIN = 10;
+export const LABEL_FONT_SIZE_MAX = 28;
 export const LABEL_AREA_MIN = 1e9;  // 1,000 km² in square meters
 export const LABEL_AREA_MAX = 1e12; // 1,000,000 km² in square meters
 
