@@ -1801,14 +1801,23 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             filter={['!', ['has', 'point_count']]}
             layout={{
               'text-field': ['get', 'name'],
-              'text-size': 10,
-              'text-offset': [0, 1.5],
+              'text-size': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                3, 8,
+                5, 10,
+                7, 12,
+                10, 14,
+              ],
+              'text-offset': [0, 1.2],
               'text-anchor': 'top',
               'text-optional': true,
+              'text-font': ['Noto Sans Regular', 'Arial Unicode MS Regular'],
             }}
             paint={{
-              'text-color': themeConfig.foreColors[0],
-              'text-halo-color': themeConfig.backColors[0],
+              'text-color': 'rgba(50, 50, 50, 0.85)',
+              'text-halo-color': 'rgba(255, 255, 255, 0.8)',
               'text-halo-width': 1,
             }}
           />
@@ -1826,17 +1835,20 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             layout={{
               'text-field': ['get', 'name'],
               'text-size': ['get', 'fontSize'],
-              'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+              'text-font': ['Noto Serif Regular', 'Arial Unicode MS Regular'],
               'text-anchor': 'center',
               'text-allow-overlap': false,
               'text-ignore-placement': false,
               'text-optional': true,
               'text-transform': 'uppercase',
+              'text-letter-spacing': 0.15,
+              'text-max-width': 12,
             }}
             paint={{
-              'text-color': '#333333',
-              'text-halo-color': '#ffffff',
-              'text-halo-width': 2,
+              'text-color': 'rgba(0, 0, 0, 0.78)',
+              'text-halo-color': 'rgba(255, 255, 255, 0.6)',
+              'text-halo-width': 1.5,
+              'text-halo-blur': 1,
             }}
           />
         </Source>
