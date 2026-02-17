@@ -102,7 +102,7 @@ export const SIDEBAR_WIDTH_CLOSED = 50;
  * Right drawer width for layout calculations
  * Requirement 15.3: WHEN the right drawer opens, THE MapView SHALL adjust its width
  */
-export const RIGHT_DRAWER_WIDTH_PERCENT = 25;
+export const RIGHT_DRAWER_WIDTH_PERCENT = 50;
 
 /**
  * Province layer configuration for each color dimension.

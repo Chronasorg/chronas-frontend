@@ -18,9 +18,9 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 25%;
-  min-width: 300px;
-  max-width: 500px;
+  width: 50%;
+  min-width: 400px;
+  max-width: 800px;
   background-color: #ffffff;
   color: rgb(73, 73, 73);
   display: flex;
