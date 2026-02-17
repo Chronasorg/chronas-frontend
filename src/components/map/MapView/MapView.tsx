@@ -1794,21 +1794,21 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               ],
             }}
           />
-          {/* Marker label layer (unclustered points only) */}
+          {/* Marker label layer (unclustered points only) - only visible when zoomed in */}
           <Layer
             id="markers-label"
             type="symbol"
             filter={['!', ['has', 'point_count']]}
+            minzoom={6}
             layout={{
               'text-field': ['get', 'name'],
               'text-size': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                3, 9,
-                5, 11,
-                7, 13,
-                10, 15,
+                6, 10,
+                8, 12,
+                10, 14,
               ],
               'text-offset': [0, 1.2],
               'text-anchor': 'top',
