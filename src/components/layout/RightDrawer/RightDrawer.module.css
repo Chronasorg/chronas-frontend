@@ -18,9 +18,9 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 50%;
-  min-width: 400px;
-  max-width: 800px;
+  width: 58%;
+  min-width: 450px;
+  max-width: 900px;
   background-color: #ffffff;
   color: rgb(73, 73, 73);
   display: flex;
@@ -52,15 +52,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background-color: #ffffff;
+  padding: 0 16px;
+  height: 56px;
+  border-bottom: none;
+  background-color: rgb(242, 242, 242);
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
   flex-shrink: 0;
-  min-height: 48px;
+  z-index: 1;
 }
 
 .title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   margin: 0;
   overflow: hidden;
@@ -76,24 +78,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm, 0.25rem);
+  border-radius: 50%;
   background-color: transparent;
-  color: var(--color-text-secondary, #757575);
-  font-size: 1.5rem;
+  color: rgb(106, 106, 106);
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  transition: background-color var(--transition-fast, 150ms ease),
-              color var(--transition-fast, 150ms ease);
+  transition: 450ms cubic-bezier(0.23, 1, 0.32, 1);
   flex-shrink: 0;
 }
 
 .closeButton:hover {
-  background-color: var(--color-border, #e0e0e0);
-  color: var(--color-text, #212121);
+  background-color: rgba(0, 0, 0, 0.08);
+  color: rgb(73, 73, 73);
 }
 
 .closeButton:focus {
