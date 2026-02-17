@@ -1805,20 +1805,21 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                3, 8,
-                5, 10,
-                7, 12,
-                10, 14,
+                3, 9,
+                5, 11,
+                7, 13,
+                10, 15,
               ],
               'text-offset': [0, 1.2],
               'text-anchor': 'top',
               'text-optional': true,
               'text-font': ['Noto Sans Regular', 'Arial Unicode MS Regular'],
+              'text-max-width': 10,
             }}
             paint={{
-              'text-color': 'rgba(50, 50, 50, 0.85)',
-              'text-halo-color': 'rgba(255, 255, 255, 0.8)',
-              'text-halo-width': 1,
+              'text-color': '#333333',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2,
             }}
           />
         </Source>
