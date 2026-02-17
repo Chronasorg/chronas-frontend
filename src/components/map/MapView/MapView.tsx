@@ -1799,15 +1799,16 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             id="markers-label"
             type="symbol"
             filter={['!', ['has', 'point_count']]}
-            minzoom={8}
+            minzoom={5}
             layout={{
               'text-field': ['get', 'name'],
               'text-size': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                8, 10,
-                10, 12,
+                5, 9,
+                7, 11,
+                9, 13,
                 12, 14,
               ],
               'text-offset': [0, 1.2],
