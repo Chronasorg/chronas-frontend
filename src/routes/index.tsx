@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useState } from 'react';
 import { ROUTES } from './routes';
 import { AppShell, FeaturePlaceholder, HomePage as HomePageComponent } from '../components';
-import { LoginForm } from '../components/auth/LoginForm';
-import { SignupForm } from '../components/auth/SignupForm';
-import { useState } from 'react';
+
+// Lazy-loaded components for code splitting (NFR-1.4)
+const LoginForm = lazy(() => import('../components/auth/LoginForm/LoginForm'));
+const SignupForm = lazy(() => import('../components/auth/SignupForm/SignupForm'));
 
 // Home page using the new UI components
 function HomePage() {
@@ -42,11 +44,13 @@ function LoginPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   return (
     <AppShell>
-      {mode === 'login' ? (
-        <LoginForm onSwitchToSignup={() => setMode('signup')} />
-      ) : (
-        <SignupForm onSwitchToLogin={() => setMode('login')} />
-      )}
+      <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>Loading...</div>}>
+        {mode === 'login' ? (
+          <LoginForm onSwitchToSignup={() => setMode('signup')} />
+        ) : (
+          <SignupForm onSwitchToLogin={() => setMode('login')} />
+        )}
+      </Suspense>
     </AppShell>
   );
 }
