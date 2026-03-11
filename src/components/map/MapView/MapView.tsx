@@ -1863,9 +1863,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             }}
             paint={{
               'text-color': 'rgba(0, 0, 0, 0.78)',
-              'text-halo-color': 'rgba(255, 255, 255, 0.6)',
-              'text-halo-width': 1.5,
-              'text-halo-blur': 1,
+              'text-halo-color': 'rgba(255, 255, 255, 0.85)',
+              'text-halo-width': 2,
+              'text-halo-blur': 0.5,
             }}
           />
         </Source>
