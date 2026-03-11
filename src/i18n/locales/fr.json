@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "layers": "Couches",
+    "discover": "Découvrir",
+    "random": "Article aléatoire",
+    "settings": "Configuration",
+    "pro": "Version PRO",
+    "collections": "Collections",
+    "play": "Jouer",
+    "help": "Aide",
+    "logout": "Déconnexion"
+  },
+  "map": {
+    "loading": "Chargement de la carte...",
+    "ruler": "Souverain",
+    "culture": "Culture",
+    "religion": "Religion",
+    "religionGeneral": "Religion Générale",
+    "capital": "Capitale",
+    "population": "Population"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "close": "Fermer",
+    "back": "Retour",
+    "ad": "ap. J.-C.",
+    "bc": "av. J.-C."
+  }
+}

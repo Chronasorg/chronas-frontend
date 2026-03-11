@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "layers": "Capas",
+    "discover": "Descubrir",
+    "random": "Artículo aleatorio",
+    "settings": "Configuración",
+    "pro": "Versión PRO",
+    "collections": "Colecciones",
+    "play": "Jugar",
+    "help": "Ayuda",
+    "logout": "Cerrar sesión"
+  },
+  "map": {
+    "loading": "Cargando mapa...",
+    "ruler": "Gobernante",
+    "culture": "Cultura",
+    "religion": "Religión",
+    "religionGeneral": "Religión General",
+    "capital": "Capital",
+    "population": "Población"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "close": "Cerrar",
+    "back": "Volver",
+    "ad": "d.C.",
+    "bc": "a.C."
+  }
+}
