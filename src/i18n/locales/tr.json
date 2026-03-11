@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Katmanlar",
+    "discover": "Keşfet",
+    "random": "Rastgele makale",
+    "settings": "Yapılandırma",
+    "pro": "PRO Sürüm",
+    "collections": "Koleksiyonlar",
+    "play": "Oyna",
+    "help": "Yardım",
+    "logout": "Çıkış"
+  },
+  "map": {
+    "loading": "Harita yükleniyor...",
+    "ruler": "Hükümdar",
+    "culture": "Kültür",
+    "religion": "Din",
+    "religionGeneral": "Din Genel",
+    "capital": "Başkent",
+    "population": "Nüfus"
+  },
+  "common": { "loading": "Yükleniyor...", "close": "Kapat", "back": "Geri", "ad": "MS", "bc": "MÖ" }
+}

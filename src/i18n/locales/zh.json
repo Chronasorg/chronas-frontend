@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "图层",
+    "discover": "发现",
+    "random": "随机文章",
+    "settings": "配置",
+    "pro": "专业版",
+    "collections": "收藏",
+    "play": "播放",
+    "help": "帮助",
+    "logout": "退出"
+  },
+  "map": {
+    "loading": "地图加载中...",
+    "ruler": "统治者",
+    "culture": "文化",
+    "religion": "宗教",
+    "religionGeneral": "宗教（通用）",
+    "capital": "首都",
+    "population": "人口"
+  },
+  "common": { "loading": "加载中...", "close": "关闭", "back": "返回", "ad": "年", "bc": "公元前" }
+}

@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Livelli",
+    "discover": "Scopri",
+    "random": "Articolo casuale",
+    "settings": "Configurazione",
+    "pro": "Versione PRO",
+    "collections": "Collezioni",
+    "play": "Gioca",
+    "help": "Aiuto",
+    "logout": "Esci"
+  },
+  "map": {
+    "loading": "Caricamento mappa...",
+    "ruler": "Sovrano",
+    "culture": "Cultura",
+    "religion": "Religione",
+    "religionGeneral": "Religione Generale",
+    "capital": "Capitale",
+    "population": "Popolazione"
+  },
+  "common": { "loading": "Caricamento...", "close": "Chiudi", "back": "Indietro", "ad": "d.C.", "bc": "a.C." }
+}

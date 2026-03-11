@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Lager",
+    "discover": "Upptäck",
+    "random": "Slumpmässig artikel",
+    "settings": "Konfiguration",
+    "pro": "PRO-version",
+    "collections": "Samlingar",
+    "play": "Spela",
+    "help": "Hjälp",
+    "logout": "Logga ut"
+  },
+  "map": {
+    "loading": "Laddar karta...",
+    "ruler": "Härskare",
+    "culture": "Kultur",
+    "religion": "Religion",
+    "religionGeneral": "Religion Allmän",
+    "capital": "Huvudstad",
+    "population": "Befolkning"
+  },
+  "common": { "loading": "Laddar...", "close": "Stäng", "back": "Tillbaka", "ad": "e.Kr.", "bc": "f.Kr." }
+}

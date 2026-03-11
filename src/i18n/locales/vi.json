@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Lớp",
+    "discover": "Khám phá",
+    "random": "Bài viết ngẫu nhiên",
+    "settings": "Cấu hình",
+    "pro": "Phiên bản PRO",
+    "collections": "Bộ sưu tập",
+    "play": "Chơi",
+    "help": "Trợ giúp",
+    "logout": "Đăng xuất"
+  },
+  "map": {
+    "loading": "Đang tải bản đồ...",
+    "ruler": "Người cai trị",
+    "culture": "Văn hóa",
+    "religion": "Tôn giáo",
+    "religionGeneral": "Tôn giáo chung",
+    "capital": "Thủ đô",
+    "population": "Dân số"
+  },
+  "common": { "loading": "Đang tải...", "close": "Đóng", "back": "Quay lại", "ad": "SCN", "bc": "TCN" }
+}

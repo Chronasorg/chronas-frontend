@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Warstwy",
+    "discover": "Odkrywaj",
+    "random": "Losowy artykuł",
+    "settings": "Konfiguracja",
+    "pro": "Wersja PRO",
+    "collections": "Kolekcje",
+    "play": "Graj",
+    "help": "Pomoc",
+    "logout": "Wyloguj"
+  },
+  "map": {
+    "loading": "Ładowanie mapy...",
+    "ruler": "Władca",
+    "culture": "Kultura",
+    "religion": "Religia",
+    "religionGeneral": "Religia Ogólna",
+    "capital": "Stolica",
+    "population": "Populacja"
+  },
+  "common": { "loading": "Ładowanie...", "close": "Zamknij", "back": "Wstecz", "ad": "n.e.", "bc": "p.n.e." }
+}

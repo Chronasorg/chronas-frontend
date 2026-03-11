@@ -15,6 +15,19 @@ import de from './locales/de.json';
 import fr from './locales/fr.json';
 import es from './locales/es.json';
 import ru from './locales/ru.json';
+import it from './locales/it.json';
+import pt from './locales/pt.json';
+import nl from './locales/nl.json';
+import pl from './locales/pl.json';
+import sv from './locales/sv.json';
+import el from './locales/el.json';
+import tr from './locales/tr.json';
+import ar from './locales/ar.json';
+import hi from './locales/hi.json';
+import ja from './locales/ja.json';
+import zh from './locales/zh.json';
+import vi from './locales/vi.json';
+import ca from './locales/ca.json';
 
 /**
  * All supported language codes.
@@ -50,6 +63,19 @@ void i18n
       fr: { translation: fr },
       es: { translation: es },
       ru: { translation: ru },
+      it: { translation: it },
+      pt: { translation: pt },
+      nl: { translation: nl },
+      pl: { translation: pl },
+      sv: { translation: sv },
+      el: { translation: el },
+      tr: { translation: tr },
+      ar: { translation: ar },
+      hi: { translation: hi },
+      ja: { translation: ja },
+      zh: { translation: zh },
+      vi: { translation: vi },
+      ca: { translation: ca },
     },
     lng: 'en',
     fallbackLng: 'en',

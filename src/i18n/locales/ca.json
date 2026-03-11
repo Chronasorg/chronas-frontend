@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Capes",
+    "discover": "Descobrir",
+    "random": "Article aleatori",
+    "settings": "Configuració",
+    "pro": "Versió PRO",
+    "collections": "Col·leccions",
+    "play": "Jugar",
+    "help": "Ajuda",
+    "logout": "Tancar sessió"
+  },
+  "map": {
+    "loading": "Carregant mapa...",
+    "ruler": "Governant",
+    "culture": "Cultura",
+    "religion": "Religió",
+    "religionGeneral": "Religió General",
+    "capital": "Capital",
+    "population": "Població"
+  },
+  "common": { "loading": "Carregant...", "close": "Tancar", "back": "Enrere", "ad": "dC", "bc": "aC" }
+}

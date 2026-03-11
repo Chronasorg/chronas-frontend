@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "Lagen",
+    "discover": "Ontdekken",
+    "random": "Willekeurig artikel",
+    "settings": "Configuratie",
+    "pro": "PRO Versie",
+    "collections": "Collecties",
+    "play": "Spelen",
+    "help": "Help",
+    "logout": "Uitloggen"
+  },
+  "map": {
+    "loading": "Kaart laden...",
+    "ruler": "Heerser",
+    "culture": "Cultuur",
+    "religion": "Religie",
+    "religionGeneral": "Religie Algemeen",
+    "capital": "Hoofdstad",
+    "population": "Bevolking"
+  },
+  "common": { "loading": "Laden...", "close": "Sluiten", "back": "Terug", "ad": "n.Chr.", "bc": "v.Chr." }
+}

@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "layers": "परतें",
+    "discover": "खोजें",
+    "random": "यादृच्छिक लेख",
+    "settings": "कॉन्फ़िगरेशन",
+    "pro": "PRO संस्करण",
+    "collections": "संग्रह",
+    "play": "खेलें",
+    "help": "सहायता",
+    "logout": "लॉग आउट"
+  },
+  "map": {
+    "loading": "मानचित्र लोड हो रहा है...",
+    "ruler": "शासक",
+    "culture": "संस्कृति",
+    "religion": "धर्म",
+    "religionGeneral": "धर्म सामान्य",
+    "capital": "राजधानी",
+    "population": "जनसंख्या"
+  },
+  "common": { "loading": "लोड हो रहा है...", "close": "बंद करें", "back": "वापस", "ad": "ई.", "bc": "ई.पू." }
+}
