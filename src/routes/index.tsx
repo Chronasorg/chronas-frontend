@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { AppShell, FeaturePlaceholder, HomePage as HomePageComponent } from '../components';
+import { LoginForm } from '../components/auth/LoginForm';
+import { SignupForm } from '../components/auth/SignupForm';
+import { useState } from 'react';
 
 // Home page using the new UI components
 function HomePage() {
@@ -36,13 +39,14 @@ function DiscoverPage() {
 }
 
 function LoginPage() {
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   return (
     <AppShell>
-      <FeaturePlaceholder
-        featureName="Authentication"
-        description="Login and registration functionality."
-        migrationPriority="high"
-      />
+      {mode === 'login' ? (
+        <LoginForm onSwitchToSignup={() => setMode('signup')} />
+      ) : (
+        <SignupForm onSwitchToLogin={() => setMode('login')} />
+      )}
     </AppShell>
   );
 }

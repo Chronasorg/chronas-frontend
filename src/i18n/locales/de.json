@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "layers": "Ebenen",
+    "discover": "Entdecken",
+    "random": "Zufälliger Artikel",
+    "configuration": "Konfiguration",
+    "pro": "PRO Version",
+    "collections": "Sammlungen",
+    "play": "Spielen",
+    "help": "Hilfe",
+    "logout": "Abmelden",
+    "community": "Community Forum",
+    "account": "Konto verwalten"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "signingIn": "Anmeldung...",
+    "creatingAccount": "Konto wird erstellt...",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "username": "Benutzername",
+    "or": "oder",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "loginFailed": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
+    "signupFailed": "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+  },
+  "map": {
+    "loading": "Karte wird geladen...",
+    "ruler": "Herrscher",
+    "culture": "Kultur",
+    "religion": "Religion",
+    "religionGeneral": "Religion Allgemein",
+    "capital": "Hauptstadt",
+    "population": "Bevölkerung"
+  },
+  "common": {
+    "loading": "Lädt...",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "back": "Zurück",
+    "ad": "n. Chr.",
+    "bc": "v. Chr."
+  }
+}

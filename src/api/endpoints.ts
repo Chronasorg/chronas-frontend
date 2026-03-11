@@ -105,6 +105,12 @@ export const METADATA = {
    * Requirements: 2.1, 2.2
    */
   GET_INIT: '/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral',
+  /**
+   * Get province timeline data (historical rulers, cultures, religions, capitals over time).
+   * Returns aggregated province data with type=ap.
+   * Requirements: US-3.4
+   */
+  GET_PROVINCE_TIMELINE: (provinceId: string) => `/metadata/ap_${provinceId.toLowerCase()}?type=ap`,
 } as const;
 
 // ============================================================================

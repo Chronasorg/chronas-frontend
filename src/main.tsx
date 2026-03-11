@@ -4,6 +4,8 @@ import App from './App';
 import './styles/global.css';
 // Mapbox GL CSS for map rendering (required by react-map-gl)
 import 'mapbox-gl/dist/mapbox-gl.css';
+// i18n initialization (must be imported before App)
+import './i18n/i18n';
 
 const rootElement = document.getElementById('root');
 

@@ -1,0 +1,62 @@
+/**
+ * ProvinceTimeline Component Styles
+ * Matches legacy: chronas/src/components/content/ProvinceTimeline.js
+ */
+
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.timelineWrapper {
+  width: 100%;
+  height: 326px;
+  overflow: hidden;
+}
+
+/* vis-timeline overrides matching legacy main.scss */
+.timelineWrapper :global(.vis-item) {
+  cursor: pointer;
+}
+
+.timelineWrapper :global(.vis-item.provinceTimelineItem:hover) {
+  border-color: transparent;
+  background: white;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 45px, rgba(0, 0, 0, 0.22) 0px 10px 18px;
+}
+
+.timelineWrapper :global(.vis-item.vis-range) {
+  height: 30px;
+  line-height: 15px;
+  margin-top: 2px;
+}
+
+.timelineWrapper :global(div.vis-tooltip) {
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #ddd;
+  background-color: rgba(85, 85, 85, 0.85);
+  border-radius: 3px;
+  border: 0;
+  box-shadow: none;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: rgb(106, 106, 106);
+  font-size: 14px;
+}
+
+.error {
+  padding: 12px 16px;
+  color: #d32f2f;
+  font-size: 13px;
+}

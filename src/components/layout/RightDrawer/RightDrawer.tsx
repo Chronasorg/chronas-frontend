@@ -7,7 +7,7 @@
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.10, 10.2, 10.4, 10.5
  */
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import type { DrawerContent } from '@/stores/uiStore';
 import { useMapStore } from '@/stores/mapStore';
 import { ProvinceDrawerContent } from '@/components/content/ProvinceDrawerContent/ProvinceDrawerContent';
@@ -65,9 +65,44 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
+  // Resize state (US-3.2)
+  const [drawerWidth, setDrawerWidth] = useState<string>('50%');
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef<number>(0);
+  const dragStartWidth = useRef<number>(0);
+
   // Get metadata and province data from mapStore for rendering content
   const metadata = useMapStore((state) => state.metadata);
   const currentAreaData = useMapStore((state) => state.currentAreaData);
+
+  // Drag handle resize handlers (US-3.2)
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = drawerRef.current?.getBoundingClientRect().width ?? window.innerWidth * 0.5;
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) return undefined;
+
+    const handleDragMove = (e: MouseEvent) => {
+      const delta = dragStartX.current - e.clientX;
+      const newWidth = Math.max(300, Math.min(window.innerWidth * 0.8, dragStartWidth.current + delta));
+      setDrawerWidth(`${String(newWidth)}px`);
+    };
+
+    const handleDragEnd = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    return () => {
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, [isDragging]);
 
   // Handle Escape key to close drawer (Requirement 4.6, 10.4)
   const handleKeyDown = useCallback(
@@ -159,15 +194,29 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
   const placeholderNoteClass = styles['placeholderNote'] ?? '';
   const emptyStateClass = styles['emptyState'] ?? '';
 
+  const draggingClass = styles['dragging'] ?? '';
+
   return (
     <aside
       ref={drawerRef}
       data-testid="right-drawer"
-      className={`${drawerClass} ${isOpen ? openClass : closedClass}`}
+      className={`${drawerClass} ${isOpen ? openClass : closedClass} ${isDragging ? draggingClass : ''}`}
+      style={isOpen ? { width: drawerWidth } : undefined}
       role="complementary"
       aria-label="Content details panel"
       aria-hidden={!isOpen}
     >
+      {/* Drag handle for resizing (US-3.2) */}
+      {isOpen && (
+        <div
+          className={styles['dragHandle'] ?? ''}
+          onMouseDown={handleDragStart}
+          data-testid="right-drawer-drag-handle"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize panel"
+        />
+      )}
       {/* Header with title and close button (Requirements 4.3, 4.4) */}
       <header className={headerClass}>
         <h2 className={titleClass} data-testid="right-drawer-title">

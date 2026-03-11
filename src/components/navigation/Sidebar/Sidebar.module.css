@@ -148,6 +148,40 @@
   }
 }
 
+/* Dark theme */
+[data-theme='dark'] .sidebar {
+  background: linear-gradient(180deg, #333 0%, #000 100%);
+  background-color: #333;
+  color: #F2F2F2;
+}
+
+[data-theme='dark'] .toggleButton {
+  background: linear-gradient(180deg, #333 0%, #000 100%);
+  border-color: rgba(200, 200, 200, 0.2);
+  color: #F2F2F2;
+}
+
+[data-theme='dark'] .toggleButton:hover {
+  color: rgba(173, 135, 27);
+}
+
+/* Luther theme */
+[data-theme='luther'] .sidebar {
+  background: linear-gradient(180deg, #011c31 0%, #451c2e 100%);
+  background-color: #011c31;
+  color: #fff3d3;
+}
+
+[data-theme='luther'] .toggleButton {
+  background: linear-gradient(180deg, #011c31 0%, #451c2e 100%);
+  border-color: rgba(200, 200, 200, 0.2);
+  color: #fff3d3;
+}
+
+[data-theme='luther'] .toggleButton:hover {
+  color: rgba(69, 28, 46, 200);
+}
+
 /* Desktop: Always visible */
 @media (min-width: 768px) {
   .sidebar {

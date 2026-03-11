@@ -371,15 +371,9 @@
 .collapseArrow { }
 
 
-/* Hidden section - visually hidden but accessible for tests */
+/* Advanced section - visible card with full border */
 .hiddenSection {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  padding: 0 0 8px;
+  border: 1px solid rgb(217, 217, 217);
+  background: rgb(255, 255, 255);
 }

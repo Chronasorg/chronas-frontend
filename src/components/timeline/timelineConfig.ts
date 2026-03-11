@@ -34,7 +34,7 @@ export const ZOOM_MIN_MS = MIN_VISIBLE_YEARS * MS_PER_YEAR;
 export const ZOOM_MAX_MS = (EXTENDED_MAX_YEAR - EXTENDED_MIN_YEAR) * MS_PER_YEAR;
 
 /** Timeline height when collapsed (pixels) */
-export const TIMELINE_HEIGHT_COLLAPSED = 120;
+export const TIMELINE_HEIGHT_COLLAPSED = 100;
 
 /** Timeline height when expanded (pixels) */
 export const TIMELINE_HEIGHT_EXPANDED = 400;
@@ -76,11 +76,12 @@ export function getCollapsedTimelineOptions(): TimelineOptions {
     stack: false,
     showCurrentTime: false,
     editable: false,
-    showMajorLabels: true,
+    showMajorLabels: false,
     showMinorLabels: true,
     horizontalScroll: true,
     zoomable: true,
     moveable: true,
+    timeAxis: { scale: 'year', step: 500 },
   };
 }
 

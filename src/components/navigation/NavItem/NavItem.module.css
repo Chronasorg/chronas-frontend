@@ -104,3 +104,52 @@
   border-radius: 9px;
   border: 1px solid #fafafa;
 }
+
+
+/* Dark theme */
+[data-theme='dark'] .nav-item {
+  color: #F2F2F2;
+}
+
+[data-theme='dark'] .nav-item:hover:not(.nav-item--disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(173, 135, 27);
+}
+
+[data-theme='dark'] .nav-item--active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: rgba(173, 135, 27);
+}
+
+[data-theme='dark'] .nav-item--highlighted {
+  color: rgba(173, 135, 27);
+}
+
+[data-theme='dark'] .nav-item__badge {
+  background-color: rgba(173, 135, 27);
+  border-color: #333;
+}
+
+/* Luther theme */
+[data-theme='luther'] .nav-item {
+  color: #fff3d3;
+}
+
+[data-theme='luther'] .nav-item:hover:not(.nav-item--disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(69, 28, 46, 200);
+}
+
+[data-theme='luther'] .nav-item--active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: rgba(69, 28, 46, 200);
+}
+
+[data-theme='luther'] .nav-item--highlighted {
+  color: rgba(69, 28, 46, 200);
+}
+
+[data-theme='luther'] .nav-item__badge {
+  background-color: rgba(69, 28, 46, 200);
+  border-color: #011c31;
+}

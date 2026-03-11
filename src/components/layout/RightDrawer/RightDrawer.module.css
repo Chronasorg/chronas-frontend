@@ -18,9 +18,9 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 58%;
-  min-width: 450px;
-  max-width: 900px;
+  width: 50%;
+  min-width: 300px;
+  max-width: 80%;
   background-color: #ffffff;
   color: rgb(73, 73, 73);
   display: flex;
@@ -45,6 +45,41 @@
 /* Closed state - slide out to right */
 .closed {
   transform: translateX(100%);
+}
+
+/* Drag handle for resizing (Requirement US-3.2) */
+.dragHandle {
+  position: absolute;
+  left: -6px;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: col-resize;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dragHandle::after {
+  content: '';
+  width: 4px;
+  height: 32px;
+  border-radius: 2px;
+  background-color: rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease;
+}
+
+.dragHandle:hover::after {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dragging {
+  cursor: col-resize;
+}
+
+.dragging .content {
+  pointer-events: none;
 }
 
 /* Header section (Requirements 4.3, 4.4) */

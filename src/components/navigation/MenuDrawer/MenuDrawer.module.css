@@ -51,9 +51,10 @@
 
 /* Light theme header */
 .drawer.light .header {
-  background-color: rgb(242, 242, 242);
+  background-color: #ffffff;
   border-bottom: none;
   padding: 12px 16px;
+  box-shadow: rgba(0, 0, 0, 0.4) 3px 6px 6px -3px;
 }
 
 .title {

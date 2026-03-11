@@ -17,6 +17,16 @@
 import { Link } from 'react-router-dom';
 import styles from './Logo.module.css';
 import { LOGO_SVG_PATHS } from './logoSvgPaths';
+import { useUIStore } from '../../../stores/uiStore';
+
+/**
+ * Maps theme name to CSS module class name.
+ */
+const themeClassMap: Record<string, string> = {
+  light: 'lightTheme',
+  dark: 'darkTheme',
+  luther: 'lutherTheme',
+};
 
 /**
  * Logo component props
@@ -33,10 +43,13 @@ export interface LogoProps {
  * Uses inline SVG so CSS can style the fill color for light/dark themes.
  */
 export function Logo({ className, testId }: LogoProps) {
+  const { theme } = useUIStore();
+  const themeClass = themeClassMap[theme] ?? 'lightTheme';
+
   const combinedClassName = [
     styles['logo'] ?? '',
     styles['logoMenuContainer'] ?? '',
-    styles['lightTheme'] ?? '',
+    styles[themeClass] ?? '',
     className ?? '',
   ].filter(Boolean).join(' ');
 

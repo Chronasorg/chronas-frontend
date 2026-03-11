@@ -72,3 +72,22 @@
 .lightTheme .logo-svg g {
   fill: currentColor;
 }
+
+
+/* Dark theme: logo fill #F2F2F2 */
+.darkTheme {
+  color: #F2F2F2;
+}
+
+.darkTheme .logo-svg g {
+  fill: currentColor;
+}
+
+/* Luther theme: logo fill #fff3d3 */
+.lutherTheme {
+  color: #fff3d3;
+}
+
+.lutherTheme .logo-svg g {
+  fill: currentColor;
+}

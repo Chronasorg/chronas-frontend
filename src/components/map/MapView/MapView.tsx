@@ -1126,8 +1126,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       setHoveredMarker(null);
       
       // Extract province ID from feature properties
-      // Province ID is typically stored in 'id' or 'provinceId' property
-      const provinceId = (properties['id'] as string | undefined) ?? 
+      // GeoJSON features use 'name' property which matches area data keys
+      const provinceId = (properties['name'] as string | undefined) ??
+                         (properties['id'] as string | undefined) ?? 
                          (properties['provinceId'] as string | undefined) ??
                          (feature.id !== undefined ? String(feature.id) : undefined);
       
@@ -1201,10 +1202,12 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             : `https://en.wikipedia.org/wiki/${encodeURIComponent(labelName.replace(/ /g, '_'))}`;
           
           // Open right drawer with entity content
+          // Label click shows the entity (ruler/culture/religion), not a specific province
+          // Use labelName as provinceName for display, entityId for outline calculation
           openRightDrawer({
-            type: 'area',
-            provinceId: entityId,
-            provinceName: labelName,
+            type: 'epic',
+            epicId: entityId,
+            epicName: labelName,
             wikiUrl,
           });
           
@@ -1283,7 +1286,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       }
       
       // Extract province ID from feature properties
-      const provinceId = (properties['id'] as string | undefined) ?? 
+      // GeoJSON features use 'name' property which matches area data keys (e.g., "Croatia", "Finnmark")
+      const provinceId = (properties['name'] as string | undefined) ??
+                         (properties['id'] as string | undefined) ?? 
                          (properties['provinceId'] as string | undefined) ??
                          (feature.id !== undefined ? String(feature.id) : undefined);
       
@@ -1836,7 +1841,15 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             type="symbol"
             layout={{
               'text-field': ['get', 'name'],
-              'text-size': ['get', 'fontSize'],
+              'text-size': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                1, ['*', ['get', 'fontSize'], 0.3],
+                3, ['*', ['get', 'fontSize'], 0.5],
+                5, ['*', ['get', 'fontSize'], 0.8],
+                7, ['get', 'fontSize'],
+              ],
               'text-font': ['Noto Serif Regular', 'Arial Unicode MS Regular'],
               'text-anchor': 'center',
               'text-allow-overlap': false,
@@ -1845,6 +1858,8 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-transform': 'uppercase',
               'text-letter-spacing': 0.15,
               'text-max-width': 12,
+              'text-padding': 8,
+              'symbol-sort-key': ['*', -1, ['get', 'fontSize']],
             }}
             paint={{
               'text-color': 'rgba(0, 0, 0, 0.78)',

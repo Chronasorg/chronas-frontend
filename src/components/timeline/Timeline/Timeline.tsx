@@ -194,8 +194,8 @@ export const Timeline: React.FC<TimelineProps> = ({
     horizontalScroll: true,
     zoomable: true,
     moveable: true,
-    // Force year-based time axis
-    timeAxis: { scale: 'year', step: 100 },
+    // Force year-based time axis with 500-year steps matching production
+    timeAxis: { scale: 'year', step: 500 },
   }), [isExpanded]);
 
   /**

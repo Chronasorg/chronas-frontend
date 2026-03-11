@@ -12,6 +12,8 @@ import type React from 'react';
 import styles from './ProvinceDrawerContent.module.css';
 import { formatPopulation } from '@/utils/formatUtils';
 import { ArticleIframe } from '@/components/content/ArticleIframe/ArticleIframe';
+// ProvinceTimeline temporarily removed — province ID mismatch needs resolution first
+// import { ProvinceTimeline } from '@/components/content/ProvinceTimeline';
 import type { EntityMetadata, MetadataEntry, ProvinceData } from '@/api/types';
 
 /**
@@ -262,6 +264,12 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
           </span>
         </div>
       </section>
+
+      {/* Province Timeline — temporarily removed pending province ID mismatch fix
+       * TODO: Re-enable when mapStore.selectProvince returns correct province keys
+       * Component: ProvinceTimeline (src/components/content/ProvinceTimeline/)
+       * Stories: US-3.4, US-3.5
+       */}
 
       {/* Wikipedia iframe section - Requirement 2.6 */}
       <section

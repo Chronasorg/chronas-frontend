@@ -135,8 +135,8 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+            {/* Chevron-left icon matching legacy fa-chevron-left */}
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
       </div>

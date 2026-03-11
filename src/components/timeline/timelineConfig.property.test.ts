@@ -189,7 +189,7 @@ describe('Timeline Configuration Property Tests', () => {
             expect(options.height).toBe(400);
           } else {
             expect(options.stack).toBe(false);
-            expect(options.height).toBe(120);
+            expect(options.height).toBe(100);
           }
         }),
         { numRuns: 100 }

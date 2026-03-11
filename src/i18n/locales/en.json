@@ -1,0 +1,76 @@
+{
+  "nav": {
+    "layers": "Layers",
+    "discover": "Discover",
+    "random": "Random Article",
+    "configuration": "Configuration",
+    "pro": "PRO Version",
+    "collections": "Collections",
+    "play": "Play",
+    "help": "Help",
+    "logout": "Logout",
+    "community": "Community Board",
+    "account": "Manage Account"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "or": "or",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "signupFailed": "Signup failed. Please try again."
+  },
+  "map": {
+    "loading": "Loading map...",
+    "ruler": "Ruler",
+    "culture": "Culture",
+    "religion": "Religion",
+    "religionGeneral": "Religion General",
+    "capital": "Capital",
+    "population": "Population"
+  },
+  "layers": {
+    "title": "Layers",
+    "general": "GENERAL",
+    "advanced": "Advanced",
+    "area": "Area",
+    "markers": "Markers",
+    "epics": "Epics",
+    "basemap": "Basemap",
+    "showProvinces": "Show Provinces",
+    "opacityByPopulation": "Opacity By Population",
+    "clusterMarkers": "Cluster Markers",
+    "markerLimit": "Marker Limit",
+    "uncheckAll": "Uncheck All",
+    "checkAll": "Check All"
+  },
+  "timeline": {
+    "expandTimeline": "Expand Timeline",
+    "resetView": "Reset Timeline View",
+    "searchEpics": "Search Epics",
+    "autoplay": "Start Autoplay",
+    "stopAutoplay": "Stop Autoplay"
+  },
+  "drawer": {
+    "noContent": "No content selected",
+    "closePanel": "Close panel",
+    "provinceDataNotAvailable": "Province data not available for this selection."
+  },
+  "common": {
+    "loading": "Loading...",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Go Back",
+    "ad": "AD",
+    "bc": "BC"
+  }
+}

@@ -5,6 +5,7 @@ import { MenuDrawer } from '../navigation/MenuDrawer';
 import { RightDrawer } from './RightDrawer/RightDrawer';
 import { CollectionsPlaceholder } from '../placeholders';
 import { LayersContent } from '../navigation/LayersContent';
+import { LoadingBar } from '../global/LoadingBar';
 import { Timeline } from '../timeline/Timeline/Timeline';
 import { useUIStore } from '../../stores/uiStore';
 import { useNavigationStore } from '../../stores/navigationStore';
@@ -41,6 +42,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
     >
       {/* Header hidden - production uses sidebar logo as branding */}
       {/* <Header /> */}
+      
+      {/* Loading bar at top of viewport - matches production */}
+      <LoadingBar />
       
       <div className={styles['body']}>
         <Sidebar
