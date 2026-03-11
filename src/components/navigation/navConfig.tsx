@@ -143,7 +143,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Discover',
     to: '/discover',
     section: 'top',
-    disabled: true,
+    disabled: true, // Deferred: Discover page not yet implemented
   },
   {
     id: 'random',
@@ -151,7 +151,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Random Article',
     action: 'random',
     section: 'top',
-    disabled: true,
   },
   {
     id: 'settings',
@@ -159,7 +158,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Configuration',
     to: '/configuration',
     section: 'top',
-    disabled: true,
   },
 
   // Bottom section - matches production order exactly
@@ -170,7 +168,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     to: '/pro',
     section: 'bottom',
     highlightWhenPro: true,
-    disabled: true,
+    disabled: true, // Deferred: PRO subscription page not yet implemented
   },
   {
     id: 'collections',
@@ -178,7 +176,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Collections',
     action: 'collections',
     section: 'bottom',
-    disabled: true,
+    disabled: true, // Deferred: Collections system not yet implemented
   },
   {
     id: 'play',
@@ -186,7 +184,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Play',
     to: '/play',
     section: 'bottom',
-    disabled: true,
+    disabled: true, // Deferred: Autoplay page not yet implemented
   },
   {
     id: 'help',
@@ -194,7 +192,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Help',
     to: '/info',
     section: 'bottom',
-    disabled: true,
   },
   {
     id: 'logout',

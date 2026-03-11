@@ -8,6 +8,7 @@
  */
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { DrawerContent } from '@/stores/uiStore';
 import { useMapStore } from '@/stores/mapStore';
 import { ProvinceDrawerContent } from '@/components/content/ProvinceDrawerContent/ProvinceDrawerContent';
@@ -64,6 +65,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const { t } = useTranslation();
 
   // Resize state (US-3.2)
   const [drawerWidth, setDrawerWidth] = useState<string>('50%');
@@ -227,7 +229,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
           type="button"
           className={closeButtonClass}
           onClick={onClose}
-          aria-label="Close panel"
+          aria-label={t('drawer.closePanel', 'Close panel')}
           data-testid="right-drawer-close"
         >
           <span aria-hidden="true">×</span>
@@ -255,7 +257,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
                 <div className={placeholderClass}>
                   <p>Province: {content.provinceName}</p>
                   <p className={placeholderNoteClass}>
-                    Province data not available for this selection.
+                    {t('drawer.provinceDataNotAvailable', 'Province data not available for this selection.')}
                   </p>
                 </div>
               );
@@ -274,7 +276,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
           </div>
         ) : (
           <div className={emptyStateClass}>
-            <p>No content selected</p>
+            <p>{t('drawer.noContent', 'No content selected')}</p>
           </div>
         )}
       </div>

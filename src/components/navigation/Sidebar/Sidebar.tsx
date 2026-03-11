@@ -9,6 +9,7 @@
 
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Logo } from '../Logo';
 import { NavItem } from '../NavItem';
 import { UserAvatar } from '../UserAvatar';
@@ -16,6 +17,7 @@ import { getNavItemsBySection, type NavItemConfig } from '../navConfig';
 import { useUIStore } from '../../../stores/uiStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
+import { useMapStore } from '../../../stores/mapStore';
 import styles from './Sidebar.module.css';
 
 export interface SidebarProps {
@@ -40,9 +42,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   testId = 'navigation-sidebar',
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { theme } = useUIStore();
   const { isAuthenticated, username, avatar, score, subscription, clearUser } = useAuthStore();
   const { toggleDrawer, drawerOpen, drawerContent } = useNavigationStore();
+  const currentAreaData = useMapStore((s) => s.currentAreaData);
+  const openRightDrawer = useUIStore((s) => s.openRightDrawer);
 
   const topItems = getNavItemsBySection('top');
   const bottomItems = getNavItemsBySection('bottom');
@@ -63,10 +68,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           case 'collections':
             toggleDrawer('collections');
             break;
-          case 'random':
-            // TODO: Implement random area selection
-            console.log('Random action triggered');
+          case 'random': {
+            // Pick a random province from area data and open its Wikipedia article
+            if (currentAreaData) {
+              const keys = Object.keys(currentAreaData);
+              if (keys.length > 0) {
+                const randomKey = keys[Math.floor(Math.random() * keys.length)];
+                if (randomKey) {
+                  const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(randomKey.replace(/ /g, '_'))}`;
+                  openRightDrawer({
+                    type: 'area',
+                    provinceId: randomKey,
+                    provinceName: randomKey,
+                    wikiUrl,
+                  });
+                }
+              }
+            }
             break;
+          }
           case 'logout':
             if (isAuthenticated) {
               clearUser();
@@ -79,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }
       }
     },
-    [toggleDrawer, isAuthenticated, clearUser, navigate]
+    [toggleDrawer, isAuthenticated, clearUser, navigate, currentAreaData, openRightDrawer]
   );
 
   /**
@@ -139,7 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <React.Fragment key={item.id}>
         <NavItem
           icon={item.icon}
-          label={item.label}
+          label={t(`nav.${item.id}`, item.label)}
           to={item.disabled ? undefined : item.to}
           onClick={item.action && !item.disabled ? () => handleItemClick(item) : undefined}
           isActive={isItemActive(item)}
