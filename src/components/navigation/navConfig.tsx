@@ -151,6 +151,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Random Article',
     action: 'random',
     section: 'top',
+    disabled: true,
   },
   {
     id: 'settings',
@@ -158,6 +159,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     label: 'Configuration',
     to: '/configuration',
     section: 'top',
+    disabled: true,
   },
 
   // Bottom section - matches production order exactly
