@@ -50,7 +50,7 @@
 /* Drag handle for resizing (Requirement US-3.2) */
 .dragHandle {
   position: absolute;
-  left: -6px;
+  left: -12px;
   top: 0;
   bottom: 0;
   width: 12px;
@@ -149,9 +149,10 @@
 /* Scrollable content area (Requirement 4.5) */
 .content {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .contentInner {
@@ -160,12 +161,16 @@
   flex-direction: column;
 }
 
+/* Ensure iframe sections fill remaining space */
+.contentInner > *:last-child {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Placeholder styles (temporary until content components are implemented) */
 .placeholder {
   padding: var(--spacing-md, 1rem);
-  background-color: var(--color-background, #ffffff);
-  border-radius: var(--radius-md, 0.5rem);
-  border: 1px dashed var(--color-border, #e0e0e0);
+  background-color: transparent;
 }
 
 .placeholder p {
