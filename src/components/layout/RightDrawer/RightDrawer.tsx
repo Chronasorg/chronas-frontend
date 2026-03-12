@@ -253,6 +253,15 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
                   />
                 );
               }
+              // No province data — show Wikipedia article directly if URL available
+              if (content.wikiUrl) {
+                return (
+                  <ArticleIframe
+                    url={content.wikiUrl}
+                    title={`Wikipedia article for ${content.provinceName}`}
+                  />
+                );
+              }
               return (
                 <div className={placeholderClass}>
                   <p>Province: {content.provinceName}</p>
