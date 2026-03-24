@@ -234,8 +234,6 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
   const setBasemap = useMapStore((s) => s.setBasemap);
   const showProvinceBorders = useMapStore((s) => s.showProvinceBorders);
   const setShowProvinceBorders = useMapStore((s) => s.setShowProvinceBorders);
-  const populationOpacity = useMapStore((s) => s.populationOpacity);
-  const setPopulationOpacity = useMapStore((s) => s.setPopulationOpacity);
   const markerLimit = useMapStore((s) => s.markerLimit);
   const setMarkerLimit = useMapStore((s) => s.setMarkerLimit);
   const clusterMarkers = useMapStore((s) => s.clusterMarkers);
