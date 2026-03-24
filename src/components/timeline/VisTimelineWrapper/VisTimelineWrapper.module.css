@@ -36,8 +36,6 @@
   background: transparent !important;
   pointer-events: all;
   cursor: ew-resize;
-  top: 20px !important;
-  height: 36px !important;
   z-index: 5;
   overflow: visible !important;
 }
@@ -46,8 +44,6 @@
   background-color: transparent !important;
   background: transparent !important;
   pointer-events: none;
-  top: 54px !important;
-  height: 26px !important;
   overflow: visible !important;
 }
 
@@ -159,12 +155,12 @@
   box-shadow: 0 2px 6px rgba(74, 144, 217, 0.4);
 }
 
-/* Range item styling - clean, no bracket borders */
+/* Range item styling - matches production */
 .container :global(.vis-item.vis-range),
 .container :global(.vis-item.epic-item.vis-range) {
   border-radius: 2px;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
   background-color: rgba(255, 255, 255, 0.35) !important;
   /* Hide bracket-like left/right end caps */
@@ -172,11 +168,26 @@
   border-right-color: transparent !important;
   border-top: none !important;
   border-bottom: none !important;
+  overflow: hidden;
 }
 
-/* Range item content — hide text, show only the colour bar */
+/* Range item content — show truncated text matching production */
 .container :global(.vis-item.vis-range .vis-item-content) {
-  display: none;
+  display: block;
+  overflow: hidden;
+  padding: 0 4px;
+  height: 100%;
+}
+
+/* warContainer — truncated epic name label */
+.container :global(.vis-item.vis-range .warContainer) {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(0, 0, 0, 0.75);
 }
 
 /* Ensure vis-item-overflow is visible for icons */
@@ -220,8 +231,6 @@
 .container :global(.vis-time-axis .vis-grid.vis-vertical) {
   position: absolute;
   border-left: 1px solid;
-  top: 20px !important;
-  height: 36px;
   border-color: rgba(200, 200, 200, 0.4);
 }
 
@@ -243,7 +252,6 @@
 .container :global(.vis-panel.vis-background.vis-horizontal) {
   background: transparent !important;
   background-color: transparent !important;
-  top: 20px !important;
 }
 
 /* Content area must be transparent */
@@ -346,8 +354,8 @@
   border: none !important;
   border-bottom: 1px solid rgba(122, 0, 0, 0.3) !important;
   cursor: pointer;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
@@ -370,8 +378,8 @@
   border: none !important;
   border-bottom: 1px solid rgba(0, 140, 36, 0.35) !important;
   cursor: pointer;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
@@ -393,8 +401,8 @@
   background-color: transparent !important;
   border-color: transparent !important;
   pointer-events: none;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
@@ -407,8 +415,8 @@
   background-color: transparent !important;
   border-color: transparent !important;
   pointer-events: none;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
@@ -422,8 +430,8 @@
   border: none !important;
   border-bottom: 1px solid rgba(0, 128, 0, 0.3) !important;
   cursor: pointer;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
@@ -433,8 +441,8 @@
   border: none !important;
   border-bottom: 1px solid rgba(255, 165, 0, 0.3) !important;
   cursor: pointer;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
@@ -444,16 +452,16 @@
   border: none !important;
   border-bottom: 1px solid rgba(180, 180, 180, 0.3) !important;
   cursor: pointer;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 
 /* Battle epic items (eb) - transparent background */
 .container :global(.vis-item.timelineItem_eb) {
   background: transparent !important;
-  height: 14px !important;
-  line-height: 12px;
+  height: 20px !important;
+  line-height: 20px;
   margin-top: 1px;
 }
 

@@ -53,19 +53,19 @@ const ENTITY_ROWS: EntityRowConfig[] = [
     dataIndex: 0,
     metadataKey: 'ruler',
     label: 'Ruler',
-    icon: '⚔',
+    icon: 'ruler',
   },
   {
     dataIndex: 1,
     metadataKey: 'culture',
     label: 'Culture',
-    icon: '◈',
+    icon: 'culture',
   },
   {
     dataIndex: 2,
     metadataKey: 'religion',
     label: 'Religion',
-    icon: '✦',
+    icon: 'religion',
   },
 ];
 
@@ -157,7 +157,15 @@ interface EntityRowProps {
   icon: string;
 }
 
+// Sprite positions in abstract-atlas.png (60px wide, 119px tall spritesheet)
+const ICON_SPRITES: Record<string, React.CSSProperties> = {
+  ruler:    { backgroundPosition: '-1px -460px',  backgroundSize: '60px 119px', width: 16, height: 16 },
+  culture:  { backgroundPosition: '-30px -322px', backgroundSize: '60px 119px', width: 16, height: 20 },
+  religion: { backgroundPosition: '-56px -442px', backgroundSize: '74px 119px', width: 16, height: 16 },
+};
+
 const EntityRow: React.FC<EntityRowProps> = ({ label, entry, icon }) => {
+  const spriteStyle = ICON_SPRITES[icon];
   return (
     <div className={styles['entityRow']} data-testid="entity-row">
       <div
@@ -172,9 +180,22 @@ const EntityRow: React.FC<EntityRowProps> = ({ label, entry, icon }) => {
       <span className={styles['entityName']} data-testid="entity-name">
         {entry.name}
       </span>
-      <span className={styles['entityIcon']} data-testid="entity-icon" aria-hidden="true">
-        {icon}
-      </span>
+      {spriteStyle ? (
+        <span
+          className={styles['entityIcon']}
+          data-testid="entity-icon"
+          aria-hidden="true"
+          style={{
+            display: 'inline-block',
+            backgroundImage: 'url(/images/abstract-atlas.png)',
+            ...spriteStyle,
+          }}
+        />
+      ) : (
+        <span className={styles['entityIcon']} data-testid="entity-icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
     </div>
   );
 };
@@ -253,7 +274,7 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
         <EntityRow
           label="Religion Gen."
           entry={religionGeneralEntry}
-          icon="◇"
+          icon="religion"
         />
 
         {/* Population display */}
