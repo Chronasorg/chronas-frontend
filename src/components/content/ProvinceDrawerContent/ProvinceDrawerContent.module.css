@@ -100,11 +100,14 @@
   white-space: nowrap;
 }
 
-/* Avatar icon for entity type */
+/* Icon for entity type */
 .entityIcon {
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1;
+  color: rgb(160, 160, 160);
+  width: 18px;
+  text-align: center;
 }
 
 /* Population row */

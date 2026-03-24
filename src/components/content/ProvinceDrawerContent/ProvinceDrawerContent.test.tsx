@@ -380,10 +380,10 @@ describe('ProvinceDrawerContent', () => {
       expect(icons).toHaveLength(4);
       
       // Check for expected icons
-      expect(screen.getByText('👑')).toBeInTheDocument(); // Ruler
-      expect(screen.getByText('🎭')).toBeInTheDocument(); // Culture
-      expect(screen.getByText('⛪')).toBeInTheDocument(); // Religion
-      expect(screen.getByText('☯️')).toBeInTheDocument(); // Religion General
+      expect(screen.getByText('⚔')).toBeInTheDocument(); // Ruler
+      expect(screen.getByText('◈')).toBeInTheDocument(); // Culture
+      expect(screen.getByText('✦')).toBeInTheDocument(); // Religion
+      expect(screen.getByText('◇')).toBeInTheDocument(); // Religion General
     });
 
     it('should apply correct background color to color chips', () => {

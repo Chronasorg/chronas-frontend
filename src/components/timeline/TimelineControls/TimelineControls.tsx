@@ -29,6 +29,8 @@ export interface TimelineControlsProps {
   onAutoplayOpen: () => void;
   /** Whether autoplay is currently active */
   isAutoplayActive: boolean;
+  /** Left offset in px — shifts controls right when layers panel is open */
+  leftOffset?: number;
   /** Additional CSS class name */
   className?: string;
 }
@@ -176,6 +178,7 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
   onSearchOpen,
   onAutoplayOpen,
   isAutoplayActive,
+  leftOffset,
   className,
 }) => {
   const containerClasses = [
@@ -183,9 +186,14 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
     className ?? '',
   ].filter(Boolean).join(' ');
 
+  const containerStyle = leftOffset !== undefined
+    ? { left: `${String(leftOffset)}px`, transition: 'left 300ms ease-in-out' }
+    : undefined;
+
   return (
     <div
       className={containerClasses}
+      style={containerStyle}
       data-testid="timeline-controls"
       role="group"
       aria-label="Timeline controls"

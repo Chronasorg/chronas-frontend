@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="#1a1a2e"/>
+
+  <!-- Outer ring -->
+  <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(173,135,27,0.4)" stroke-width="0.8"/>
+
+  <!-- Compass rose - 4 cardinal points -->
+  <!-- North point (tall, gold) -->
+  <polygon points="32,6 29,28 32,24 35,28" fill="#ad871b"/>
+  <!-- South point (shorter, muted) -->
+  <polygon points="32,58 29,36 32,40 35,36" fill="rgba(173,135,27,0.5)"/>
+  <!-- West point -->
+  <polygon points="6,32 28,29 24,32 28,35" fill="rgba(173,135,27,0.5)"/>
+  <!-- East point -->
+  <polygon points="58,32 36,29 40,32 36,35" fill="#ad871b"/>
+
+  <!-- 4 intercardinal points (thin) -->
+  <line x1="14" y1="14" x2="26" y2="26" stroke="rgba(173,135,27,0.3)" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="50" y1="14" x2="38" y2="26" stroke="rgba(173,135,27,0.3)" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="14" y1="50" x2="26" y2="38" stroke="rgba(173,135,27,0.3)" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="50" y1="50" x2="38" y2="38" stroke="rgba(173,135,27,0.3)" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Center circle -->
+  <circle cx="32" cy="32" r="4" fill="#ad871b"/>
+  <circle cx="32" cy="32" r="2" fill="#1a1a2e"/>
+</svg>

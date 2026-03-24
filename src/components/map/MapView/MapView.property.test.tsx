@@ -431,7 +431,7 @@ describe('MapView Property Tests', () => {
 
           // Verify the constants are correct
           if (sidebarOpen) {
-            expect(expectedLeftOffset).toBe(156); // Requirement 15.1
+            expect(expectedLeftOffset).toBe(350); // Requirement 15.1
           } else {
             expect(expectedLeftOffset).toBe(50); // Requirement 15.2
           }
@@ -501,7 +501,7 @@ describe('MapView Property Tests', () => {
 
           // Verify the expected left offset
           const expectedLeftOffset = toState ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
-          expect(expectedLeftOffset).toBe(toState ? 156 : 50);
+          expect(expectedLeftOffset).toBe(toState ? 350 : 50);
         }),
         { numRuns: 100 }
       );
@@ -527,7 +527,7 @@ describe('MapView Property Tests', () => {
 
             // Verify the expected left offset
             const expectedLeftOffset = sidebarOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
-            expect(expectedLeftOffset).toBe(sidebarOpen ? 156 : 50);
+            expect(expectedLeftOffset).toBe(sidebarOpen ? 350 : 50);
           }
         }),
         { numRuns: 100 }
@@ -569,7 +569,7 @@ describe('MapView Property Tests', () => {
 
     it('should have correct sidebar width constants', () => {
       // Verify the constants match the requirements
-      expect(SIDEBAR_WIDTH_OPEN).toBe(156); // Requirement 15.1
+      expect(SIDEBAR_WIDTH_OPEN).toBe(350); // Requirement 15.1
       expect(SIDEBAR_WIDTH_CLOSED).toBe(50); // Requirement 15.2
     });
   });
@@ -1061,11 +1061,11 @@ describe('MapView Property Tests', () => {
   describe('Property 4: Window Resize Viewport Sync', () => {
     /**
      * Arbitrary for generating valid window dimensions.
-     * Width: 320-3840 (mobile to 4K)
+     * Width: 400-3840 (wider than max sidebar width of 350px, up to 4K)
      * Height: 240-2160 (mobile to 4K)
      */
     const windowDimensionsArb = fc.record({
-      width: fc.integer({ min: 320, max: 3840 }),
+      width: fc.integer({ min: 400, max: 3840 }),
       height: fc.integer({ min: 240, max: 2160 }),
     });
 
@@ -1127,8 +1127,8 @@ describe('MapView Property Tests', () => {
 
           // Verify the calculation is correct
           if (sidebarOpen) {
-            expect(sidebarWidth).toBe(156); // SIDEBAR_WIDTH_OPEN
-            expect(expectedViewportWidth).toBe(dimensions.width - 156);
+            expect(sidebarWidth).toBe(350); // SIDEBAR_WIDTH_OPEN
+            expect(expectedViewportWidth).toBe(dimensions.width - 350);
           } else {
             expect(sidebarWidth).toBe(50); // SIDEBAR_WIDTH_CLOSED
             expect(expectedViewportWidth).toBe(dimensions.width - 50);
@@ -1319,9 +1319,9 @@ describe('MapView Property Tests', () => {
        * Arbitrary for generating extreme window dimensions.
        */
       const extremeDimensionsArb = fc.oneof(
-        // Very small (mobile)
+        // Very small (mobile, min width exceeds SIDEBAR_WIDTH_OPEN=350)
         fc.record({
-          width: fc.integer({ min: 320, max: 480 }),
+          width: fc.integer({ min: 400, max: 480 }),
           height: fc.integer({ min: 240, max: 640 }),
         }),
         // Very large (4K+)
@@ -1334,9 +1334,9 @@ describe('MapView Property Tests', () => {
           width: fc.integer({ min: 2560, max: 5120 }),
           height: fc.integer({ min: 720, max: 1080 }),
         }),
-        // Portrait mode
+        // Portrait mode (min width exceeds SIDEBAR_WIDTH_OPEN=350)
         fc.record({
-          width: fc.integer({ min: 320, max: 768 }),
+          width: fc.integer({ min: 400, max: 768 }),
           height: fc.integer({ min: 1024, max: 2048 }),
         })
       );

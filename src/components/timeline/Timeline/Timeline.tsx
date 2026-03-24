@@ -15,6 +15,7 @@ import { useTimelineStore, fetchEpicCoordinates } from '../../../stores/timeline
 import type { EpicItem } from '../../../stores/timelineStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useMapStore } from '../../../stores/mapStore';
+import { useNavigationStore } from '../../../stores/navigationStore';
 import { TimelineControls } from '../TimelineControls/TimelineControls';
 import { YearDialog } from '../YearDialog/YearDialog';
 import { AutoplayMenu } from '../AutoplayMenu/AutoplayMenu';
@@ -47,8 +48,8 @@ export interface TimelineProps {
 /**
  * Timeline heights in pixels
  */
-export const TIMELINE_HEIGHT_COLLAPSED = 132;
-export const TIMELINE_HEIGHT_EXPANDED = 400;
+export const TIMELINE_HEIGHT_COLLAPSED = 80;
+export const TIMELINE_HEIGHT_EXPANDED = 280;
 
 /**
  * Timeline Component
@@ -82,9 +83,13 @@ export const Timeline: React.FC<TimelineProps> = ({
     epicItems, // Subscribe to epicItems to trigger re-render when loaded
   } = useTimelineStore();
 
+  // Get right drawer state to shift timeline away from it
+  const rightDrawerOpen = useUIStore((state) => state.rightDrawerOpen);
   // Get openRightDrawer from uiStore for epic click handling
   // Requirements: 6.3
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
+  // Get layers drawer state to shift timeline controls
+  const layersDrawerOpen = useNavigationStore((state) => state.drawerOpen);
 
   // Ref for the vis-timeline wrapper
   const timelineRef = useRef<VisTimelineRef>(null);
@@ -411,13 +416,18 @@ export const Timeline: React.FC<TimelineProps> = ({
   const stateClass = isExpanded ? expandedClass : collapsedClass;
   const combinedClassName = `${timelineClass} ${stateClass} ${className ?? ''}`.trim();
 
+  // Shift timeline away from open drawers
+  const timelineRight = rightDrawerOpen ? '35%' : '0';
+  // Controls left: 50px sidebar + 250px layers panel + 14px gap = 314px when open, 64px when closed
+  const controlsLeft = layersDrawerOpen ? 314 : 64;
+
   const timelineContent = (
     <div
       data-testid="timeline"
       data-year={selectedYear}
       data-expanded={isExpanded}
       className={combinedClassName}
-      style={{ height: `${String(currentHeight)}px` }}
+      style={{ height: `${String(currentHeight)}px`, right: timelineRight, transition: 'right 300ms ease-in-out, height 500ms ease-in-out' }}
       role="navigation"
       aria-label="Timeline navigation"
     >
@@ -431,6 +441,7 @@ export const Timeline: React.FC<TimelineProps> = ({
           onSearchOpen={handleSearchOpen}
           onAutoplayOpen={handleAutoplayOpen}
           isAutoplayActive={isAutoplayActive}
+          leftOffset={controlsLeft}
         />
 
         {/* Vis.js Timeline with epic items (Requirements 6.2, 6.4, 6.5) */}

@@ -15,9 +15,8 @@
   left: 50px;
   right: 0;
   width: auto;
-  background: transparent;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
   z-index: var(--z-timeline, 350);
-  transition: height 500ms ease-in-out;
   overflow: visible;
   box-sizing: border-box;
   pointer-events: none;
@@ -25,12 +24,12 @@
 
 /* Collapsed state */
 .collapsed {
-  height: 132px;
+  height: 80px;
 }
 
 /* Expanded state */
 .expanded {
-  height: 400px;
+  height: 280px;
 }
 
 /* Content wrapper - no padding, transparent */
@@ -86,22 +85,31 @@
 /* Responsive adjustments for smaller screens */
 @media (max-width: 767px) {
   .timeline {
-    /* Slightly reduced heights on mobile */
-    --timeline-collapsed-height: 100px;
-    --timeline-expanded-height: 300px;
+    --timeline-collapsed-height: 64px;
+    --timeline-expanded-height: 220px;
   }
-  
+
   .collapsed {
-    height: var(--timeline-collapsed-height, 100px);
+    height: var(--timeline-collapsed-height, 64px);
   }
-  
+
   .expanded {
-    height: var(--timeline-expanded-height, 300px);
+    height: var(--timeline-expanded-height, 220px);
   }
   
   .yearDisplay {
     font-size: 24px;
   }
+}
+
+/* Dark theme backdrop */
+[data-theme='dark'] .timeline {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+}
+
+/* Luther theme backdrop */
+[data-theme='luther'] .timeline {
+  background: linear-gradient(to top, rgba(1, 28, 49, 0.7) 0%, rgba(1, 28, 49, 0.3) 50%, transparent 100%);
 }
 
 /* Print styles - hide timeline when printing */
@@ -112,11 +120,11 @@
 }
 
 
-/* Search Epics button - positioned on the right side of timeline (Requirement 1.5) */
+/* Search Epics button - positioned on the right side of timeline */
 .searchEpicsButton {
   position: absolute;
   right: 16px;
-  bottom: 16px;
+  bottom: 12px;
   
   /* Reset button styles */
   border: none;

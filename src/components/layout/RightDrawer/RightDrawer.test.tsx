@@ -285,7 +285,8 @@ describe('RightDrawer', () => {
         />
       );
 
-      expect(screen.getByText(/Province: Italia/)).toBeInTheDocument();
+      expect(screen.getByTestId('right-drawer-title')).toHaveTextContent('Italia');
+      expect(screen.getByTestId('right-drawer-content')).toBeInTheDocument();
     });
 
     it('should display marker info for marker content', () => {

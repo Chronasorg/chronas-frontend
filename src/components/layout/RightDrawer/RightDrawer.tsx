@@ -68,7 +68,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
   const { t } = useTranslation();
 
   // Resize state (US-3.2)
-  const [drawerWidth, setDrawerWidth] = useState<string>('50%');
+  const [drawerWidth, setDrawerWidth] = useState<string>('35%');
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef<number>(0);
   const dragStartWidth = useRef<number>(0);

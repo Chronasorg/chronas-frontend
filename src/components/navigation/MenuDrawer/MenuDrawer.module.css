@@ -10,7 +10,7 @@
   top: 0;
   left: 50px; /* Positioned to the right of the sidebar */
   bottom: 0;
-  width: 300px;
+  width: 250px;
   /* Default dark background */
   background-color: #2d2d2d;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -126,6 +126,6 @@
   .drawer {
     left: 0;
     width: 100%;
-    max-width: 300px;
+    max-width: 250px;
   }
 }

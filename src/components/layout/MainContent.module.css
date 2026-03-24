@@ -23,9 +23,9 @@
   padding: 0;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - no padding for map-based content */
 @media (max-width: 768px) {
   .content {
-    padding: var(--spacing-sm, 8px);
+    padding: 0;
   }
 }

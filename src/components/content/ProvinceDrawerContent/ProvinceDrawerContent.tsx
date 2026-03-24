@@ -53,19 +53,19 @@ const ENTITY_ROWS: EntityRowConfig[] = [
     dataIndex: 0,
     metadataKey: 'ruler',
     label: 'Ruler',
-    icon: '👑',
+    icon: '⚔',
   },
   {
     dataIndex: 1,
     metadataKey: 'culture',
     label: 'Culture',
-    icon: '🎭',
+    icon: '◈',
   },
   {
     dataIndex: 2,
     metadataKey: 'religion',
     label: 'Religion',
-    icon: '⛪',
+    icon: '✦',
   },
 ];
 
@@ -253,7 +253,7 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
         <EntityRow
           label="Religion Gen."
           entry={religionGeneralEntry}
-          icon="☯️"
+          icon="◇"
         />
 
         {/* Population display */}

@@ -92,17 +92,16 @@ export interface HoverInfo {
 
 /**
  * Sidebar width constants for layout calculations
- * Requirement 15.1: WHEN the menu drawer opens, THE MapView SHALL adjust its left offset to 156px
- * Requirement 15.2: WHEN the menu drawer closes, THE MapView SHALL adjust its left offset to 56px
+ * SIDEBAR_WIDTH_OPEN = 50px sidebar + 300px MenuDrawer = 350px total
+ * SIDEBAR_WIDTH_CLOSED = 50px sidebar only
  */
-export const SIDEBAR_WIDTH_OPEN = 156;
+export const SIDEBAR_WIDTH_OPEN = 350;
 export const SIDEBAR_WIDTH_CLOSED = 50;
 
 /**
- * Right drawer width for layout calculations
- * Requirement 15.3: WHEN the right drawer opens, THE MapView SHALL adjust its width
+ * Right drawer width for layout calculations — must match RightDrawer CSS width (35%)
  */
-export const RIGHT_DRAWER_WIDTH_PERCENT = 58;
+export const RIGHT_DRAWER_WIDTH_PERCENT = 35;
 
 /**
  * Province layer configuration for each color dimension.
@@ -1845,10 +1844,10 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                1, ['*', ['get', 'fontSize'], 0.3],
-                3, ['*', ['get', 'fontSize'], 0.5],
-                5, ['*', ['get', 'fontSize'], 0.8],
-                7, ['get', 'fontSize'],
+                1, ['*', ['get', 'fontSize'], 0.2],
+                3, ['*', ['get', 'fontSize'], 0.35],
+                5, ['*', ['get', 'fontSize'], 0.6],
+                7, ['*', ['get', 'fontSize'], 0.85],
               ],
               'text-font': ['Noto Serif Regular', 'Arial Unicode MS Regular'],
               'text-anchor': 'center',

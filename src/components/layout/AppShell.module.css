@@ -52,7 +52,7 @@
 /* Responsive: Small screens */
 @media (max-width: 767px) {
   .shell {
-    grid-template-rows: var(--header-height-mobile, 56px) 1fr var(--footer-height-mobile, 40px);
+    grid-template-rows: 1fr;
   }
 
   .body {

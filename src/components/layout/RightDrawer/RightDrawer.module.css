@@ -18,7 +18,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 50%;
+  width: 35%;
   min-width: 300px;
   max-width: 80%;
   background-color: #ffffff;
@@ -256,8 +256,8 @@
 
 @media (max-width: 600px) {
   .drawer {
-    width: 100%;
+    width: 85%;
     min-width: unset;
-    max-width: unset;
+    max-width: 340px;
   }
 }

@@ -7,6 +7,9 @@ dist-ssr/
 dist-node/
 
 # Environment files with secrets (keep templates)
+.env.development
+.env.staging
+.env.production
 .env.local
 .env.*.local
 

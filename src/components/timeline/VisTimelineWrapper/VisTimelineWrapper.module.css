@@ -10,7 +10,6 @@
   height: 100%;
   min-height: 80px;
   position: relative;
-  cursor: ew-resize;
 }
 
 /* Override vis.js default styles for theming - CRITICAL for visibility */
@@ -20,8 +19,7 @@
   background: transparent !important;
   visibility: visible !important;
   width: 100% !important;
-  height: 132px !important;
-  cursor: ew-resize;
+  height: 80px !important;
   pointer-events: all;
   overflow: visible !important;
 }
@@ -38,9 +36,8 @@
   background: transparent !important;
   pointer-events: all;
   cursor: ew-resize;
-  /* Match production exactly: top: 24px, height: 84px */
-  top: 24px !important;
-  height: 84px !important;
+  top: 20px !important;
+  height: 36px !important;
   z-index: 5;
   overflow: visible !important;
 }
@@ -49,9 +46,8 @@
   background-color: transparent !important;
   background: transparent !important;
   pointer-events: none;
-  /* Year labels panel - positioned to show below epic items */
-  top: 100px !important;
-  height: 32px !important;
+  top: 54px !important;
+  height: 26px !important;
   overflow: visible !important;
 }
 
@@ -80,7 +76,7 @@
 .container :global(.vis-time-axis .vis-grid.vis-vertical) {
   position: absolute;
   border-left: 1px solid;
-  border-color: #e5e5e5;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Panel heights */
@@ -163,19 +159,24 @@
   box-shadow: 0 2px 6px rgba(74, 144, 217, 0.4);
 }
 
-/* Range item styling - matches production main.scss */
+/* Range item styling - clean, no bracket borders */
 .container :global(.vis-item.vis-range),
 .container :global(.vis-item.epic-item.vis-range) {
-  border-radius: 3px;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
-  background-color: rgba(255, 255, 255, 0.4) !important;
+  border-radius: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
+  background-color: rgba(255, 255, 255, 0.35) !important;
+  /* Hide bracket-like left/right end caps */
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  border-top: none !important;
+  border-bottom: none !important;
 }
 
-/* Range item content */
+/* Range item content — hide text, show only the colour bar */
 .container :global(.vis-item.vis-range .vis-item-content) {
-  padding: 2px 4px;
+  display: none;
 }
 
 /* Ensure vis-item-overflow is visible for icons */
@@ -189,9 +190,9 @@
  * ============================================ */
 
 .container :global(.vis-time-axis .vis-text) {
-  color: var(--chronas-fore-1, #6a6a6a);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 12px;
-  text-shadow: 0.03em 0 4px #fff, 0.03em 0 4px #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   font-weight: 600;
 }
 
@@ -215,13 +216,13 @@
   border-color: var(--chronas-border, rgba(200, 200, 200, 0.5));
 }
 
-/* Vertical grid lines - match production: top: 24px */
+/* Vertical grid lines */
 .container :global(.vis-time-axis .vis-grid.vis-vertical) {
   position: absolute;
   border-left: 1px solid;
-  top: 24px !important;
-  height: 80px;
-  border-color: #e5e5e5;
+  top: 20px !important;
+  height: 36px;
+  border-color: rgba(200, 200, 200, 0.4);
 }
 
 /* Panel borders */
@@ -242,7 +243,7 @@
 .container :global(.vis-panel.vis-background.vis-horizontal) {
   background: transparent !important;
   background-color: transparent !important;
-  top: 24px !important;
+  top: 20px !important;
 }
 
 /* Content area must be transparent */
@@ -339,14 +340,15 @@
  * Matches production main.scss timelineItem_* classes
  * ============================================ */
 
-/* War epic items (ew) - matches production main.scss */
+/* War epic items (ew) */
 .container :global(.vis-item.timelineItem_ew) {
   background-color: rgba(255, 255, 255, 0.4) !important;
-  border: 1px solid rgba(122, 0, 0, 0.28) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(122, 0, 0, 0.3) !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
 .container :global(.vis-item.timelineItem_ew:hover) {
@@ -362,14 +364,15 @@
   background: white !important;
 }
 
-/* Empire epic items (ee) - matches production main.scss */
+/* Empire epic items (ee) */
 .container :global(.vis-item.timelineItem_ee) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
-  border: 2px solid rgba(0, 140, 36, 0.2) !important;
+  background-color: rgba(0, 140, 36, 0.12) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 140, 36, 0.35) !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
 .container :global(.vis-item.timelineItem_ee:hover) {
@@ -390,9 +393,9 @@
   background-color: transparent !important;
   border-color: transparent !important;
   pointer-events: none;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
 .container :global(.vis-item.timelineItem_ei.vis-selected) {
@@ -404,51 +407,54 @@
   background-color: transparent !important;
   border-color: transparent !important;
   pointer-events: none;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
 .container :global(.vis-item.timelineItem_ps.vis-selected) {
   border-color: transparent !important;
 }
 
-/* Biography epic items (ebio) - matches production main.scss */
+/* Biography epic items (ebio) */
 .container :global(.vis-item.timelineItem_ebio) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
-  border: 2px solid rgba(0, 128, 0, 0.2) !important;
+  background-color: rgba(0, 128, 0, 0.1) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 128, 0, 0.3) !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
-/* Culture epic items (ec) - matches production main.scss */
+/* Culture epic items (ec) */
 .container :global(.vis-item.timelineItem_ec) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
-  border: 2px solid rgba(255, 165, 0, 0.2) !important;
+  background-color: rgba(255, 165, 0, 0.1) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 165, 0, 0.3) !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
-/* Other epic items (eo) - matches production main.scss */
+/* Other epic items (eo) */
 .container :global(.vis-item.timelineItem_eo) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
-  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(180, 180, 180, 0.15) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(180, 180, 180, 0.3) !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
 /* Battle epic items (eb) - transparent background */
 .container :global(.vis-item.timelineItem_eb) {
   background: transparent !important;
-  height: 20px !important;
-  line-height: 18px;
-  margin-top: 2px;
+  height: 14px !important;
+  line-height: 12px;
+  margin-top: 1px;
 }
 
 /* Extended timeline mode - larger items when expanded */
