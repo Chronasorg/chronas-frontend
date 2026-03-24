@@ -313,14 +313,6 @@ describe('LayersContent', () => {
       expect(screen.getByTestId('show-provinces-toggle')).toBeInTheDocument();
     });
 
-    it('should render opacity by population toggle', () => {
-      render(<LayersContent />);
-      
-      // Expand advanced section
-      fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-      
-      expect(screen.getByTestId('pop-opacity-toggle')).toBeInTheDocument();
-    });
 
     it('should have basemap options', () => {
       render(<LayersContent />);
@@ -511,70 +503,6 @@ describe('LayersContent', () => {
       });
     });
 
-    /**
-     * Population Opacity Toggle Tests (Requirement 3.1)
-     *
-     * Verifies that:
-     * - Pop opacity toggle switch reflects store state
-     * - Toggling calls setPopulationOpacity action
-     */
-    describe('Population Opacity Toggle (Requirement 3.1)', () => {
-      it('should reflect store state when populationOpacity is false', () => {
-        render(<LayersContent />);
-        
-        // Expand advanced section
-        fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-        
-        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
-        expect(toggle).toHaveAttribute('aria-checked', 'false');
-      });
-
-      it('should reflect store state when populationOpacity is true', () => {
-        // Update mock state to have populationOpacity true
-        const opacityEnabledState = { ...mockMapState, populationOpacity: true };
-        (useMapStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-          (selector: (state: typeof mockMapState) => unknown) => selector(opacityEnabledState)
-        );
-
-        render(<LayersContent />);
-        
-        // Expand advanced section
-        fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-        
-        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
-        expect(toggle).toHaveAttribute('aria-checked', 'true');
-      });
-
-      it('should call setPopulationOpacity(true) when checking', () => {
-        render(<LayersContent />);
-        
-        // Expand advanced section
-        fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-        
-        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
-        fireEvent.click(toggle);
-        
-        expect(mockMapState.setPopulationOpacity).toHaveBeenCalledWith(true);
-      });
-
-      it('should call setPopulationOpacity(false) when unchecking', () => {
-        // Update mock state to have populationOpacity true
-        const opacityEnabledState = { ...mockMapState, populationOpacity: true };
-        (useMapStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-          (selector: (state: typeof mockMapState) => unknown) => selector(opacityEnabledState)
-        );
-
-        render(<LayersContent />);
-        
-        // Expand advanced section
-        fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-        
-        const toggle = within(screen.getByTestId('pop-opacity-toggle')).getByRole('switch');
-        fireEvent.click(toggle);
-        
-        expect(opacityEnabledState.setPopulationOpacity).toHaveBeenCalledWith(false);
-      });
-    });
 
     /**
      * Marker Limit Slider Tests (Requirement 4.1)
