@@ -229,18 +229,19 @@ export const Timeline: React.FC<TimelineProps> = ({
           onEpicSelect(clickedEpic);
         }
         
-        // Zoom timeline to show the epic's date range (like production _flyTo)
-        // Production zooms to: start - 100 years to end + 100 years
+        // Zoom timeline to show the epic's date range — matches production _flyTo
+        // Padding scales with the epic duration (min 50 yrs, 20% of duration)
         if (timelineRef.current) {
           const startYear = clickedEpic.start.getFullYear();
           const endYear = clickedEpic.end.getFullYear();
-          const zoomStart = new Date(new Date(0, 1, 1).setFullYear(startYear - 100));
-          const zoomEnd = new Date(new Date(0, 1, 1).setFullYear(endYear + 100));
-          
-          // Zoom to the epic's date range
+          const duration = Math.max(1, endYear - startYear);
+          const padding = Math.max(50, Math.round(duration * 0.2));
+          const zoomStart = new Date(new Date(0, 1, 1).setFullYear(startYear - padding));
+          const zoomEnd = new Date(new Date(0, 1, 1).setFullYear(endYear + padding));
+
           timelineRef.current.setWindow(zoomStart, zoomEnd);
-          
-          // Select the item after zoom animation (like production's 2 second delay)
+
+          // Select the item after zoom animation
           setTimeout(() => {
             timelineRef.current?.setSelection([String(event.item)]);
           }, 500);
@@ -266,18 +267,15 @@ export const Timeline: React.FC<TimelineProps> = ({
             const centerLng = (minLng + maxLng) / 2;
             const centerLat = (minLat + maxLat) / 2;
             
-            // Calculate appropriate zoom level based on bounds
-            // Larger spread = lower zoom, smaller spread = higher zoom
-            const lngSpread = maxLng - minLng;
-            const latSpread = maxLat - minLat;
-            const maxSpread = Math.max(lngSpread, latSpread);
-            
-            // Approximate zoom calculation (similar to production fitBounds)
-            // maxSpread of 180 degrees = zoom 1, maxSpread of ~1 degree = zoom 8
-            let zoom = 4.5; // Default minimum zoom
-            if (maxSpread > 0) {
-              zoom = Math.max(4.5, Math.min(8, 8 - Math.log2(maxSpread + 1)));
-            }
+            // Calculate zoom level matching Mapbox fitBounds approximation:
+            // World is 360° wide. Viewport is ~1400px. Tile is 256px at zoom 0.
+            // zoom = log2(360 / spread) - log2(viewport/256) clamped to 2..7
+            const lngSpread = Math.max(maxLng - minLng, 0.1);
+            const latSpread = Math.max(maxLat - minLat, 0.1);
+            const zoomLng = Math.log2(360 / lngSpread) - Math.log2(1400 / 256);
+            const zoomLat = Math.log2(180 / latSpread) - Math.log2(900 / 256);
+            let zoom = Math.min(zoomLng, zoomLat) - 0.5; // -0.5 for padding
+            zoom = Math.max(2, Math.min(7, zoom));
             
             console.log('[Timeline] Flying map to epic coordinates:', { centerLng, centerLat, zoom, coordinateCount: coordinates.length });
             
