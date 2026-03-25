@@ -41,7 +41,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
             <button
               key={t.value}
               type="button"
-              className={`${styles['themeBtn']} ${theme === t.value ? styles['themeBtnActive'] : ''}`}
+              className={`${styles['themeBtn'] ?? ''} ${theme === t.value ? (styles['themeBtnActive'] ?? '') : ''}`}
               onClick={() => handleThemeChange(t.value)}
               data-testid={`theme-btn-${t.value}`}
               aria-pressed={theme === t.value}
