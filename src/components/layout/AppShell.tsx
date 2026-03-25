@@ -1,16 +1,19 @@
 import type React from 'react';
+import { lazy, Suspense } from 'react';
 import { MainContent } from './MainContent';
 import { Sidebar } from '../navigation/Sidebar';
 import { MenuDrawer } from '../navigation/MenuDrawer';
 import { RightDrawer } from './RightDrawer/RightDrawer';
 import { CollectionsPlaceholder } from '../placeholders';
 import { LayersContent } from '../navigation/LayersContent';
+import { SettingsContent } from '../navigation/SettingsContent';
 import { LoadingBar } from '../global/LoadingBar';
-import { Timeline } from '../timeline/Timeline/Timeline';
 import { useUIStore } from '../../stores/uiStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { clearURLParams } from '../../utils/urlStateUtils';
 import styles from './AppShell.module.css';
+
+const Timeline = lazy(() => import('../timeline/Timeline/Timeline').then((m) => ({ default: m.Timeline })));
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -59,6 +62,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
         >
           {drawerContent === 'layers' && <LayersContent onClose={closeDrawer} />}
           {drawerContent === 'collections' && <CollectionsPlaceholder />}
+          {drawerContent === 'settings' && <SettingsContent onClose={closeDrawer} />}
         </MenuDrawer>
         
         <MainContent>
@@ -75,7 +79,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
         />
       </div>
       
-      <Timeline />
+      <Suspense fallback={null}>
+        <Timeline />
+      </Suspense>
     </div>
   );
 };

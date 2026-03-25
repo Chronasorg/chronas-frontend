@@ -17,7 +17,7 @@ export interface MenuDrawerProps {
   /** Whether the drawer is open */
   isOpen: boolean;
   /** Content type to display */
-  contentType: 'layers' | 'collections' | null;
+  contentType: 'layers' | 'collections' | 'settings' | null;
   /** Callback when close is requested */
   onClose: () => void;
   /** Children to render in the content area */
@@ -31,12 +31,14 @@ export interface MenuDrawerProps {
 /**
  * Gets the title based on content type.
  */
-function getTitle(contentType: 'layers' | 'collections' | null): string {
+function getTitle(contentType: 'layers' | 'collections' | 'settings' | null): string {
   switch (contentType) {
     case 'layers':
       return 'Layers';
     case 'collections':
       return 'Collections';
+    case 'settings':
+      return 'Configuration';
     default:
       return '';
   }
@@ -58,9 +60,9 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Determine if using light theme (for Layers)
-  const isLightTheme = contentType === 'layers';
-  // Hide header for Layers (LayersContent has its own header)
+  // Determine if using light theme (for Layers and Settings)
+  const isLightTheme = contentType === 'layers' || contentType === 'settings';
+  // Hide header for Layers (LayersContent has its own header); Settings shows header
   const hideHeader = contentType === 'layers';
 
   // Focus trap and focus management

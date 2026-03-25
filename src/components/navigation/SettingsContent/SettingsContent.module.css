@@ -1,0 +1,83 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 8px 0;
+  background: rgb(242, 242, 242);
+  color: rgb(73, 73, 73);
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-size: 14px;
+  height: 100%;
+}
+
+.section {
+  padding: 8px 0;
+  border: 1px solid rgb(217, 217, 217);
+  background: rgb(255, 255, 255);
+  margin-bottom: 8px;
+}
+
+.sectionLabel {
+  color: rgba(106, 106, 106, 0.54);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 48px;
+  padding-left: 16px;
+  width: 100%;
+}
+
+.themeButtons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.themeBtn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid rgb(217, 217, 217);
+  border-radius: 4px;
+  background: rgb(255, 255, 255);
+  color: rgb(73, 73, 73);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.themeBtn:hover {
+  background: rgb(242, 242, 242);
+  border-color: rgb(180, 180, 180);
+}
+
+.themeBtnActive {
+  background: rgb(63, 81, 181);
+  border-color: rgb(63, 81, 181);
+  color: rgb(255, 255, 255);
+}
+
+.themeBtnActive:hover {
+  background: rgb(48, 63, 159);
+  border-color: rgb(48, 63, 159);
+  color: rgb(255, 255, 255);
+}
+
+.languageSelect {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 12px;
+  padding: 8px 12px;
+  border: 1px solid rgb(217, 217, 217);
+  border-radius: 4px;
+  background: rgb(255, 255, 255);
+  color: rgb(73, 73, 73);
+  font-size: 14px;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.languageSelect:focus {
+  outline: 2px solid rgb(63, 81, 181);
+  outline-offset: -1px;
+}

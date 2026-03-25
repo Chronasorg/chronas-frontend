@@ -22,7 +22,7 @@ import type React from 'react';
 /**
  * Action types for navigation items that don't navigate to a route.
  */
-export type NavAction = 'layers' | 'collections' | 'random' | 'logout';
+export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings';
 
 /**
  * Navigation item configuration interface.
@@ -157,9 +157,8 @@ export const NAV_ITEMS: NavItemConfig[] = [
     id: 'settings',
     icon: SettingsIcon(),
     label: 'Configuration',
-    to: '/configuration',
+    action: 'settings',
     section: 'top',
-    disabled: true,
   },
 
   // Bottom section - matches production order exactly
