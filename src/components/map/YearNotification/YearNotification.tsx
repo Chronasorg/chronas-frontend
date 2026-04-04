@@ -49,7 +49,7 @@ export function formatYearWithEra(year: number): { value: string; era: string } 
   const era = year < 0 ? 'BC' : 'AD';
 
   return {
-    value: absYear.toLocaleString(),
+    value: absYear.toLocaleString('en'),
     era,
   };
 }
