@@ -8,8 +8,19 @@
  * Requirements: 2.1, 2.2, 2.3, 2.6, 7.2, 12.2, 13.4
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { act } from '@testing-library/react';
+
+const mockGet = vi.hoisted(() => vi.fn());
+
+vi.mock('../api/client', () => ({
+  apiClient: {
+    get: mockGet,
+    post: vi.fn().mockRejectedValue(new Error('Not implemented')),
+    put: vi.fn().mockRejectedValue(new Error('Not implemented')),
+    delete: vi.fn().mockRejectedValue(new Error('Not implemented')),
+  },
+}));
 import {
   useMapStore,
   defaultViewport,
@@ -34,6 +45,8 @@ import {
 describe('mapStore', () => {
   // Reset store before each test
   beforeEach(() => {
+    vi.clearAllMocks();
+    mockGet.mockRejectedValue(new Error('API not mocked for this test'));
     act(() => {
       // Reset with a fresh Map to ensure clean state between tests
       useMapStore.setState({
