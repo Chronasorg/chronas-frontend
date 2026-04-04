@@ -8,6 +8,7 @@ import { CollectionsPlaceholder } from '../placeholders';
 import { LayersContent } from '../navigation/LayersContent';
 import { SettingsContent } from '../navigation/SettingsContent';
 import { LoadingBar } from '../global/LoadingBar';
+import { AnnouncementBanner } from '../global/AnnouncementBanner/AnnouncementBanner';
 import { useUIStore } from '../../stores/uiStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { clearURLParams } from '../../utils/urlStateUtils';
@@ -46,6 +47,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
       {/* Header hidden - production uses sidebar logo as branding */}
       {/* <Header /> */}
       
+      <AnnouncementBanner />
+
       {/* Loading bar at top of viewport - matches production */}
       <LoadingBar />
       

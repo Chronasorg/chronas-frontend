@@ -1,0 +1,51 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 40px;
+  background: #2b2520;
+  color: #c8b990;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  line-height: 1.4;
+}
+
+.link {
+  color: #c8b990;
+  text-decoration: underline;
+  font-weight: 700;
+  transition: opacity 0.2s;
+}
+
+.link:hover {
+  opacity: 0.85;
+}
+
+.closeButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #c8b990;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.closeButton:hover {
+  opacity: 1;
+}
