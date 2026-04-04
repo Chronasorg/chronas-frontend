@@ -90,6 +90,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }
             break;
           }
+          case 'help':
+            useUIStore.getState().toggleBanner();
+            break;
           case 'logout':
             if (isAuthenticated) {
               clearUser();

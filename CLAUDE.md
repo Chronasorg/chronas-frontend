@@ -19,6 +19,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | E2E UI mode | `npm run test:e2e:ui` |
 | Full CI check | `npm run ci` (lint + test + build) |
 | Deploy (dev) | `npm run deploy` |
+| Deploy (staging) | `npm run deploy:staging` |
+| Deploy (prod) | `npm run deploy:prod` |
 
 ## Architecture
 
@@ -82,4 +84,61 @@ Validated at startup in `src/config/env.ts`.
 
 ## Deployment
 
-AWS S3 + CloudFront. Script at `scripts/deploy.ts` syncs `dist/` to environment-specific buckets using `chronas-dev` AWS profile. Distribution IDs cached in `.deploy-config.json`.
+**Infrastructure:** AWS S3 + CloudFront, region `eu-west-1`.
+
+**Deploy script:** `scripts/deploy.ts` — builds the app, syncs `dist/` to S3, and invalidates the CloudFront cache. It auto-creates buckets and CloudFront distributions if they don't exist. Distribution IDs are cached in `.deploy-config.json`.
+
+### Environments
+
+| Environment | Command | AWS Profile | S3 Bucket | API URL |
+|-------------|---------|-------------|-----------|---------|
+| Development | `npm run deploy` | `chronas-dev` | `chronas-frontend-dev` | `https://api.chronas.org/v1` |
+| Staging | `npm run deploy:staging` | `chronas-dev` | `chronas-frontend-staging` | `https://api-staging.chronas.org/v1` |
+| Production | `npm run deploy:prod` | `chronas-prod` | `chronas-frontend-new` | `https://api.chronas.org/v1` |
+
+### CI/CD (GitHub Actions)
+
+Workflow at `.github/workflows/deploy-prod.yml`:
+- **Trigger:** Push to `main` branch
+- **Steps:** `npm ci` → `npm run lint` → `npm test` → `npm run deploy:prod`
+- **Concurrency:** Only one deploy runs at a time (`cancel-in-progress: true`)
+- **Secrets required:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (configured as GitHub repo secrets, uses `chronas-prod` profile)
+
+### Env files
+
+- `.env.development` — local dev (not committed, create manually)
+- `.env.staging` — staging builds
+- `.env.production` — production builds
+
+### Cache strategy
+
+- `index.html`: `max-age=0, must-revalidate` (always fresh)
+- `assets/*.js`, `*.css`, etc.: `max-age=31536000, immutable` (fingerprinted, long-cached)
+- CloudFront `/*` invalidation runs on every deploy
+
+### Production URLs
+
+- **App:** Served via CloudFront (URL in `.deploy-config.json` after first deploy)
+- **API:** `https://api.chronas.org/v1`
+- **Current production (old frontend):** `https://chronas.org`
+
+## Visual Verification
+
+**Always verify UI changes visually before reporting them as done.** Use Playwright headless browser to take screenshots after any frontend change:
+
+```bash
+# Screenshot local dev (wait for map/content to load)
+npx playwright screenshot --browser chromium --wait-for-timeout 5000 "http://localhost:5173" /tmp/screenshot.png --viewport-size "1400,900"
+
+# Screenshot production for comparison
+npx playwright screenshot --browser chromium --wait-for-timeout 5000 "https://chronas.org" /tmp/prod-screenshot.png --viewport-size "1400,900"
+```
+
+Steps for any UI change:
+1. Make the code change
+2. Run typecheck + lint to catch compile errors
+3. Start dev server if not running (`npm run dev`)
+4. Take a screenshot with Playwright and review it visually
+5. Only then report the change as done
+
+If Playwright browsers are not installed, run `npx playwright install chromium` first.

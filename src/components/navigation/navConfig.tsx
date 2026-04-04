@@ -22,7 +22,7 @@ import type React from 'react';
 /**
  * Action types for navigation items that don't navigate to a route.
  */
-export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings';
+export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help';
 
 /**
  * Navigation item configuration interface.
@@ -191,7 +191,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     id: 'help',
     icon: HelpIcon(),
     label: 'Help',
-    to: '/info',
+    action: 'help',
     section: 'bottom',
   },
   {

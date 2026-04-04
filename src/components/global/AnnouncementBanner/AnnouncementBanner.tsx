@@ -1,17 +1,11 @@
-import { useState } from 'react';
+import { useUIStore } from '../../../stores/uiStore';
 import styles from './AnnouncementBanner.module.css';
 
-const DISMISSED_KEY = 'chs_banner_dismissed';
-
 export const AnnouncementBanner: React.FC = () => {
-  const [visible, setVisible] = useState(() => localStorage.getItem(DISMISSED_KEY) !== '1');
+  const bannerVisible = useUIStore((s) => s.bannerVisible);
+  const toggleBanner = useUIStore((s) => s.toggleBanner);
 
-  if (!visible) return null;
-
-  const handleClose = () => {
-    setVisible(false);
-    localStorage.setItem(DISMISSED_KEY, '1');
-  };
+  if (!bannerVisible) return null;
 
   return (
     <div className={styles['banner']} role="banner">
@@ -26,7 +20,7 @@ export const AnnouncementBanner: React.FC = () => {
       </a>
       <button
         className={styles['closeButton']}
-        onClick={handleClose}
+        onClick={toggleBanner}
         aria-label="Dismiss banner"
       >
         &times;

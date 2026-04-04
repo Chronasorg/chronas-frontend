@@ -52,6 +52,8 @@ export interface UIState {
   rightDrawerOpen: boolean;
   /** Content displayed in the right drawer - Requirement 4.8 */
   rightDrawerContent: DrawerContent | null;
+  /** Whether the announcement banner is visible */
+  bannerVisible: boolean;
 }
 
 /**
@@ -68,6 +70,8 @@ export interface UIActions {
   openRightDrawer: (content: DrawerContent) => void;
   /** Closes the right drawer - Requirement 2.7 */
   closeRightDrawer: () => void;
+  /** Toggles the announcement banner */
+  toggleBanner: () => void;
 }
 
 /**
@@ -85,6 +89,7 @@ const defaultState: UIState = {
   isFullscreen: false,
   rightDrawerOpen: false,
   rightDrawerContent: null,
+  bannerVisible: true,
 };
 
 /**
@@ -202,6 +207,10 @@ export const useUIStore = create<UIStore>()(
           rightDrawerOpen: false,
           rightDrawerContent: null,
         });
+      },
+
+      toggleBanner: () => {
+        set((state) => ({ bannerVisible: !state.bannerVisible }));
       },
     }),
     {
