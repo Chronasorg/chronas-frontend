@@ -7,6 +7,9 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 // i18n initialization (must be imported before App)
 import './i18n/i18n';
 
+declare const __BUILD_TIMESTAMP__: string;
+console.log(`%cChronas build: ${__BUILD_TIMESTAMP__}`, 'color: #888; font-size: 10px;');
+
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {

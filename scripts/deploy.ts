@@ -56,9 +56,9 @@ const deployConfigs: Record<string, DeployConfig> = {
     environment: 'staging',
   },
   production: {
-    awsProfile: 'chronas-dev',
+    awsProfile: 'chronas-prod',
     awsRegion: 'eu-west-1',
-    s3Bucket: 'chronas-frontend-prod',
+    s3Bucket: 'chronas-frontend-new',
     cloudfrontDistributionId: '',
     environment: 'production',
   },
