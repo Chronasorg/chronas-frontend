@@ -32,4 +32,7 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile chronas-prod
           aws configure set region eu-west-1 --profile chronas-prod
 
-      - run: npm run deploy:prod
+      - name: Build and deploy
+        env:
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+        run: npm run deploy:prod

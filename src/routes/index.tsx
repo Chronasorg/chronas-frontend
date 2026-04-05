@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense, useState } from 'react';
 import { ROUTES } from './routes';
 import { AppShell, FeaturePlaceholder, HomePage as HomePageComponent } from '../components';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 // Lazy-loaded components for code splitting (NFR-1.4)
 const LoginForm = lazy(() => import('../components/auth/LoginForm/LoginForm'));
@@ -68,6 +69,8 @@ function ArticlePage() {
 }
 
 export default function AppRoutes() {
+  useAnalytics();
+
   return (
     <Routes>
       <Route path={ROUTES.HOME} element={<HomePage />} />
