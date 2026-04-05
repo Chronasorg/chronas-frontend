@@ -96,7 +96,7 @@ function VisTimelineWrapperComponent(
   const timelineRef = useRef<VisTimeline | null>(null);
   const itemsDataSetRef = useRef<DataSet<TimelineItem> | null>(null);
   const groupsDataSetRef = useRef<DataSet<TimelineGroup> | null>(null);
-  const customTimeIdsRef = useRef<Set<string>>(new Set());
+  const customTimeIdsRef = useRef(new Set());
 
   const handleClick = useCallback((properties: { event: MouseEvent; time: Date; item: string | null }) => {
     const clickEvent: TimelineClickEvent = { event: properties.event, time: properties.time, item: properties.item };

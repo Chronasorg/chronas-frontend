@@ -67,6 +67,8 @@ i18next via react-i18next. Setup in `src/i18n/`. Locale preference managed by ui
 - **Unit/integration:** Vitest + React Testing Library. Tests live alongside source as `*.test.ts` / `*.spec.tsx`.
 - **Property-based:** fast-check library, files named `*.property.test.ts`.
 - **E2E:** Playwright (Chromium only), tests in `tests/e2e/`.
+  - **Comprehensive UI suite:** `tests/e2e/comprehensive-ui.spec.ts` — 53 tests covering navigation sidebar, layers panel (area dimensions, marker filters, epic filters, advanced section), settings panel, right drawer, timeline controls, announcement banner, keyboard accessibility, and section collapse/expand.
+  - **Other E2E suites:** `navigation.spec.ts`, `layer-controls.spec.ts`, `map-interactions.spec.ts`, `marker-features.spec.ts`, `timeline-interactions.spec.ts`, etc.
 - **Setup file:** `tests/setup.ts` — mocks localStorage, atob/btoa, and environment.
 - **Mocks:** `tests/__mocks__/` — react-map-gl is mocked in unit tests.
 
@@ -122,9 +124,20 @@ Workflow at `.github/workflows/deploy-prod.yml`:
 - **API:** `https://api.chronas.org/v1`
 - **Current production (old frontend):** `https://chronas.org`
 
-## Visual Verification
+## Completion Checklist
 
-**Always verify UI changes visually before reporting them as done.** Use Playwright headless browser to take screenshots after any frontend change:
+**Before reporting any task as finished, always run the following steps:**
+
+1. `npm run lint` — ensure no lint errors
+2. `npm run build` — ensure the build succeeds
+3. `npm run test:e2e -- tests/e2e/comprehensive-ui.spec.ts` — run the comprehensive Playwright E2E test suite
+4. **MCP browser verification** — use the Playwright MCP server to navigate the running app (`http://localhost:5173`), take screenshots, and visually confirm the UI works correctly
+
+If Playwright browsers are not installed, run `npx playwright install chromium` first.
+
+### Visual Verification
+
+Use Playwright headless browser to take screenshots after any frontend change:
 
 ```bash
 # Screenshot local dev (wait for map/content to load)
@@ -133,12 +146,3 @@ npx playwright screenshot --browser chromium --wait-for-timeout 5000 "http://loc
 # Screenshot production for comparison
 npx playwright screenshot --browser chromium --wait-for-timeout 5000 "https://chronas.org" /tmp/prod-screenshot.png --viewport-size "1400,900"
 ```
-
-Steps for any UI change:
-1. Make the code change
-2. Run typecheck + lint to catch compile errors
-3. Start dev server if not running (`npm run dev`)
-4. Take a screenshot with Playwright and review it visually
-5. Only then report the change as done
-
-If Playwright browsers are not installed, run `npx playwright install chromium` first.

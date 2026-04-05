@@ -868,7 +868,7 @@ export function DeckGLOverlay(props: DeckGLOverlayProps) {
 
   // Track processed markers with clustering data
   const [processedMarkers, setProcessedMarkers] = useState<MarkerData[]>([]);
-  const prevZoomRef = useRef<number>(viewport.zoom);
+  const prevZoomRef = useRef(viewport.zoom);
 
   // Process markers for clustering when data or zoom changes
   useEffect(() => {

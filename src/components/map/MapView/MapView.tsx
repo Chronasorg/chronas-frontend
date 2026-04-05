@@ -50,7 +50,7 @@ export const YEAR_CHANGE_DEBOUNCE_MS = 300;
  * @returns The debounced value
  */
 export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
     // Set up the timeout to update the debounced value
@@ -408,14 +408,14 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   
   // Cursor position for tooltip positioning
   // Requirement 1.1: Tooltip appears at cursor position
-  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   
   // Track previous year to detect changes
   const prevYearRef = useRef<number | null>(null);
   
   // Track if initial data load has been done (after URL year is processed)
   // This prevents loading data before URL year is applied
-  const initialLoadDoneRef = useRef<boolean>(false);
+  const initialLoadDoneRef = useRef(false);
   
   // Selected marker state for popup display
   // Requirement 5.4: WHEN a marker is clicked, THE MapView SHALL display marker details
@@ -478,7 +478,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   // Requirement 2.2: WHEN the RightDrawer opens, THE MapView SHALL reduce its width by 25%
   const rightDrawerOpen = useUIStore((state) => state.rightDrawerOpen);
   // Track previous right drawer state to detect changes
-  const prevRightDrawerOpenRef = useRef<boolean>(rightDrawerOpen);
+  const prevRightDrawerOpenRef = useRef(rightDrawerOpen);
   const selectedYear = useTimelineStore((state) => state.selectedYear);
 
   // Menu drawer state for map left offset

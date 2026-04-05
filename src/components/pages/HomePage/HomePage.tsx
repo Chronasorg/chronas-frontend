@@ -30,7 +30,7 @@ export const HomePage: React.FC = () => {
   const selectedYear = useTimelineStore((state) => state.selectedYear);
   
   // Track previous year to detect changes for notification
-  const [prevYear, setPrevYear] = useState<number>(selectedYear);
+  const [prevYear, setPrevYear] = useState(selectedYear);
   
   // Year notification visibility state
   // Requirement 4.6: THE Year_Notification SHALL auto-hide after 6 seconds of inactivity

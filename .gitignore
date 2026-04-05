@@ -47,5 +47,11 @@ test-results/
 # Misc
 *.local
 
+# Playwright MCP
+.playwright-mcp/
+
+# Screenshots from testing
+screenshots/
+
 # Deployment config (contains distribution IDs)
 .deploy-config.json
