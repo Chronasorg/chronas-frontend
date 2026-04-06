@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import { lazy, Suspense, useState } from 'react';
 import { ROUTES } from './routes';
 import { AppShell, FeaturePlaceholder, HomePage as HomePageComponent } from '../components';

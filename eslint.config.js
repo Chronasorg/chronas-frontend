@@ -46,6 +46,7 @@ export default tseslint.config(
     rules: {
       // React Hooks rules
       ...reactHooks.configs.recommended.rules,
+      'react-hooks/set-state-in-effect': 'warn',
 
       // React Refresh rules for HMR
       'react-refresh/only-export-components': [
@@ -89,6 +90,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/non-nullable-type-assertion-style': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',

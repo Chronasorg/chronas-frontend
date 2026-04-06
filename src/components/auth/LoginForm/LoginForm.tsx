@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { apiClient } from '@/api/client';
 import { AUTH } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/authStore';
@@ -35,7 +35,7 @@ export function LoginForm({ onSwitchToSignup, testId = 'login-form' }: LoginForm
       const response = await apiClient.post<{ token: string }>(AUTH.LOGIN, { email, password });
       if (response.token) {
         setUser(response.token);
-        navigate('/');
+        void navigate('/');
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');

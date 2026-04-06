@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      '@': resolve(import.meta.dirname, './src'),
     },
   },
   // Optimize mapbox-gl for ESM compatibility
@@ -28,11 +28,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          state: ['zustand'],
+        manualChunks(id) {
+          if (id.includes('react-dom') || id.includes('react-router')) {
+            return 'vendor';
+          }
+          if (id.includes('zustand')) {
+            return 'state';
+          }
         },
       },
     },

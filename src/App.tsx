@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { HashRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router';
 import AppRoutes from './routes';
 import { useAuthStore } from './stores';
 import { useMapStore } from './stores/mapStore';

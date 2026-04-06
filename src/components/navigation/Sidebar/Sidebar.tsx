@@ -8,7 +8,7 @@
  */
 
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '../Logo';
 import { NavItem } from '../NavItem';
@@ -96,10 +96,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           case 'logout':
             if (isAuthenticated) {
               clearUser();
-              navigate('/');
+              void navigate('/');
             } else {
               // Trigger login flow
-              navigate('/login');
+              void navigate('/login');
             }
             break;
         }
@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
    */
   const handleAvatarClick = useCallback(() => {
     if (username) {
-      navigate(`/community/user/${username}`);
+      void navigate(`/community/user/${username}`);
     }
   }, [navigate, username]);
 

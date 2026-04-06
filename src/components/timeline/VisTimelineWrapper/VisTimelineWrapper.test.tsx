@@ -16,41 +16,40 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { createRef } from 'react';
 
 // Mock vis-timeline and vis-data since they require DOM APIs not available in jsdom
-vi.mock('vis-timeline', () => {
-  const mockTimeline = vi.fn().mockImplementation(() => ({
-    destroy: vi.fn(),
-    on: vi.fn(),
-    off: vi.fn(),
-    setWindow: vi.fn(),
-    getWindow: vi.fn().mockReturnValue({ start: new Date(), end: new Date() }),
-    setSelection: vi.fn(),
-    fit: vi.fn(),
-    moveTo: vi.fn(),
-    zoomIn: vi.fn(),
-    zoomOut: vi.fn(),
-    addCustomTime: vi.fn(),
-    setCustomTime: vi.fn(),
-    setOptions: vi.fn(),
-  }));
-
-  return {
-    Timeline: mockTimeline,
+const { mockTimelineClass, mockDataSetClass } = vi.hoisted(() => {
+  const fn = () => vi.fn();
+  const mockTimelineClass = class {
+    destroy = fn();
+    on = fn();
+    off = fn();
+    setWindow = fn();
+    getWindow = fn().mockReturnValue({ start: new Date(), end: new Date() });
+    setSelection = fn();
+    fit = fn();
+    moveTo = fn();
+    zoomIn = fn();
+    zoomOut = fn();
+    addCustomTime = fn();
+    setCustomTime = fn();
+    setOptions = fn();
   };
+  const mockDataSetClass = class {
+    clear = fn();
+    add = fn();
+    remove = fn();
+    update = fn();
+    get = fn().mockReturnValue([]);
+  };
+  return { mockTimelineClass, mockDataSetClass };
 });
 
-vi.mock('vis-data', () => {
-  const mockDataSet = vi.fn().mockImplementation(() => ({
-    clear: vi.fn(),
-    add: vi.fn(),
-    remove: vi.fn(),
-    update: vi.fn(),
-    get: vi.fn().mockReturnValue([]),
-  }));
+vi.mock('vis-timeline', () => ({
+  Timeline: mockTimelineClass,
+}));
 
-  return {
-    DataSet: mockDataSet,
-  };
-});
+vi.mock('vis-data', () => ({
+  DataSet: mockDataSetClass,
+}));
 
 // Mock CSS imports
 vi.mock('vis-timeline/styles/vis-timeline-graph2d.css', () => ({}));

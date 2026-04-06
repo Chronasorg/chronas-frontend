@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { apiClient } from '@/api/client';
 import { AUTH } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/authStore';
@@ -33,7 +33,7 @@ export function SignupForm({ onSwitchToLogin, testId = 'signup-form' }: SignupFo
       const response = await apiClient.post<{ token: string }>(AUTH.SIGNUP, { username, email, password });
       if (response.token) {
         setUser(response.token);
-        navigate('/');
+        void navigate('/');
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');

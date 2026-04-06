@@ -958,7 +958,7 @@ describe('Property 33: Arc Rendering', () => {
 
   it('should handle empty arc data arrays', () => {
     fc.assert(
-      fc.property(fc.constant([]), (arcs: ArcData[]) => {
+      fc.property(fc.constant([] as ArcData[]), (arcs: ArcData[]) => {
         expect(arcs).toHaveLength(0);
         expect(Array.isArray(arcs)).toBe(true);
       }),

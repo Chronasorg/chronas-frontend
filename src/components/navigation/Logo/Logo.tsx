@@ -14,7 +14,7 @@
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
  */
 
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import styles from './Logo.module.css';
 import { LOGO_SVG_PATHS } from './logoSvgPaths';
 import { useUIStore } from '../../../stores/uiStore';

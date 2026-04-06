@@ -693,6 +693,7 @@ describe('MapView Property Tests', () => {
     it('should handle sequential hover events correctly', () => {
       fc.assert(
         fc.property(hoverSequenceArb, (hoverEvents) => {
+          // eslint-disable-next-line no-useless-assignment
           let currentHoverInfo: (typeof hoverEvents)[0] | null = null;
 
           // Process each hover event

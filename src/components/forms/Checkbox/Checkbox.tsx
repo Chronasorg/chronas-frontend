@@ -84,7 +84,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
     if (indeterminate) {
       return defaultIndeterminateIcon;
     }
-    const isChecked = checked ?? inputRef.current?.checked ?? defaultChecked;
+    const isChecked = checked ?? defaultChecked ?? false;
     if (isChecked) {
       return checkedIcon ?? defaultCheckedIcon;
     }

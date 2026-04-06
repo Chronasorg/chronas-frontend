@@ -13,6 +13,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["node"],
 
     /* Linting - Strict settings */
     "strict": true,
@@ -27,9 +28,8 @@
     "forceConsistentCasingInFileNames": true,
 
     /* Path aliases */
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "tests"],
