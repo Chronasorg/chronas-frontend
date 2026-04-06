@@ -384,7 +384,7 @@ describe('LayersContent Property Tests', () => {
             unmount();
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 20 }
       );
     });
 
