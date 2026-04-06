@@ -256,8 +256,12 @@
 
 @media (max-width: 600px) {
   .drawer {
-    width: 85%;
+    width: 100% !important;
     min-width: unset;
-    max-width: 340px;
+    max-width: none;
+  }
+
+  .dragHandle {
+    display: none;
   }
 }
