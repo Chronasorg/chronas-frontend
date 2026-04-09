@@ -15,7 +15,7 @@
   left: 50px;
   right: 0;
   width: auto;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, 0.15) 100%);
   z-index: var(--z-timeline, 350);
   overflow: visible;
   box-sizing: border-box;
@@ -24,7 +24,7 @@
 
 /* Collapsed state */
 .collapsed {
-  height: 80px;
+  height: 110px;
 }
 
 /* Expanded state */
@@ -104,12 +104,12 @@
 
 /* Dark theme backdrop */
 [data-theme='dark'] .timeline {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0.2) 100%);
 }
 
 /* Luther theme backdrop */
 [data-theme='luther'] .timeline {
-  background: linear-gradient(to top, rgba(1, 28, 49, 0.7) 0%, rgba(1, 28, 49, 0.3) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(1, 28, 49, 0.85) 0%, rgba(1, 28, 49, 0.55) 60%, rgba(1, 28, 49, 0.15) 100%);
 }
 
 /* Print styles - hide timeline when printing */
@@ -209,6 +209,26 @@
   background-color: rgba(1, 28, 49, 0.95);
   color: var(--chronas-highlight, rgba(69, 28, 46, 200));
   border-color: rgba(255, 243, 211, 0.25);
+}
+
+/* Zoom hint — fades out after a few seconds */
+.zoomHint {
+  position: absolute;
+  right: 16px;
+  top: 30px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px 8px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 10;
+  animation: zoomHintFade 6s ease-in-out forwards;
+}
+
+@keyframes zoomHintFade {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Responsive adjustments */

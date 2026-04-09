@@ -1,0 +1,47 @@
+.eraBands {
+  position: absolute;
+  top: 24px;
+  left: 50px;
+  right: 0;
+  bottom: 18px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.eraBand {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.eraLabel {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-left: 6px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+@media (max-width: 767px) {
+  .eraBands {
+    left: 0;
+  }
+
+  .eraLabel {
+    font-size: 7px;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media print {
+  .eraBands {
+    display: none;
+  }
+}

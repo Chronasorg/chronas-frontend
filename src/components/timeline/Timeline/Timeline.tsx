@@ -22,6 +22,8 @@ import { AutoplayMenu } from '../AutoplayMenu/AutoplayMenu';
 import { EpicSearchAutocomplete } from '../EpicSearchAutocomplete/EpicSearchAutocomplete';
 import { VisTimelineWrapper, type TimelineItem, type TimelineGroup, type TimelineOptions, type VisTimelineRef, type TimelineClickEvent } from '../VisTimelineWrapper/VisTimelineWrapper';
 import { YearMarkerLabel } from '../YearMarkerLabel';
+import { CenturyNav } from '../CenturyNav';
+import { EraBands } from '../EraBands';
 import styles from './Timeline.module.css';
 
 /**
@@ -48,7 +50,7 @@ export interface TimelineProps {
 /**
  * Timeline heights in pixels
  */
-export const TIMELINE_HEIGHT_COLLAPSED = 80;
+export const TIMELINE_HEIGHT_COLLAPSED = 110;
 export const TIMELINE_HEIGHT_EXPANDED = 280;
 
 /**
@@ -94,6 +96,14 @@ export const Timeline: React.FC<TimelineProps> = ({
   // Ref for the vis-timeline wrapper
   const timelineRef = useRef<VisTimelineRef>(null);
 
+  // Zoom hint visibility — shown briefly on first render
+  const [showZoomHint, setShowZoomHint] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowZoomHint(false), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Local state for dialogs/menus
   const [isYearDialogOpen, setIsYearDialogOpen] = useState(false);
   const [isAutoplayMenuOpen, setIsAutoplayMenuOpen] = useState(false);
@@ -101,20 +111,21 @@ export const Timeline: React.FC<TimelineProps> = ({
   const [isDefaultView, setIsDefaultView] = useState(true);
 
   /**
-   * Get icon HTML for epic item based on subtype
-   * Matches production Map.js epic item content formatting
+   * Color dot HTML for each epic type — used as a visual category indicator.
    */
-  const getEpicIconHtml = useCallback((subtype: string, index: number): string => {
-    switch (subtype) {
-      case 'ei': // Discovery/invention
-        return '<img class="tsTicks discoveryIcon" src="/images/transparent.png" alt="" />';
-      case 'ps': // Person
-        return `<img class="tsTicks esIcon${(index % 3 === 0) ? '1' : '2'}" src="/images/transparent.png" alt="" />`;
-      case 'ew': // War
-        return ''; // Wars show title text, not icon
-      default:
-        return '';
-    }
+  const TYPE_DOT_COLORS: Record<string, string> = {
+    ew: '#e74c3c',  // war — red
+    ee: '#2ecc71',  // empire — green
+    ei: '#f39c12',  // discovery — orange
+    ps: '#3498db',  // person — blue
+    ec: '#f39c12',  // culture — orange
+    ebio: '#2ecc71', // biography — green
+    eb: '#e74c3c',  // battle — red
+  };
+
+  const getDotHtml = useCallback((subtype: string): string => {
+    const color = TYPE_DOT_COLORS[subtype] ?? 'rgba(180,180,180,0.6)';
+    return `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};margin-right:4px;flex-shrink:0;vertical-align:middle"></span>`;
   }, []);
 
   /**
@@ -143,13 +154,10 @@ export const Timeline: React.FC<TimelineProps> = ({
    * Requirements: 6.2, 6.4, 6.5
    * Matches production Map.js epic item formatting
    */
-  const transformEpicToTimelineItem = useCallback((epic: EpicItem, index: number): TimelineItem => {
-    const iconHtml = getEpicIconHtml(epic.subtype, index);
-    // For wars (ew), show the title; for others, show the icon
-    const contentHtml = epic.subtype === 'ew' 
-      ? `<div class="warContainer">${epic.content}</div>`
-      : `<div class="warContainer">${iconHtml}</div>`;
-    
+  const transformEpicToTimelineItem = useCallback((epic: EpicItem, _index: number): TimelineItem => {
+    const dot = getDotHtml(epic.subtype);
+    const contentHtml = `<div class="warContainer">${dot}${epic.content}</div>`;
+
     return {
       id: epic.id,
       content: contentHtml,
@@ -158,9 +166,9 @@ export const Timeline: React.FC<TimelineProps> = ({
       group: epic.group,
       type: 'range',
       className: epic.className ?? `timelineItem_${epic.subtype}`,
-      title: getEpicTooltipHtml(epic), // HTML tooltip
+      title: getEpicTooltipHtml(epic),
     };
-  }, [getEpicIconHtml, getEpicTooltipHtml]);
+  }, [getDotHtml, getEpicTooltipHtml]);
 
   /**
    * Get filtered epic items and transform to TimelineItem format
@@ -180,18 +188,32 @@ export const Timeline: React.FC<TimelineProps> = ({
    * Timeline options configuration
    * Matches production MapTimeline.js settings
    */
+  /**
+   * Compute a tighter default view window centered on the selected year (~500yr range)
+   */
+  const viewStart = useMemo(() => {
+    const y = selectedYear - 250;
+    const d = new Date(0, 0, 1);
+    d.setFullYear(y);
+    return d.toISOString();
+  }, []); // Only compute on mount — user scrolls from there
+
+  const viewEnd = useMemo(() => {
+    const y = selectedYear + 250;
+    const d = new Date(0, 0, 1);
+    d.setFullYear(y);
+    return d.toISOString();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const timelineOptions = useMemo((): TimelineOptions => ({
     width: '100%',
     height: isExpanded ? TIMELINE_HEIGHT_EXPANDED : TIMELINE_HEIGHT_COLLAPSED,
-    // Production uses -2500 to 2500 range
     min: '-002500-01-01',
     max: '2500-01-01',
-    // Start with a wide view showing full history range like production
-    start: '-000550-01-01',
-    end: '2050-01-01',
-    // zoomMin: ~10 years in ms - prevents zooming to months
+    start: viewStart,
+    end: viewEnd,
     zoomMin: 315360000000,
-    stack: isExpanded, // Only stack items when expanded (like production)
+    stack: isExpanded,
     showCurrentTime: false,
     editable: false,
     showMajorLabels: false,
@@ -199,9 +221,8 @@ export const Timeline: React.FC<TimelineProps> = ({
     horizontalScroll: true,
     zoomable: true,
     moveable: true,
-    // Force year-based time axis with 500-year steps matching production
-    timeAxis: { scale: 'year', step: 500 },
-  }), [isExpanded]);
+    timeAxis: { scale: 'year', step: 100 },
+  }), [isExpanded, viewStart, viewEnd]);
 
   /**
    * Custom time marker for current year
@@ -384,6 +405,18 @@ export const Timeline: React.FC<TimelineProps> = ({
     setIsAutoplayMenuOpen(false);
   }, [startAutoplay]);
 
+  const handleCenturyJump = useCallback((year: number) => {
+    setYear(year);
+    setIsDefaultView(false);
+    if (timelineRef.current) {
+      const start = new Date(0, 0, 1);
+      start.setFullYear(year - 250);
+      const end = new Date(0, 0, 1);
+      end.setFullYear(year + 250);
+      timelineRef.current.setWindow(start, end, { animation: true });
+    }
+  }, [setYear]);
+
   // Create portal container for timeline
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
@@ -430,6 +463,12 @@ export const Timeline: React.FC<TimelineProps> = ({
       aria-label="Timeline navigation"
     >
       <div className={styles['content']}>
+        {/* Century quick-nav bar */}
+        <CenturyNav selectedYear={selectedYear} onJumpToYear={handleCenturyJump} />
+
+        {/* Era background bands for orientation */}
+        <EraBands />
+
         {/* Timeline controls (Requirement 6.1-6.10) */}
         <TimelineControls
           isExpanded={isExpanded}
@@ -453,6 +492,13 @@ export const Timeline: React.FC<TimelineProps> = ({
           onTimelineClick={handleTimelineClick}
           className={styles['visTimeline'] ?? ''}
         />
+
+        {/* Zoom hint — fades after a few seconds */}
+        {showZoomHint && (
+          <div className={styles['zoomHint']} aria-hidden="true">
+            scroll to zoom &middot; drag to pan
+          </div>
+        )}
 
         {/* Year label on the red marker (like production) */}
         <YearMarkerLabel

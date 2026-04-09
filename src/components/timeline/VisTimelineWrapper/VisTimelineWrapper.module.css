@@ -8,7 +8,7 @@
 .container {
   width: 100%;
   height: 100%;
-  min-height: 80px;
+  min-height: 110px;
   position: relative;
 }
 
@@ -19,7 +19,7 @@
   background: transparent !important;
   visibility: visible !important;
   width: 100% !important;
-  height: 80px !important;
+  height: 110px !important;
   pointer-events: all;
   overflow: visible !important;
 }
@@ -108,66 +108,47 @@
  * Requirements: 10.1, 10.7, 10.8
  * ============================================ */
 
-/* Base item styling */
+/* Base item styling — intentionally no background; type-specific rules set colors */
 .container :global(.vis-item) {
-  background-color: rgba(255, 255, 255, 0.25);
-  border: 1px solid var(--chronas-border, rgba(200, 200, 200, 0.5));
-  border-radius: 2px;
-  color: var(--chronas-fore-2, #494949);
+  border: none;
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 12px;
   transition: background-color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Epic item specific styling - semi-transparent backgrounds */
+/* Epic item specific styling */
 .container :global(.vis-item.epic-item) {
-  background-color: rgba(255, 255, 255, 0.25);
-  border: 1px solid var(--chronas-border, rgba(200, 200, 200, 0.5));
+  border: none;
   border-radius: 3px;
   padding: 2px 6px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   overflow: visible;
 }
 
-/* Hover effects for epic items */
+/* Hover effects for epic items — type-specific :hover rules add the color */
 .container :global(.vis-item:hover),
 .container :global(.vis-item.epic-item:hover) {
-  background-color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   opacity: 1;
 }
 
 /* Active/pressed state */
 .container :global(.vis-item:active),
 .container :global(.vis-item.epic-item:active) {
-  background-color: rgba(255, 255, 255, 0.55);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Selected item styling */
-.container :global(.vis-item.vis-selected),
-.container :global(.vis-item.epic-item.vis-selected) {
-  background-color: var(--chronas-highlight, #4a90d9);
-  border-color: var(--chronas-highlight, #4a90d9);
-  color: white;
-  box-shadow: 0 2px 6px rgba(74, 144, 217, 0.4);
-}
-
-/* Range item styling - matches production */
+/* Range item styling — base defaults only, type-specific colors below */
 .container :global(.vis-item.vis-range),
 .container :global(.vis-item.epic-item.vis-range) {
-  border-radius: 2px;
-  height: 20px !important;
-  line-height: 20px;
+  border-radius: 3px;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
-  background-color: rgba(255, 255, 255, 0.35) !important;
-  /* Hide bracket-like left/right end caps */
-  border-left-color: transparent !important;
-  border-right-color: transparent !important;
-  border-top: none !important;
-  border-bottom: none !important;
   overflow: hidden;
 }
 
@@ -182,12 +163,15 @@
 /* warContainer — truncated epic name label */
 .container :global(.vis-item.vis-range .warContainer) {
   font-size: 10px;
-  font-weight: 500;
-  line-height: 20px;
+  font-weight: 600;
+  line-height: 22px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: rgba(0, 0, 0, 0.75);
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
 }
 
 /* Ensure vis-item-overflow is visible for icons */
@@ -348,120 +332,161 @@
  * Matches production main.scss timelineItem_* classes
  * ============================================ */
 
-/* War epic items (ew) */
+/* War epic items (ew) — red */
 .container :global(.vis-item.timelineItem_ew) {
-  background-color: rgba(255, 255, 255, 0.4) !important;
+  background-color: rgba(231, 76, 60, 0.55) !important;
   border: none !important;
-  border-bottom: 1px solid rgba(122, 0, 0, 0.3) !important;
+  border-left: 3px solid #e74c3c !important;
+  border-bottom: 2px solid #c0392b !important;
+  border-radius: 3px !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 20px;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
 }
 
 .container :global(.vis-item.timelineItem_ew:hover) {
-  background-color: white !important;
-  border-color: transparent !important;
+  background-color: rgba(231, 76, 60, 0.75) !important;
   z-index: 1000;
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 45px, rgba(0, 0, 0, 0.22) 0px 10px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .container :global(.vis-item.timelineItem_ew.vis-selected) {
   z-index: 1000;
-  border: 1px solid rgb(214, 0, 0) !important;
-  background: white !important;
+  border: 2px solid #e74c3c !important;
+  background: rgba(231, 76, 60, 0.85) !important;
+  color: white !important;
 }
 
-/* Empire epic items (ee) */
+/* Empire epic items (ee) — green */
 .container :global(.vis-item.timelineItem_ee) {
-  background-color: rgba(0, 140, 36, 0.12) !important;
+  background-color: rgba(46, 204, 113, 0.5) !important;
   border: none !important;
-  border-bottom: 1px solid rgba(0, 140, 36, 0.35) !important;
+  border-left: 3px solid #27ae60 !important;
+  border-bottom: 2px solid #27ae60 !important;
+  border-radius: 3px !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 20px;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
 }
 
 .container :global(.vis-item.timelineItem_ee:hover) {
-  background-color: white !important;
-  border-color: transparent !important;
+  background-color: rgba(46, 204, 113, 0.7) !important;
   z-index: 1000;
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 45px, rgba(0, 0, 0, 0.22) 0px 10px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .container :global(.vis-item.timelineItem_ee.vis-selected) {
-  border: 2px solid rgb(0, 140, 36) !important;
-  background: white !important;
+  border: 2px solid #27ae60 !important;
+  background: rgba(46, 204, 113, 0.85) !important;
+  color: white !important;
   z-index: 1000;
 }
 
-/* Discovery/invention epic items (ei) - matches production main.scss */
+/* Discovery/invention epic items (ei) — orange */
 .container :global(.vis-item.timelineItem_ei) {
-  background-color: transparent !important;
-  border-color: transparent !important;
-  pointer-events: none;
-  height: 20px !important;
-  line-height: 20px;
+  background-color: rgba(243, 156, 18, 0.5) !important;
+  border: none !important;
+  border-left: 3px solid #f39c12 !important;
+  border-bottom: 2px solid #e67e22 !important;
+  border-radius: 3px !important;
+  cursor: pointer;
+  pointer-events: auto;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
+}
+
+.container :global(.vis-item.timelineItem_ei:hover) {
+  background-color: rgba(243, 156, 18, 0.7) !important;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .container :global(.vis-item.timelineItem_ei.vis-selected) {
-  border-color: transparent !important;
+  border: 2px solid #e67e22 !important;
+  background: rgba(243, 156, 18, 0.85) !important;
+  color: white !important;
+  z-index: 1000;
 }
 
-/* Person epic items (ps) - matches production main.scss */
+/* Person epic items (ps) — blue */
 .container :global(.vis-item.timelineItem_ps) {
-  background-color: transparent !important;
-  border-color: transparent !important;
-  pointer-events: none;
-  height: 20px !important;
-  line-height: 20px;
+  background-color: rgba(52, 152, 219, 0.5) !important;
+  border: none !important;
+  border-left: 3px solid #3498db !important;
+  border-bottom: 2px solid #2980b9 !important;
+  border-radius: 3px !important;
+  cursor: pointer;
+  pointer-events: auto;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
+}
+
+.container :global(.vis-item.timelineItem_ps:hover) {
+  background-color: rgba(52, 152, 219, 0.7) !important;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .container :global(.vis-item.timelineItem_ps.vis-selected) {
-  border-color: transparent !important;
+  border: 2px solid #2980b9 !important;
+  background: rgba(52, 152, 219, 0.85) !important;
+  color: white !important;
+  z-index: 1000;
 }
 
-/* Biography epic items (ebio) */
+/* Biography epic items (ebio) — green */
 .container :global(.vis-item.timelineItem_ebio) {
-  background-color: rgba(0, 128, 0, 0.1) !important;
+  background-color: rgba(46, 204, 113, 0.45) !important;
   border: none !important;
-  border-bottom: 1px solid rgba(0, 128, 0, 0.3) !important;
+  border-left: 3px solid #27ae60 !important;
+  border-bottom: 2px solid #27ae60 !important;
+  border-radius: 3px !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 20px;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
 }
 
-/* Culture epic items (ec) */
+/* Culture epic items (ec) — orange */
 .container :global(.vis-item.timelineItem_ec) {
-  background-color: rgba(255, 165, 0, 0.1) !important;
+  background-color: rgba(243, 156, 18, 0.5) !important;
   border: none !important;
-  border-bottom: 1px solid rgba(255, 165, 0, 0.3) !important;
+  border-left: 3px solid #f39c12 !important;
+  border-bottom: 2px solid #e67e22 !important;
+  border-radius: 3px !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 20px;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
 }
 
-/* Other epic items (eo) */
+/* Other epic items (eo) — gray */
 .container :global(.vis-item.timelineItem_eo) {
-  background-color: rgba(180, 180, 180, 0.15) !important;
+  background-color: rgba(180, 180, 180, 0.4) !important;
   border: none !important;
-  border-bottom: 1px solid rgba(180, 180, 180, 0.3) !important;
+  border-left: 3px solid rgba(180, 180, 180, 0.7) !important;
+  border-bottom: 2px solid rgba(180, 180, 180, 0.5) !important;
+  border-radius: 3px !important;
   cursor: pointer;
-  height: 20px !important;
-  line-height: 20px;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
 }
 
-/* Battle epic items (eb) - transparent background */
+/* Battle epic items (eb) — red */
 .container :global(.vis-item.timelineItem_eb) {
-  background: transparent !important;
-  height: 20px !important;
-  line-height: 20px;
+  background-color: rgba(231, 76, 60, 0.45) !important;
+  border: none !important;
+  border-left: 3px solid #e74c3c !important;
+  border-bottom: 2px solid #c0392b !important;
+  border-radius: 3px !important;
+  cursor: pointer;
+  height: 22px !important;
+  line-height: 22px;
   margin-top: 1px;
 }
 
