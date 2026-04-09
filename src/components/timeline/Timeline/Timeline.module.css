@@ -15,7 +15,7 @@
   left: 50px;
   right: 0;
   width: auto;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, 0.15) 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.8) 60%, rgba(0, 0, 0, 0.4) 100%);
   z-index: var(--z-timeline, 350);
   overflow: visible;
   box-sizing: border-box;
@@ -104,12 +104,12 @@
 
 /* Dark theme backdrop */
 [data-theme='dark'] .timeline {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, rgba(0, 0, 0, 0.2) 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 60%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 /* Luther theme backdrop */
 [data-theme='luther'] .timeline {
-  background: linear-gradient(to top, rgba(1, 28, 49, 0.85) 0%, rgba(1, 28, 49, 0.55) 60%, rgba(1, 28, 49, 0.15) 100%);
+  background: linear-gradient(to top, rgba(1, 28, 49, 0.95) 0%, rgba(1, 28, 49, 0.8) 60%, rgba(1, 28, 49, 0.4) 100%);
 }
 
 /* Print styles - hide timeline when printing */
