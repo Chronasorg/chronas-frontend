@@ -436,7 +436,7 @@ export interface MapActions {
    *
    * @returns Promise that resolves with the metadata or null on error
    */
-  loadMetadata: () => Promise<EntityMetadata | null>;
+  loadMetadata: (locale?: string) => Promise<EntityMetadata | null>;
 
   /**
    * Gets the color for an entity value from metadata.
@@ -1575,7 +1575,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
    *
    * @returns Promise that resolves with the metadata or null on error
    */
-  loadMetadata: async (): Promise<EntityMetadata | null> => {
+  loadMetadata: async (locale?: string): Promise<EntityMetadata | null> => {
     set({ isLoadingMetadata: true });
 
     try {
@@ -1584,25 +1584,44 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
       // Extract provinces GeoJSON if available
       const provincesData = data['provinces'] as FeatureCollection<Polygon | MultiPolygon> | undefined;
-      
+
       // Extract entity metadata
       const rulerData = data['ruler'] as Record<string, [string, string, string?, string?]> | undefined;
       const cultureData = data['culture'] as Record<string, [string, string, string?, string?]> | undefined;
       const religionData = data['religion'] as Record<string, [string, string, string?, string?, string?]> | undefined;
       const religionGeneralData = data['religionGeneral'] as Record<string, [string, string, string?, string?]> | undefined;
 
+      // If non-English locale, fetch localized names (API returns plain strings, not arrays)
+      let localizedNames: Record<string, Record<string, string>> | undefined;
+      if (locale && locale !== 'en') {
+        try {
+          const locData = await apiClient.get<Record<string, unknown>>(
+            METADATA.GET_INIT_LOCALIZED(locale)
+          );
+          localizedNames = {
+            ruler: (locData['ruler'] ?? {}) as Record<string, string>,
+            culture: (locData['culture'] ?? {}) as Record<string, string>,
+            religion: (locData['religion'] ?? {}) as Record<string, string>,
+            religionGeneral: (locData['religionGeneral'] ?? {}) as Record<string, string>,
+          };
+        } catch {
+          // Localized names are optional — fall back to English
+        }
+      }
+
       // Convert array format to MetadataEntry format
       // Original format: [name, color, wiki?, icon?, parent?]
       const convertToMetadataEntry = (
         record: Record<string, [string, string, string?, string?, string?]> | undefined,
-        hasParent = false
+        hasParent = false,
+        locNames?: Record<string, string>
       ): Record<string, MetadataEntry> => {
         if (!record) return {};
         const result: Record<string, MetadataEntry> = {};
         for (const [key, value] of Object.entries(record)) {
           if (Array.isArray(value) && value.length >= 2) {
             result[key] = {
-              name: value[0] || key,
+              name: locNames?.[key] ?? (value[0] ? value[0] : key),
               color: value[1] || FALLBACK_COLOR,
               ...(value[2] ? { wiki: value[2] } : {}),
               ...(hasParent && value[3] ? { parent: value[3] } : {}),
@@ -1614,10 +1633,10 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
       // Build EntityMetadata from the response
       const metadata: EntityMetadata = {
-        ruler: convertToMetadataEntry(rulerData),
-        culture: convertToMetadataEntry(cultureData),
-        religion: convertToMetadataEntry(religionData, true),
-        religionGeneral: convertToMetadataEntry(religionGeneralData),
+        ruler: convertToMetadataEntry(rulerData, false, localizedNames?.['ruler']),
+        culture: convertToMetadataEntry(cultureData, false, localizedNames?.['culture']),
+        religion: convertToMetadataEntry(religionData, true, localizedNames?.['religion']),
+        religionGeneral: convertToMetadataEntry(religionGeneralData, false, localizedNames?.['religionGeneral']),
       };
 
       // Set provinces GeoJSON if available

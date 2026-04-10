@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { HashRouter } from 'react-router';
 import AppRoutes from './routes';
 import { useAuthStore } from './stores';
@@ -58,16 +58,26 @@ function App() {
   const selectedYear = useTimelineStore((state) => state.selectedYear);
   const setYear = useTimelineStore((state) => state.setYear);
   const loadEpicItems = useTimelineStore((state) => state.loadEpicItems);
+  const locale = useUIStore((state) => state.locale);
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
   const closeRightDrawer = useUIStore((state) => state.closeRightDrawer);
+
+  // Re-fetch metadata when locale changes to get localized entity names
+  const localeRef = useRef(locale);
+  useEffect(() => {
+    if (localeRef.current !== locale) {
+      localeRef.current = locale;
+      void loadMetadata(locale);
+    }
+  }, [locale, loadMetadata]);
 
   // Initialize stores on mount
   // Requirement 2.1: WHEN the application initializes, THE Map_Store SHALL fetch metadata
   // Requirement 9.4: THE application SHALL restore drawer state from URL on page load
   useEffect(() => {
     loadFromStorage();
-    // Load metadata for entity colors on app startup
-    void loadMetadata();
+    // Load metadata for entity colors on app startup (with current locale)
+    void loadMetadata(locale);
     // Load epic items for timeline display
     void loadEpicItems();
     

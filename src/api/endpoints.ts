@@ -106,6 +106,12 @@ export const METADATA = {
    */
   GET_INIT: '/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral',
   /**
+   * Get localized entity names.
+   * The API returns translated names as plain strings (not arrays).
+   */
+  GET_INIT_LOCALIZED: (locale: string) =>
+    `/metadata?type=g&locale=${locale}&f=ruler_${locale},culture_${locale},religion_${locale},religionGeneral_${locale}`,
+  /**
    * Get province timeline data (historical rulers, cultures, religions, capitals over time).
    * Returns aggregated province data with type=ap.
    * Requirements: US-3.4

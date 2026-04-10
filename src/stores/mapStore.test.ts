@@ -1675,6 +1675,247 @@ describe('entity outline', () => {
       });
     });
 
+    describe('loadMetadata with locale', () => {
+      // Mock data matching real API response format:
+      // Standard endpoint returns arrays: [name, color, wiki?, icon?, parent?]
+      const standardApiResponse = {
+        provinces: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        ruler: {
+          _Almohad_Caliphate: [
+            'Almohad Caliphate',
+            'rgb(92,66,0)',
+            'Almohad_Caliphate',
+            '6/65/Flag_of_Morocco_%281147-1269%29.svg',
+          ],
+          _Spanish_Empire: [
+            'Spanish Empire',
+            'rgb(199,170,0)',
+            'Spanish_Empire',
+            'f/f5/Flag_of_Cross_of_Burgundy.svg',
+          ],
+          _Kingdom_of_England: [
+            'Kingdom of England',
+            'rgb(181,0,51)',
+            'Kingdom_of_England',
+            '0/00/Royal_Coat_of_Arms_of_England.svg',
+          ],
+        },
+        culture: {
+          chamic: [
+            'Chamic',
+            'rgb(26,23,127)',
+            'List_of_indigenous_peoples',
+            'd/d2/ChamicalCOA.jpeg',
+          ],
+          mysian: ['Mysian', 'rgb(100,50,50)', 'Mysians'],
+        },
+        religion: {
+          chalcedonism: [
+            'CHRISTIANITY',
+            'rgb(191,166,0)',
+            'Pentecost',
+            'Christianity',
+            'f/f0/Duccio.jpg',
+          ],
+        },
+        religionGeneral: {
+          Shamanism: [
+            'Shamanism',
+            'rgb(191,191,191)',
+            'Shamanism',
+            '1/15/Tengrist_symbol.png',
+          ],
+        },
+      };
+
+      // Localized endpoint returns plain strings (translated names), not arrays
+      const localizedDeResponse = {
+        ruler: {
+          _Almohad_Caliphate: 'Almohaden',
+          _Spanish_Empire: 'Spanisches Kolonialreich',
+          _Kingdom_of_England: 'Königreich England',
+        },
+        culture: {
+          chamic: 'Liste indigener Völker',
+          mysian: 'Mysier',
+        },
+        religion: {
+          chalcedonism: 'Christentum',
+        },
+        religionGeneral: {
+          Shamanism: 'Schamanismus',
+        },
+      };
+
+      // Helper: set up mockGet to route responses by URL pattern
+      function setupMetadataMock(
+        locResponse?: Record<string, unknown> | Error
+      ) {
+        mockGet.mockImplementation((url: string) => {
+          if (url.includes('locale=')) {
+            if (locResponse instanceof Error) return Promise.reject(locResponse);
+            return Promise.resolve(locResponse ?? {});
+          }
+          if (url.includes('type=g')) {
+            return Promise.resolve(standardApiResponse);
+          }
+          return Promise.reject(new Error(`Unexpected URL: ${url}`));
+        });
+      }
+
+      it('should load standard metadata without locale', async () => {
+        setupMetadataMock();
+
+        let result: EntityMetadata | null = null;
+        await act(async () => {
+          result = await useMapStore.getState().loadMetadata();
+        });
+
+        expect(result).not.toBeNull();
+
+        // Names should be English (from array[0])
+        expect(result!.ruler['_Almohad_Caliphate']?.name).toBe('Almohad Caliphate');
+        expect(result!.ruler['_Spanish_Empire']?.name).toBe('Spanish Empire');
+        expect(result!.culture['chamic']?.name).toBe('Chamic');
+        expect(result!.religion['chalcedonism']?.name).toBe('CHRISTIANITY');
+        expect(result!.religionGeneral['Shamanism']?.name).toBe('Shamanism');
+
+        // Colors should be preserved
+        expect(result!.ruler['_Almohad_Caliphate']?.color).toBe('rgb(92,66,0)');
+        expect(result!.culture['chamic']?.color).toBe('rgb(26,23,127)');
+      });
+
+      it('should load standard metadata with locale "en" (no localized fetch)', async () => {
+        setupMetadataMock();
+
+        let result: EntityMetadata | null = null;
+        await act(async () => {
+          result = await useMapStore.getState().loadMetadata('en');
+        });
+
+        expect(result).not.toBeNull();
+        // No localized request should have been made
+        const locCalls = mockGet.mock.calls.filter(
+          (c) => typeof c[0] === 'string' && (c[0] as string).includes('locale=')
+        );
+        expect(locCalls).toHaveLength(0);
+        expect(result!.ruler['_Almohad_Caliphate']?.name).toBe('Almohad Caliphate');
+      });
+
+      it('should overlay localized names when locale is non-English', async () => {
+        setupMetadataMock(localizedDeResponse);
+
+        let result: EntityMetadata | null = null;
+        await act(async () => {
+          result = await useMapStore.getState().loadMetadata('de');
+        });
+
+        expect(result).not.toBeNull();
+
+        // A localized request should have been made
+        const locCalls = mockGet.mock.calls.filter(
+          (c) => typeof c[0] === 'string' && (c[0] as string).includes('locale=de')
+        );
+        expect(locCalls.length).toBeGreaterThan(0);
+
+        // Names should be German (from localized response)
+        expect(result!.ruler['_Almohad_Caliphate']?.name).toBe('Almohaden');
+        expect(result!.ruler['_Spanish_Empire']?.name).toBe('Spanisches Kolonialreich');
+        expect(result!.ruler['_Kingdom_of_England']?.name).toBe('Königreich England');
+        expect(result!.culture['chamic']?.name).toBe('Liste indigener Völker');
+        expect(result!.culture['mysian']?.name).toBe('Mysier');
+        expect(result!.religion['chalcedonism']?.name).toBe('Christentum');
+        expect(result!.religionGeneral['Shamanism']?.name).toBe('Schamanismus');
+
+        // Colors, wiki, parent should still come from the standard response
+        expect(result!.ruler['_Almohad_Caliphate']?.color).toBe('rgb(92,66,0)');
+        expect(result!.ruler['_Almohad_Caliphate']?.wiki).toBe('Almohad_Caliphate');
+        expect(result!.culture['chamic']?.color).toBe('rgb(26,23,127)');
+        expect(result!.religion['chalcedonism']?.color).toBe('rgb(191,166,0)');
+        expect(result!.religion['chalcedonism']?.parent).toBe('Christianity');
+      });
+
+      it('should fall back to English names when localized fetch fails', async () => {
+        setupMetadataMock(new Error('Localization not available'));
+
+        let result: EntityMetadata | null = null;
+        await act(async () => {
+          result = await useMapStore.getState().loadMetadata('de');
+        });
+
+        expect(result).not.toBeNull();
+        // Names should be English (fallback)
+        expect(result!.ruler['_Almohad_Caliphate']?.name).toBe('Almohad Caliphate');
+        expect(result!.culture['chamic']?.name).toBe('Chamic');
+        // Colors still intact
+        expect(result!.ruler['_Almohad_Caliphate']?.color).toBe('rgb(92,66,0)');
+      });
+
+      it('should handle partial localized data (only some entities translated)', async () => {
+        const partialLocalized = {
+          ruler: {
+            _Almohad_Caliphate: 'Almohaden',
+            // _Spanish_Empire and _Kingdom_of_England not translated
+          },
+          culture: {},
+          // religion and religionGeneral missing entirely
+        };
+
+        setupMetadataMock(partialLocalized);
+
+        let result: EntityMetadata | null = null;
+        await act(async () => {
+          result = await useMapStore.getState().loadMetadata('de');
+        });
+
+        expect(result).not.toBeNull();
+        // Translated entry uses localized name
+        expect(result!.ruler['_Almohad_Caliphate']?.name).toBe('Almohaden');
+        // Non-translated entries fall back to English
+        expect(result!.ruler['_Spanish_Empire']?.name).toBe('Spanish Empire');
+        expect(result!.ruler['_Kingdom_of_England']?.name).toBe('Kingdom of England');
+        expect(result!.culture['chamic']?.name).toBe('Chamic');
+        expect(result!.religion['chalcedonism']?.name).toBe('CHRISTIANITY');
+        expect(result!.religionGeneral['Shamanism']?.name).toBe('Shamanism');
+      });
+
+      it('should store metadata in the store after localized load', async () => {
+        setupMetadataMock(localizedDeResponse);
+
+        await act(async () => {
+          await useMapStore.getState().loadMetadata('de');
+        });
+
+        const state = useMapStore.getState();
+        expect(state.metadata).not.toBeNull();
+        expect(state.isLoadingMetadata).toBe(false);
+        expect(state.metadata!.ruler['_Almohad_Caliphate']?.name).toBe('Almohaden');
+      });
+
+      it('should call the localized endpoint with correct locale parameter', async () => {
+        setupMetadataMock(localizedDeResponse);
+
+        await act(async () => {
+          await useMapStore.getState().loadMetadata('de');
+        });
+
+        // Find the localized call
+        const locCall = mockGet.mock.calls.find(
+          (c) => typeof c[0] === 'string' && (c[0] as string).includes('locale=')
+        );
+        expect(locCall).toBeDefined();
+        const locUrl = locCall![0] as string;
+        expect(locUrl).toContain('locale=de');
+        expect(locUrl).toContain('ruler_de');
+        expect(locUrl).toContain('culture_de');
+        expect(locUrl).toContain('religion_de');
+        expect(locUrl).toContain('religionGeneral_de');
+      });
+    });
+
     describe('setMetadata', () => {
       it('should store metadata correctly', () => {
         act(() => {

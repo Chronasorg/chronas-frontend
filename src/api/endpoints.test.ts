@@ -36,6 +36,24 @@ describe('API Endpoints', () => {
     it('should handle empty type parameter', () => {
       expect(METADATA.GET_BY_TYPE('')).toBe('/metadata?type=');
     });
+
+    it('should generate GET_INIT_LOCALIZED endpoint with locale-suffixed fields', () => {
+      const url = METADATA.GET_INIT_LOCALIZED('de');
+      expect(url).toBe(
+        '/metadata?type=g&locale=de&f=ruler_de,culture_de,religion_de,religionGeneral_de'
+      );
+    });
+
+    it('should generate GET_INIT_LOCALIZED for other locales', () => {
+      const esUrl = METADATA.GET_INIT_LOCALIZED('es');
+      expect(esUrl).toContain('locale=es');
+      expect(esUrl).toContain('ruler_es');
+      expect(esUrl).toContain('culture_es');
+
+      const frUrl = METADATA.GET_INIT_LOCALIZED('fr');
+      expect(frUrl).toContain('locale=fr');
+      expect(frUrl).toContain('ruler_fr');
+    });
   });
 
   describe('MARKERS endpoints', () => {

@@ -473,6 +473,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const setHoveredMarker = useMapStore((state) => state.setHoveredMarker);
   const getEntityWiki = useMapStore((state) => state.getEntityWiki);
   const theme = useUIStore((state) => state.theme);
+  const locale = useUIStore((state) => state.locale);
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
   // Right drawer state for width adjustment
   // Requirement 2.2: WHEN the RightDrawer opens, THE MapView SHALL reduce its width by 25%
@@ -1027,6 +1028,36 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       img.src = '/images/themed-atlas.png';
     }
   }, []);
+
+  /**
+   * Switch Mapbox basemap label language when locale changes.
+   * Mapbox vector styles have layers like 'country-label', 'state-label', etc.
+   * that support localized names via 'name_xx' properties.
+   */
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !isLoaded) return;
+
+    const mapboxLocale = locale === 'zh' ? 'zh-Hans' : locale;
+    try {
+      const style = map.getStyle();
+      for (const layer of style.layers) {
+        if (
+          layer.type === 'symbol' &&
+          layer.layout?.['text-field'] &&
+          layer.id.includes('label')
+        ) {
+          map.setLayoutProperty(layer.id, 'text-field', [
+            'coalesce',
+            ['get', `name_${mapboxLocale}`],
+            ['get', 'name'],
+          ]);
+        }
+      }
+    } catch {
+      // Style may not be loaded yet — ignore
+    }
+  }, [locale, isLoaded, basemap]);
 
   /**
    * Handles flyTo animation completion.
