@@ -1799,7 +1799,7 @@ describe('entity outline', () => {
         expect(result).not.toBeNull();
         // No localized request should have been made
         const locCalls = mockGet.mock.calls.filter(
-          (c) => typeof c[0] === 'string' && (c[0] as string).includes('locale=')
+          (c) => typeof c[0] === 'string' && c[0].includes('locale=')
         );
         expect(locCalls).toHaveLength(0);
         expect(result!.ruler['_Almohad_Caliphate']?.name).toBe('Almohad Caliphate');
@@ -1817,7 +1817,7 @@ describe('entity outline', () => {
 
         // A localized request should have been made
         const locCalls = mockGet.mock.calls.filter(
-          (c) => typeof c[0] === 'string' && (c[0] as string).includes('locale=de')
+          (c) => typeof c[0] === 'string' && c[0].includes('locale=de')
         );
         expect(locCalls.length).toBeGreaterThan(0);
 
@@ -1904,7 +1904,7 @@ describe('entity outline', () => {
 
         // Find the localized call
         const locCall = mockGet.mock.calls.find(
-          (c) => typeof c[0] === 'string' && (c[0] as string).includes('locale=')
+          (c) => typeof c[0] === 'string' && c[0].includes('locale=')
         );
         expect(locCall).toBeDefined();
         const locUrl = locCall![0] as string;
