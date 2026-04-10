@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './LayersContent.module.css';
 import { LayerToggle } from '../../map/LayerToggle/LayerToggle';
 import { ToggleSwitch } from '../../ui/ToggleSwitch/ToggleSwitch';
@@ -26,6 +27,13 @@ interface MarkerTypeConfig {
 
 const ICON_WIDTH = 135;
 const ICON_HEIGHT = 127;
+
+/** i18n key suffix for each marker type */
+const MARKER_TYPE_I18N: Record<string, string> = {
+  ar: 'artifact', b: 'battle', si: 'siege', cp: 'capital', c: 'city', ca: 'castle',
+  l: 'landmark', m: 'military', p: 'politician', e: 'explorer', s: 'scientist',
+  a: 'artist', r: 'religious', at: 'athlete', op: 'unclassified', o: 'unknown',
+};
 
 const MARKER_TYPES: MarkerTypeConfig[] = [
   { type: 'ar', label: 'Artifact', iconX: 0, iconY: 3 * ICON_HEIGHT },
@@ -52,6 +60,11 @@ const BASEMAP_OPTIONS: BasemapOption[] = [
   { value: 'watercolor', label: 'Watercolor' },
   { value: 'none', label: 'None' },
 ];
+
+/** i18n key suffix for each epic type */
+const EPIC_TYPE_I18N: Record<string, string> = {
+  war: 'wars', empire: 'empires', religion: 'religion', culture: 'culture', person: 'people', other: 'other',
+};
 
 interface EpicTypeConfig { type: EpicType; label: string; icon: string; }
 const EPIC_TYPE_CONFIGS: EpicTypeConfig[] = [
@@ -125,6 +138,7 @@ const MarkerFilters: React.FC<{
   clusterMarkers: boolean;
   onClusterChange: (enabled: boolean) => void;
 }> = ({ filters, onFilterChange, markerLimit, onMarkerLimitChange, clusterMarkers, onClusterChange }) => {
+  const { t } = useTranslation();
   const allEnabled = MARKER_TYPES.every((mt) => filters[mt.type] !== false);
   const handleToggleAll = useCallback(() => {
     const v = !allEnabled;
@@ -136,7 +150,7 @@ const MarkerFilters: React.FC<{
       <div className={styles['toggleAllRow']}>
         <button type="button" className={styles['toggleAllButton']} onClick={handleToggleAll}
           aria-label={allEnabled ? 'Uncheck all marker types' : 'Check all marker types'} data-testid="toggle-all-markers">
-          {allEnabled ? 'Uncheck All' : 'Check All'}
+          {allEnabled ? t('layers.uncheckAll', 'Uncheck All') : t('layers.checkAll', 'Check All')}
         </button>
       </div>
       <div className={styles['markerTypeList']}>
@@ -145,30 +159,31 @@ const MarkerFilters: React.FC<{
           const bgX = Math.round(mt.iconX * coeff);
           const bgY = Math.round(mt.iconY * coeff);
           const isActive = filters[mt.type] !== false;
+          const label = t(`layers.markerTypes.${MARKER_TYPE_I18N[mt.type] ?? mt.type}`, mt.label);
           return (
             <label key={mt.type} className={styles['markerTypeRow']} data-testid={`marker-filter-${mt.type}`}>
               <input type="checkbox" checked={isActive} onChange={(e) => onFilterChange(mt.type, e.target.checked)}
-                className={styles['markerCheckbox']} aria-label={`Show ${mt.label} markers`} />
+                className={styles['markerCheckbox']} aria-label={label} />
               <span className={styles['markerIcon']} aria-hidden="true" style={{
                 backgroundImage: 'url(/images/themed-atlas.png)',
                 backgroundPosition: `-${String(bgX)}px -${String(bgY)}px`,
                 backgroundSize: `${String(Math.round(540 * coeff))}px ${String(Math.round(893 * coeff))}px`,
                 opacity: isActive ? 1 : 0.3,
               }} />
-              <span className={styles['markerLabel']}>{mt.label}</span>
+              <span className={styles['markerLabel']}>{label}</span>
             </label>
           );
         })}
       </div>
       <div className={styles['sliderRow']}>
-        <label htmlFor="marker-limit" className={styles['sliderLabel']}>Marker Limit: {markerLimit.toLocaleString()}</label>
+        <label htmlFor="marker-limit" className={styles['sliderLabel']}>{t('layers.markerLimit', 'Marker Limit')}: {markerLimit.toLocaleString()}</label>
         <input id="marker-limit" type="range" min={0} max={10000} step={100} value={markerLimit}
           onChange={(e) => onMarkerLimitChange(Number(e.target.value))} className={styles['slider']}
-          aria-label="Marker limit" data-testid="marker-limit-slider" />
+          aria-label={t('layers.markerLimit', 'Marker Limit')} data-testid="marker-limit-slider" />
       </div>
       <div className={styles['toggleRow']} data-testid="cluster-markers-toggle">
-        <span className={styles['toggleLabel']}>Cluster Markers</span>
-        <ToggleSwitch checked={clusterMarkers} onChange={onClusterChange} label="Cluster markers" testId="cluster-markers-switch" />
+        <span className={styles['toggleLabel']}>{t('layers.clusterMarkers', 'Cluster Markers')}</span>
+        <ToggleSwitch checked={clusterMarkers} onChange={onClusterChange} label={t('layers.clusterMarkers', 'Cluster Markers')} testId="cluster-markers-switch" />
       </div>
     </div>
   );
@@ -180,6 +195,7 @@ const EpicFilters: React.FC<{
   onFilterChange: (type: EpicType, enabled: boolean) => void;
   onSetAllFilters: (enabled: boolean) => void;
 }> = ({ filters, onFilterChange, onSetAllFilters }) => {
+  const { t } = useTranslation();
   const allEnabled = EPIC_TYPES.every((type) => filters[type]);
   const handleToggleAll = useCallback(() => { onSetAllFilters(!allEnabled); }, [allEnabled, onSetAllFilters]);
   return (
@@ -187,18 +203,21 @@ const EpicFilters: React.FC<{
       <div className={styles['toggleAllRow']}>
         <button type="button" className={styles['toggleAllButton']} onClick={handleToggleAll}
           aria-label={allEnabled ? 'Uncheck all epic types' : 'Check all epic types'} data-testid="toggle-all-epics">
-          {allEnabled ? 'Uncheck All' : 'Check All'}
+          {allEnabled ? t('layers.uncheckAll', 'Uncheck All') : t('layers.checkAll', 'Check All')}
         </button>
       </div>
       <div className={styles['epicTypeList']}>
-        {EPIC_TYPE_CONFIGS.map((config) => (
-          <label key={config.type} className={styles['epicTypeRow']} data-testid={`epic-filter-${config.type}`}>
-            <input type="checkbox" checked={filters[config.type]} onChange={(e) => onFilterChange(config.type, e.target.checked)}
-              className={styles['epicCheckbox']} aria-label={`Show ${config.label} epics`} />
-            <span className={styles['epicIcon']} aria-hidden="true">{config.icon}</span>
-            <span className={styles['epicLabel']}>{config.label}</span>
-          </label>
-        ))}
+        {EPIC_TYPE_CONFIGS.map((config) => {
+          const label = t(`layers.epicTypes.${EPIC_TYPE_I18N[config.type] ?? config.type}`, config.label);
+          return (
+            <label key={config.type} className={styles['epicTypeRow']} data-testid={`epic-filter-${config.type}`}>
+              <input type="checkbox" checked={filters[config.type]} onChange={(e) => onFilterChange(config.type, e.target.checked)}
+                className={styles['epicCheckbox']} aria-label={label} />
+              <span className={styles['epicIcon']} aria-hidden="true">{config.icon}</span>
+              <span className={styles['epicLabel']}>{label}</span>
+            </label>
+          );
+        })}
       </div>
     </div>
   );
@@ -215,6 +234,7 @@ export interface LayersContentProps {
  * Two white cards: General (Area, Markers, Epics, Migration) and Advanced (Basemap, toggles).
  */
 export const LayersContent: React.FC<LayersContentProps> = ({ className, testId = 'layers-content', onClose }) => {
+  const { t } = useTranslation();
   const [areaExpanded, setAreaExpanded] = useState(true);
   const [markersExpanded, setMarkersExpanded] = useState(true);
   const [epicsExpanded, setEpicsExpanded] = useState(true);
@@ -256,7 +276,7 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
       {/* Layers banner header - production style with shadow and close chevron */}
       <div className={styles['layersBanner']} data-testid="layers-header">
         <div className={styles['layersBannerTitle']}>
-          <span>Layers</span>
+          <span>{t('layers.title', 'Layers')}</span>
         </div>
         {onClose && (
           <div className={styles['layersBannerClose']}>
@@ -275,22 +295,22 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
       <div className={styles['card']} data-testid="general-section">
         <button type="button" className={styles['cardHeaderBtn']} onClick={() => setGeneralExpanded(!generalExpanded)}
           aria-expanded={generalExpanded} aria-controls="general-section-content" data-testid="general-section-toggle">
-          <span className={styles['cardHeader']}>GENERAL</span>
+          <span className={styles['cardHeader']}>{t('layers.general', 'GENERAL')}</span>
         </button>
         {generalExpanded && (
           <div className={styles['sectionContent']} data-testid="general-section-content">
-            <ListItem icon={ICONS.area} label="Area" expanded={areaExpanded}
+            <ListItem icon={ICONS.area} label={t('layers.area', 'Area')} expanded={areaExpanded}
               onToggle={() => setAreaExpanded(!areaExpanded)} testId="area-section">
               <LayerToggle activeColor={activeColor} activeLabel={activeLabel} locked={colorLabelLocked}
                 onColorChange={handleColorChange} onLabelChange={handleLabelChange} onLockChange={handleLockChange} />
             </ListItem>
-            <ListItem icon={ICONS.markers} label="Markers" expanded={markersExpanded}
+            <ListItem icon={ICONS.markers} label={t('layers.markers', 'Markers')} expanded={markersExpanded}
               onToggle={() => setMarkersExpanded(!markersExpanded)} testId="markers-section">
               <MarkerFilters filters={markerFilters} onFilterChange={handleMarkerFilterChange}
                 markerLimit={markerLimit} onMarkerLimitChange={setMarkerLimit}
                 clusterMarkers={clusterMarkers} onClusterChange={setClusterMarkers} />
             </ListItem>
-            <ListItem icon={ICONS.epics} label="Epics" expanded={epicsExpanded}
+            <ListItem icon={ICONS.epics} label={t('layers.epics', 'Epics')} expanded={epicsExpanded}
               onToggle={() => setEpicsExpanded(!epicsExpanded)} testId="epics-section">
               <EpicFilters filters={epicFilters} onFilterChange={setEpicFilter} onSetAllFilters={setAllEpicFilters} />
             </ListItem>
@@ -302,18 +322,18 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
       <div className={styles['hiddenSection']} data-testid="advanced-section">
         <button type="button" className={styles['cardHeaderBtn']} onClick={() => setAdvancedExpanded(!advancedExpanded)}
           aria-expanded={advancedExpanded} aria-controls="advanced-section-content" data-testid="advanced-section-toggle">
-          <span className={styles['cardHeader']}>Advanced</span>
+          <span className={styles['cardHeader']}>{t('layers.advanced', 'Advanced')}</span>
         </button>
         {advancedExpanded && (
           <div className={styles['sectionContent']} data-testid="advanced-section-content">
             <div className={styles['basemapRow']} data-testid="advanced-settings">
               <select value={basemap} onChange={(e) => setBasemap(e.target.value as BasemapType)}
                 className={styles['basemapSelect']} data-testid="basemap-select" aria-label="Basemap">
-                {BASEMAP_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {BASEMAP_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(`layers.basemapTypes.${o.value}`, o.label)}</option>)}
               </select>
             </div>
             <label className={styles['toggleRow']} data-testid="show-provinces-toggle">
-              <div className={styles['toggleLabel']}>Show Provinces</div>
+              <div className={styles['toggleLabel']}>{t('layers.showProvinces', 'Show Provinces')}</div>
               <ToggleSwitch checked={showProvinceBorders} onChange={setShowProvinceBorders}
                 label="Show province borders" testId="show-provinces-switch" />
             </label>
@@ -325,7 +345,7 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
       {/* Suggestions footer */}
       <div className={styles['suggestions']}>
         <div className={styles['suggestionsText']}>
-          <p><i><a className={styles['suggestionsLink']}>Suggestions</a> based on your machine...</i></p>
+          <p><i>{t('layers.suggestions', 'Suggestions based on your machine...')}</i></p>
         </div>
       </div>
     </div>

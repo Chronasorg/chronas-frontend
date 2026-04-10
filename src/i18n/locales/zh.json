@@ -3,12 +3,29 @@
     "layers": "图层",
     "discover": "发现",
     "random": "随机文章",
+    "configuration": "配置",
     "settings": "配置",
     "pro": "专业版",
     "collections": "收藏",
     "play": "播放",
     "help": "帮助",
-    "logout": "退出"
+    "logout": "退出登录",
+    "community": "社区论坛",
+    "account": "管理账户"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signingIn": "正在登录...",
+    "creatingAccount": "正在创建账户...",
+    "email": "电子邮件",
+    "password": "密码",
+    "username": "用户名",
+    "or": "或",
+    "noAccount": "还没有账户？",
+    "hasAccount": "已经有账户？",
+    "loginFailed": "登录失败。请检查您的凭据。",
+    "signupFailed": "注册失败。请重试。"
   },
   "map": {
     "loading": "地图加载中...",
@@ -19,5 +36,99 @@
     "capital": "首都",
     "population": "人口"
   },
-  "common": { "loading": "加载中...", "close": "关闭", "back": "返回", "ad": "年", "bc": "公元前" }
+  "layers": {
+    "title": "图层",
+    "general": "通用",
+    "advanced": "高级",
+    "area": "区域",
+    "label": "标注",
+    "markers": "标记",
+    "epics": "重大事件",
+    "migration": "迁移",
+    "basemap": "底图",
+    "showProvinces": "显示省份",
+    "opacityByPopulation": "按人口设置透明度",
+    "clusterMarkers": "聚合标记",
+    "markerLimit": "标记上限",
+    "uncheckAll": "取消全选",
+    "checkAll": "全部选择",
+    "suggestions": "基于您设备的建议...",
+    "markerTypes": {
+      "artifact": "文物",
+      "battle": "战役",
+      "siege": "围城",
+      "capital": "首都",
+      "city": "城市",
+      "castle": "城堡",
+      "landmark": "地标",
+      "military": "军事人物",
+      "politician": "政治家",
+      "explorer": "探险家",
+      "scientist": "科学家",
+      "artist": "艺术家",
+      "religious": "宗教人物",
+      "athlete": "运动员",
+      "unclassified": "未分类",
+      "unknown": "未知"
+    },
+    "basemapTypes": {
+      "topographic": "地形图",
+      "watercolor": "水彩",
+      "none": "无"
+    },
+    "epicTypes": {
+      "wars": "战争",
+      "empires": "帝国",
+      "religion": "宗教",
+      "culture": "文化",
+      "people": "人物",
+      "other": "其他"
+    }
+  },
+  "settings": {
+    "title": "配置",
+    "theme": "主题",
+    "language": "语言",
+    "fullscreen": "全屏",
+    "toggle": "切换",
+    "fontType": "字体",
+    "markerType": "标记类型",
+    "themes": {
+      "light": "浅色",
+      "dark": "深色",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "展开时间轴",
+    "collapseTimeline": "收起时间轴",
+    "resetView": "重置时间轴视图",
+    "searchEpics": "搜索重大事件",
+    "autoplay": "开始自动播放",
+    "stopAutoplay": "停止自动播放",
+    "autoplayTitle": "自动播放",
+    "autoplaySubtitle": "按步长更改年份",
+    "startYear": "起始年份",
+    "endYear": "结束年份",
+    "stepSize": "步长（年）",
+    "delay": "延迟（秒）",
+    "repeat": "重复",
+    "startSlideshow": "开始幻灯片放映"
+  },
+  "drawer": {
+    "noContent": "未选择内容",
+    "closePanel": "关闭面板",
+    "provinceDataNotAvailable": "此选择没有可用的省份数据。"
+  },
+  "common": {
+    "loading": "加载中...",
+    "close": "关闭",
+    "cancel": "取消",
+    "save": "保存",
+    "edit": "编辑",
+    "delete": "删除",
+    "back": "返回",
+    "ad": "公元",
+    "bc": "公元前"
+  }
 }

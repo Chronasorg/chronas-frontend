@@ -9,6 +9,7 @@
 
 import type React from 'react';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './TimelineControls.module.css';
 
 /**
@@ -181,6 +182,7 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
   leftOffset,
   className,
 }) => {
+  const { t } = useTranslation();
   const containerClasses = [
     styles['timelineControls'],
     className ?? '',
@@ -200,7 +202,7 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
     >
       {/* Expand/Collapse Button (Requirement 6.2, 6.3) */}
       <ControlButton
-        label={isExpanded ? 'Collapse timeline' : 'Expand timeline'}
+        label={isExpanded ? t('timeline.collapseTimeline', 'Collapse timeline') : t('timeline.expandTimeline', 'Expand timeline')}
         onClick={onToggleExpand}
         icon={<ExpandIcon isExpanded={isExpanded} />}
         testId="expand-button"
@@ -208,7 +210,7 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
 
       {/* Reset Button (Requirement 6.4, 6.5) */}
       <ControlButton
-        label="Reset timeline view"
+        label={t('timeline.resetView', 'Reset timeline view')}
         onClick={onReset}
         disabled={isDefaultView}
         icon={<ResetIcon />}
@@ -217,7 +219,7 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
 
       {/* Search Button (Requirement 6.6) */}
       <ControlButton
-        label="Search epics"
+        label={t('timeline.searchEpics', 'Search epics')}
         onClick={onSearchOpen}
         icon={<SearchIcon />}
         testId="search-button"
@@ -225,7 +227,7 @@ export const TimelineControls: React.FC<TimelineControlsProps> = ({
 
       {/* Autoplay Button (Requirement 6.7) */}
       <ControlButton
-        label={isAutoplayActive ? 'Stop autoplay' : 'Start autoplay'}
+        label={isAutoplayActive ? t('timeline.stopAutoplay', 'Stop autoplay') : t('timeline.autoplay', 'Start autoplay')}
         onClick={onAutoplayOpen}
         icon={<AutoplayIcon isActive={isAutoplayActive} />}
         testId="autoplay-button"

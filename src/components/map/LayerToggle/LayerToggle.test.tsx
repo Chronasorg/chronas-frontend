@@ -492,30 +492,24 @@ describe('LayerToggle', () => {
       render(<LayerToggle {...defaultProps} locked={true} />);
 
       const cultureAreaRadio = screen.getByTestId('area-radio-culture');
-      expect(cultureAreaRadio).toHaveAttribute(
-        'aria-label',
-        'Set area color to Culture (also sets label when locked)'
-      );
+      expect(cultureAreaRadio).toHaveAttribute('aria-label', 'Culture');
     });
 
     it('should have descriptive aria-label on Label radio buttons', () => {
       render(<LayerToggle {...defaultProps} locked={true} />);
 
       const cultureLabelRadio = screen.getByTestId('label-radio-culture');
-      expect(cultureLabelRadio).toHaveAttribute(
-        'aria-label',
-        'Set label to Culture (also sets area color when locked)'
-      );
+      expect(cultureLabelRadio).toHaveAttribute('aria-label', 'Culture');
     });
 
     it('should have different aria-label when unlocked', () => {
       render(<LayerToggle {...defaultProps} locked={false} />);
 
       const cultureAreaRadio = screen.getByTestId('area-radio-culture');
-      expect(cultureAreaRadio).toHaveAttribute('aria-label', 'Set area color to Culture');
+      expect(cultureAreaRadio).toHaveAttribute('aria-label', 'Culture');
 
       const cultureLabelRadio = screen.getByTestId('label-radio-culture');
-      expect(cultureLabelRadio).toHaveAttribute('aria-label', 'Set label to Culture');
+      expect(cultureLabelRadio).toHaveAttribute('aria-label', 'Culture');
     });
 
     it('should have descriptive aria-label on lock toggle', () => {

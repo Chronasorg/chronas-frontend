@@ -767,10 +767,10 @@ describe('LayersContent', () => {
         render(<LayersContent />);
         
         const warCheckbox = within(screen.getByTestId('epic-filter-war')).getByRole('checkbox');
-        expect(warCheckbox).toHaveAttribute('aria-label', 'Show Wars epics');
-        
+        expect(warCheckbox).toHaveAttribute('aria-label', 'Wars');
+
         const empireCheckbox = within(screen.getByTestId('epic-filter-empire')).getByRole('checkbox');
-        expect(empireCheckbox).toHaveAttribute('aria-label', 'Show Empires epics');
+        expect(empireCheckbox).toHaveAttribute('aria-label', 'Empires');
       });
     });
 

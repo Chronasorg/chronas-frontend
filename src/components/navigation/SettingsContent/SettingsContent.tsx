@@ -8,14 +8,10 @@ interface SettingsContentProps {
   onClose: () => void;
 }
 
-const THEMES: { value: Theme; label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'luther', label: 'Luther' },
-];
+const THEME_VALUES: Theme[] = ['light', 'dark', 'luther'];
 
 export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onClose }) => {
-  const { i18n } = useTranslation();
+  const { t } = useTranslation();
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
   const locale = useUIStore((s) => s.locale);
@@ -26,40 +22,38 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLocale = e.target.value;
-    setLocale(newLocale);
-    void i18n.changeLanguage(newLocale);
+    setLocale(e.target.value);
   };
 
   return (
     <div className={styles['container']} data-testid="settings-content">
 
       <div className={styles['section']}>
-        <div className={styles['sectionLabel']}>Theme</div>
+        <div className={styles['sectionLabel']}>{t('settings.theme', 'Theme')}</div>
         <div className={styles['themeButtons']}>
-          {THEMES.map((t) => (
+          {THEME_VALUES.map((v) => (
             <button
-              key={t.value}
+              key={v}
               type="button"
-              className={`${styles['themeBtn'] ?? ''} ${theme === t.value ? (styles['themeBtnActive'] ?? '') : ''}`}
-              onClick={() => handleThemeChange(t.value)}
-              data-testid={`theme-btn-${t.value}`}
-              aria-pressed={theme === t.value}
+              className={`${styles['themeBtn'] ?? ''} ${theme === v ? (styles['themeBtnActive'] ?? '') : ''}`}
+              onClick={() => handleThemeChange(v)}
+              data-testid={`theme-btn-${v}`}
+              aria-pressed={theme === v}
             >
-              {t.label}
+              {t(`settings.themes.${v}`, v)}
             </button>
           ))}
         </div>
       </div>
 
       <div className={styles['section']}>
-        <div className={styles['sectionLabel']}>Language</div>
+        <div className={styles['sectionLabel']}>{t('settings.language', 'Language')}</div>
         <select
           className={styles['languageSelect']}
           value={locale}
           onChange={handleLanguageChange}
           data-testid="language-select"
-          aria-label="Language"
+          aria-label={t('settings.language', 'Language')}
         >
           {SUPPORTED_LANGUAGES.map((lang) => (
             <option key={lang.code} value={lang.code}>

@@ -3,21 +3,132 @@
     "layers": "Livelli",
     "discover": "Scopri",
     "random": "Articolo casuale",
+    "configuration": "Configurazione",
     "settings": "Configurazione",
     "pro": "Versione PRO",
     "collections": "Collezioni",
     "play": "Gioca",
     "help": "Aiuto",
-    "logout": "Esci"
+    "logout": "Esci",
+    "community": "Forum della comunità",
+    "account": "Gestisci account"
+  },
+  "auth": {
+    "signIn": "Accedi",
+    "signUp": "Registrati",
+    "signingIn": "Accesso in corso...",
+    "creatingAccount": "Creazione account...",
+    "email": "E-mail",
+    "password": "Password",
+    "username": "Nome utente",
+    "or": "o",
+    "noAccount": "Non hai un account?",
+    "hasAccount": "Hai già un account?",
+    "loginFailed": "Accesso fallito. Controlla le tue credenziali.",
+    "signupFailed": "Registrazione fallita. Riprova."
   },
   "map": {
     "loading": "Caricamento mappa...",
     "ruler": "Sovrano",
     "culture": "Cultura",
     "religion": "Religione",
-    "religionGeneral": "Religione Generale",
+    "religionGeneral": "Religione generale",
     "capital": "Capitale",
     "population": "Popolazione"
   },
-  "common": { "loading": "Caricamento...", "close": "Chiudi", "back": "Indietro", "ad": "d.C.", "bc": "a.C." }
+  "layers": {
+    "title": "Livelli",
+    "general": "GENERALE",
+    "advanced": "Avanzato",
+    "area": "Zona",
+    "label": "Etichetta",
+    "markers": "Marcatori",
+    "epics": "Epopee",
+    "migration": "Migrazione",
+    "basemap": "Mappa di base",
+    "showProvinces": "Mostra province",
+    "opacityByPopulation": "Opacità per popolazione",
+    "clusterMarkers": "Raggruppa marcatori",
+    "markerLimit": "Limite marcatori",
+    "uncheckAll": "Deseleziona tutti",
+    "checkAll": "Seleziona tutti",
+    "suggestions": "Suggerimenti basati sul tuo dispositivo...",
+    "markerTypes": {
+      "artifact": "Artefatto",
+      "battle": "Battaglia",
+      "siege": "Assedio",
+      "capital": "Capitale",
+      "city": "Città",
+      "castle": "Castello",
+      "landmark": "Punto di riferimento",
+      "military": "Militare",
+      "politician": "Politico",
+      "explorer": "Esploratore",
+      "scientist": "Scienziato",
+      "artist": "Artista",
+      "religious": "Religioso",
+      "athlete": "Atleta",
+      "unclassified": "Non classificato",
+      "unknown": "Sconosciuto"
+    },
+    "basemapTypes": {
+      "topographic": "Topografico",
+      "watercolor": "Acquerello",
+      "none": "Nessuno"
+    },
+    "epicTypes": {
+      "wars": "Guerre",
+      "empires": "Imperi",
+      "religion": "Religione",
+      "culture": "Cultura",
+      "people": "Persone",
+      "other": "Altro"
+    }
+  },
+  "settings": {
+    "title": "Configurazione",
+    "theme": "Tema",
+    "language": "Lingua",
+    "fullscreen": "Schermo intero",
+    "toggle": "Attiva/Disattiva",
+    "fontType": "Carattere",
+    "markerType": "Tipo di marcatore",
+    "themes": {
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Espandi cronologia",
+    "collapseTimeline": "Comprimi cronologia",
+    "resetView": "Reimposta vista cronologia",
+    "searchEpics": "Cerca epopee",
+    "autoplay": "Avvia riproduzione automatica",
+    "stopAutoplay": "Ferma riproduzione automatica",
+    "autoplayTitle": "RIPRODUZIONE AUTOMATICA",
+    "autoplaySubtitle": "CAMBIA L'ANNO IN BASE AL PASSO",
+    "startYear": "Anno di inizio",
+    "endYear": "Anno di fine",
+    "stepSize": "Passo in anni",
+    "delay": "Ritardo in secondi",
+    "repeat": "Ripeti",
+    "startSlideshow": "AVVIA PRESENTAZIONE"
+  },
+  "drawer": {
+    "noContent": "Nessun contenuto selezionato",
+    "closePanel": "Chiudi pannello",
+    "provinceDataNotAvailable": "Dati della provincia non disponibili per questa selezione."
+  },
+  "common": {
+    "loading": "Caricamento...",
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "back": "Indietro",
+    "ad": "d.C.",
+    "bc": "a.C."
+  }
 }

@@ -3,21 +3,132 @@
     "layers": "Lager",
     "discover": "Upptäck",
     "random": "Slumpmässig artikel",
+    "configuration": "Konfiguration",
     "settings": "Konfiguration",
     "pro": "PRO-version",
     "collections": "Samlingar",
     "play": "Spela",
     "help": "Hjälp",
-    "logout": "Logga ut"
+    "logout": "Logga ut",
+    "community": "Gemenskapsforum",
+    "account": "Hantera konto"
+  },
+  "auth": {
+    "signIn": "Logga in",
+    "signUp": "Registrera",
+    "signingIn": "Loggar in...",
+    "creatingAccount": "Skapar konto...",
+    "email": "E-post",
+    "password": "Lösenord",
+    "username": "Användarnamn",
+    "or": "eller",
+    "noAccount": "Har du inget konto?",
+    "hasAccount": "Har du redan ett konto?",
+    "loginFailed": "Inloggningen misslyckades. Kontrollera dina uppgifter.",
+    "signupFailed": "Registreringen misslyckades. Försök igen."
   },
   "map": {
     "loading": "Laddar karta...",
     "ruler": "Härskare",
     "culture": "Kultur",
     "religion": "Religion",
-    "religionGeneral": "Religion Allmän",
+    "religionGeneral": "Religion allmän",
     "capital": "Huvudstad",
     "population": "Befolkning"
   },
-  "common": { "loading": "Laddar...", "close": "Stäng", "back": "Tillbaka", "ad": "e.Kr.", "bc": "f.Kr." }
+  "layers": {
+    "title": "Lager",
+    "general": "ALLMÄNT",
+    "advanced": "Avancerat",
+    "area": "Område",
+    "label": "Etikett",
+    "markers": "Markörer",
+    "epics": "Epos",
+    "migration": "Migration",
+    "basemap": "Baskarta",
+    "showProvinces": "Visa provinser",
+    "opacityByPopulation": "Opacitet efter befolkning",
+    "clusterMarkers": "Gruppera markörer",
+    "markerLimit": "Markörsgräns",
+    "uncheckAll": "Avmarkera alla",
+    "checkAll": "Markera alla",
+    "suggestions": "Förslag baserat på din enhet...",
+    "markerTypes": {
+      "artifact": "Artefakt",
+      "battle": "Slag",
+      "siege": "Belägring",
+      "capital": "Huvudstad",
+      "city": "Stad",
+      "castle": "Slott",
+      "landmark": "Landmärke",
+      "military": "Militär",
+      "politician": "Politiker",
+      "explorer": "Upptäcktsresande",
+      "scientist": "Vetenskapsman",
+      "artist": "Konstnär",
+      "religious": "Religiös",
+      "athlete": "Idrottsman",
+      "unclassified": "Oklassificerad",
+      "unknown": "Okänd"
+    },
+    "basemapTypes": {
+      "topographic": "Topografisk",
+      "watercolor": "Akvarell",
+      "none": "Ingen"
+    },
+    "epicTypes": {
+      "wars": "Krig",
+      "empires": "Imperier",
+      "religion": "Religion",
+      "culture": "Kultur",
+      "people": "Personer",
+      "other": "Övrigt"
+    }
+  },
+  "settings": {
+    "title": "Konfiguration",
+    "theme": "Tema",
+    "language": "Språk",
+    "fullscreen": "Helskärm",
+    "toggle": "Växla",
+    "fontType": "Typsnitt",
+    "markerType": "Markörtyp",
+    "themes": {
+      "light": "Ljust",
+      "dark": "Mörkt",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Expandera tidslinje",
+    "collapseTimeline": "Minimera tidslinje",
+    "resetView": "Återställ tidslinjevy",
+    "searchEpics": "Sök epos",
+    "autoplay": "Starta automatisk uppspelning",
+    "stopAutoplay": "Stoppa automatisk uppspelning",
+    "autoplayTitle": "AUTOMATISK UPPSPELNING",
+    "autoplaySubtitle": "ÄNDRAR ÅR EFTER STEGSTORLEK",
+    "startYear": "Startår",
+    "endYear": "Slutår",
+    "stepSize": "Stegstorlek i år",
+    "delay": "Fördröjning i sekunder",
+    "repeat": "Upprepa",
+    "startSlideshow": "STARTA BILDSPEL"
+  },
+  "drawer": {
+    "noContent": "Inget innehåll valt",
+    "closePanel": "Stäng panel",
+    "provinceDataNotAvailable": "Provinsdata inte tillgänglig för detta val."
+  },
+  "common": {
+    "loading": "Laddar...",
+    "close": "Stäng",
+    "cancel": "Avbryt",
+    "save": "Spara",
+    "edit": "Redigera",
+    "delete": "Ta bort",
+    "back": "Tillbaka",
+    "ad": "e.Kr.",
+    "bc": "f.Kr."
+  }
 }

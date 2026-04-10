@@ -9,6 +9,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import i18n from '@/i18n/i18n';
 import type { Marker } from '@/api/types';
 
 /**
@@ -148,6 +149,7 @@ export const useUIStore = create<UIStore>()(
           console.warn(`Invalid locale value: ${String(locale)}, ignoring`);
           return;
         }
+        void i18n.changeLanguage(locale);
         set({ locale });
       },
 
@@ -246,6 +248,8 @@ export const useUIStore = create<UIStore>()(
           }
           // Apply the theme to the document element on rehydration
           applyThemeToDocument(state.theme);
+          // Sync persisted locale to i18next
+          void i18n.changeLanguage(state.locale);
         }
       },
     }

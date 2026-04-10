@@ -3,12 +3,29 @@
     "layers": "परतें",
     "discover": "खोजें",
     "random": "यादृच्छिक लेख",
+    "configuration": "कॉन्फ़िगरेशन",
     "settings": "कॉन्फ़िगरेशन",
     "pro": "PRO संस्करण",
     "collections": "संग्रह",
-    "play": "खेलें",
+    "play": "चलाएँ",
     "help": "सहायता",
-    "logout": "लॉग आउट"
+    "logout": "लॉग आउट",
+    "community": "सामुदायिक मंच",
+    "account": "खाता प्रबंधित करें"
+  },
+  "auth": {
+    "signIn": "साइन इन",
+    "signUp": "साइन अप",
+    "signingIn": "साइन इन हो रहा है...",
+    "creatingAccount": "खाता बनाया जा रहा है...",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "username": "उपयोगकर्ता नाम",
+    "or": "या",
+    "noAccount": "खाता नहीं है?",
+    "hasAccount": "पहले से खाता है?",
+    "loginFailed": "लॉगिन विफल। कृपया अपने क्रेडेंशियल जाँचें।",
+    "signupFailed": "पंजीकरण विफल। कृपया पुनः प्रयास करें।"
   },
   "map": {
     "loading": "मानचित्र लोड हो रहा है...",
@@ -19,5 +36,99 @@
     "capital": "राजधानी",
     "population": "जनसंख्या"
   },
-  "common": { "loading": "लोड हो रहा है...", "close": "बंद करें", "back": "वापस", "ad": "ई.", "bc": "ई.पू." }
+  "layers": {
+    "title": "परतें",
+    "general": "सामान्य",
+    "advanced": "उन्नत",
+    "area": "क्षेत्र",
+    "label": "लेबल",
+    "markers": "चिह्नक",
+    "epics": "महाकाव्य",
+    "migration": "प्रवासन",
+    "basemap": "आधार मानचित्र",
+    "showProvinces": "प्रांत दिखाएँ",
+    "opacityByPopulation": "जनसंख्या के अनुसार अपारदर्शिता",
+    "clusterMarkers": "चिह्नकों का समूहन",
+    "markerLimit": "चिह्नक सीमा",
+    "uncheckAll": "सभी अचयनित करें",
+    "checkAll": "सभी चयनित करें",
+    "suggestions": "आपके डिवाइस के आधार पर सुझाव...",
+    "markerTypes": {
+      "artifact": "कलाकृति",
+      "battle": "युद्ध",
+      "siege": "घेराबंदी",
+      "capital": "राजधानी",
+      "city": "शहर",
+      "castle": "किला",
+      "landmark": "ऐतिहासिक स्थल",
+      "military": "सैन्य",
+      "politician": "राजनेता",
+      "explorer": "अन्वेषक",
+      "scientist": "वैज्ञानिक",
+      "artist": "कलाकार",
+      "religious": "धार्मिक",
+      "athlete": "खिलाड़ी",
+      "unclassified": "अवर्गीकृत",
+      "unknown": "अज्ञात"
+    },
+    "basemapTypes": {
+      "topographic": "स्थलाकृतिक",
+      "watercolor": "जलरंग",
+      "none": "कोई नहीं"
+    },
+    "epicTypes": {
+      "wars": "युद्ध",
+      "empires": "साम्राज्य",
+      "religion": "धर्म",
+      "culture": "संस्कृति",
+      "people": "व्यक्ति",
+      "other": "अन्य"
+    }
+  },
+  "settings": {
+    "title": "कॉन्फ़िगरेशन",
+    "theme": "थीम",
+    "language": "भाषा",
+    "fullscreen": "पूर्ण स्क्रीन",
+    "toggle": "टॉगल",
+    "fontType": "फ़ॉन्ट",
+    "markerType": "चिह्नक प्रकार",
+    "themes": {
+      "light": "हल्का",
+      "dark": "गहरा",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "समयरेखा विस्तार करें",
+    "collapseTimeline": "समयरेखा संकुचित करें",
+    "resetView": "समयरेखा दृश्य रीसेट करें",
+    "searchEpics": "महाकाव्य खोजें",
+    "autoplay": "स्वचालित चलाना शुरू करें",
+    "stopAutoplay": "स्वचालित चलाना बंद करें",
+    "autoplayTitle": "स्वचालित चलाना",
+    "autoplaySubtitle": "चरण आकार के अनुसार वर्ष बदलता है",
+    "startYear": "प्रारंभ वर्ष",
+    "endYear": "अंतिम वर्ष",
+    "stepSize": "वर्षों में चरण आकार",
+    "delay": "सेकंड में विलंब",
+    "repeat": "दोहराएँ",
+    "startSlideshow": "स्लाइडशो शुरू करें"
+  },
+  "drawer": {
+    "noContent": "कोई सामग्री चयनित नहीं",
+    "closePanel": "पैनल बंद करें",
+    "provinceDataNotAvailable": "इस चयन के लिए प्रांत डेटा उपलब्ध नहीं है।"
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "close": "बंद करें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "edit": "संपादित करें",
+    "delete": "हटाएँ",
+    "back": "वापस जाएँ",
+    "ad": "ई.",
+    "bc": "ई.पू."
+  }
 }

@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import i18n from '@/i18n/i18n';
 import { useUIStore, UI_STORAGE_KEY, isValidTheme, isValidLocale, defaultState, applyThemeToDocument, type Theme } from './uiStore';
 
 describe('uiStore', () => {
@@ -125,6 +126,45 @@ describe('uiStore', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Invalid locale value: , ignoring');
       
       consoleSpy.mockRestore();
+    });
+
+    it('should sync locale to i18next when setLocale is called', () => {
+      const { setLocale } = useUIStore.getState();
+      const changeLanguageSpy = vi.spyOn(i18n, 'changeLanguage');
+
+      setLocale('es');
+
+      expect(changeLanguageSpy).toHaveBeenCalledWith('es');
+      expect(i18n.language).toBe('es');
+
+      changeLanguageSpy.mockRestore();
+    });
+
+    it('should not call i18n.changeLanguage for invalid locale', () => {
+      const { setLocale } = useUIStore.getState();
+      const changeLanguageSpy = vi.spyOn(i18n, 'changeLanguage');
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+      setLocale('');
+
+      expect(changeLanguageSpy).not.toHaveBeenCalled();
+
+      changeLanguageSpy.mockRestore();
+      consoleSpy.mockRestore();
+    });
+
+    it('should persist locale change across i18n and store', () => {
+      const { setLocale } = useUIStore.getState();
+
+      setLocale('fr');
+
+      expect(useUIStore.getState().locale).toBe('fr');
+      expect(i18n.language).toBe('fr');
+
+      setLocale('de');
+
+      expect(useUIStore.getState().locale).toBe('de');
+      expect(i18n.language).toBe('de');
     });
   });
 

@@ -3,21 +3,132 @@
     "layers": "Lagen",
     "discover": "Ontdekken",
     "random": "Willekeurig artikel",
+    "configuration": "Configuratie",
     "settings": "Configuratie",
-    "pro": "PRO Versie",
+    "pro": "PRO-versie",
     "collections": "Collecties",
     "play": "Spelen",
-    "help": "Help",
-    "logout": "Uitloggen"
+    "help": "Hulp",
+    "logout": "Uitloggen",
+    "community": "Communityforum",
+    "account": "Account beheren"
+  },
+  "auth": {
+    "signIn": "Inloggen",
+    "signUp": "Registreren",
+    "signingIn": "Bezig met inloggen...",
+    "creatingAccount": "Account aanmaken...",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "username": "Gebruikersnaam",
+    "or": "of",
+    "noAccount": "Heb je geen account?",
+    "hasAccount": "Heb je al een account?",
+    "loginFailed": "Inloggen mislukt. Controleer je inloggegevens.",
+    "signupFailed": "Registratie mislukt. Probeer het opnieuw."
   },
   "map": {
     "loading": "Kaart laden...",
     "ruler": "Heerser",
     "culture": "Cultuur",
     "religion": "Religie",
-    "religionGeneral": "Religie Algemeen",
+    "religionGeneral": "Religie algemeen",
     "capital": "Hoofdstad",
     "population": "Bevolking"
   },
-  "common": { "loading": "Laden...", "close": "Sluiten", "back": "Terug", "ad": "n.Chr.", "bc": "v.Chr." }
+  "layers": {
+    "title": "Lagen",
+    "general": "ALGEMEEN",
+    "advanced": "Geavanceerd",
+    "area": "Gebied",
+    "label": "Label",
+    "markers": "Markeringen",
+    "epics": "Heldendichten",
+    "migration": "Migratie",
+    "basemap": "Basiskaart",
+    "showProvinces": "Provincies tonen",
+    "opacityByPopulation": "Dekking op basis van bevolking",
+    "clusterMarkers": "Markeringen groeperen",
+    "markerLimit": "Limiet markeringen",
+    "uncheckAll": "Alles deselecteren",
+    "checkAll": "Alles selecteren",
+    "suggestions": "Suggesties op basis van je apparaat...",
+    "markerTypes": {
+      "artifact": "Artefact",
+      "battle": "Veldslag",
+      "siege": "Belegering",
+      "capital": "Hoofdstad",
+      "city": "Stad",
+      "castle": "Kasteel",
+      "landmark": "Bezienswaardigheid",
+      "military": "Militair",
+      "politician": "Politicus",
+      "explorer": "Ontdekkingsreiziger",
+      "scientist": "Wetenschapper",
+      "artist": "Kunstenaar",
+      "religious": "Religieus",
+      "athlete": "Atleet",
+      "unclassified": "Niet geclassificeerd",
+      "unknown": "Onbekend"
+    },
+    "basemapTypes": {
+      "topographic": "Topografisch",
+      "watercolor": "Aquarel",
+      "none": "Geen"
+    },
+    "epicTypes": {
+      "wars": "Oorlogen",
+      "empires": "Rijken",
+      "religion": "Religie",
+      "culture": "Cultuur",
+      "people": "Mensen",
+      "other": "Overig"
+    }
+  },
+  "settings": {
+    "title": "Configuratie",
+    "theme": "Thema",
+    "language": "Taal",
+    "fullscreen": "Volledig scherm",
+    "toggle": "Schakelen",
+    "fontType": "Lettertype",
+    "markerType": "Type markering",
+    "themes": {
+      "light": "Licht",
+      "dark": "Donker",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Tijdlijn uitvouwen",
+    "collapseTimeline": "Tijdlijn invouwen",
+    "resetView": "Tijdlijnweergave resetten",
+    "searchEpics": "Heldendichten zoeken",
+    "autoplay": "Automatisch afspelen starten",
+    "stopAutoplay": "Automatisch afspelen stoppen",
+    "autoplayTitle": "AUTOMATISCH AFSPELEN",
+    "autoplaySubtitle": "WIJZIGT HET JAAR PER STAPGROOTTE",
+    "startYear": "Startjaar",
+    "endYear": "Eindjaar",
+    "stepSize": "Stapgrootte in jaren",
+    "delay": "Vertraging in seconden",
+    "repeat": "Herhalen",
+    "startSlideshow": "DIAVOORSTELLING STARTEN"
+  },
+  "drawer": {
+    "noContent": "Geen inhoud geselecteerd",
+    "closePanel": "Paneel sluiten",
+    "provinceDataNotAvailable": "Provinciegegevens niet beschikbaar voor deze selectie."
+  },
+  "common": {
+    "loading": "Laden...",
+    "close": "Sluiten",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "back": "Terug",
+    "ad": "n.Chr.",
+    "bc": "v.Chr."
+  }
 }

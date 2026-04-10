@@ -3,21 +3,132 @@
     "layers": "Capes",
     "discover": "Descobrir",
     "random": "Article aleatori",
+    "configuration": "Configuració",
     "settings": "Configuració",
     "pro": "Versió PRO",
     "collections": "Col·leccions",
-    "play": "Jugar",
+    "play": "Reproduir",
     "help": "Ajuda",
-    "logout": "Tancar sessió"
+    "logout": "Tancar sessió",
+    "community": "Fòrum de la comunitat",
+    "account": "Gestionar compte"
+  },
+  "auth": {
+    "signIn": "Iniciar sessió",
+    "signUp": "Registrar-se",
+    "signingIn": "Iniciant sessió...",
+    "creatingAccount": "Creant compte...",
+    "email": "Correu electrònic",
+    "password": "Contrasenya",
+    "username": "Nom d'usuari",
+    "or": "o",
+    "noAccount": "No tens un compte?",
+    "hasAccount": "Ja tens un compte?",
+    "loginFailed": "Error en iniciar sessió. Si us plau, comproveu les vostres credencials.",
+    "signupFailed": "Error en registrar-se. Si us plau, torneu-ho a provar."
   },
   "map": {
     "loading": "Carregant mapa...",
     "ruler": "Governant",
     "culture": "Cultura",
     "religion": "Religió",
-    "religionGeneral": "Religió General",
+    "religionGeneral": "Religió general",
     "capital": "Capital",
     "population": "Població"
   },
-  "common": { "loading": "Carregant...", "close": "Tancar", "back": "Enrere", "ad": "dC", "bc": "aC" }
+  "layers": {
+    "title": "Capes",
+    "general": "GENERAL",
+    "advanced": "Avançat",
+    "area": "Àrea",
+    "label": "Etiqueta",
+    "markers": "Marcadors",
+    "epics": "Epopeies",
+    "migration": "Migració",
+    "basemap": "Mapa base",
+    "showProvinces": "Mostrar províncies",
+    "opacityByPopulation": "Opacitat per població",
+    "clusterMarkers": "Agrupar marcadors",
+    "markerLimit": "Límit de marcadors",
+    "uncheckAll": "Desmarcar tots",
+    "checkAll": "Marcar tots",
+    "suggestions": "Suggeriments basats en el vostre dispositiu...",
+    "markerTypes": {
+      "artifact": "Artefacte",
+      "battle": "Batalla",
+      "siege": "Setge",
+      "capital": "Capital",
+      "city": "Ciutat",
+      "castle": "Castell",
+      "landmark": "Lloc emblemàtic",
+      "military": "Militar",
+      "politician": "Polític",
+      "explorer": "Explorador",
+      "scientist": "Científic",
+      "artist": "Artista",
+      "religious": "Religiós",
+      "athlete": "Atleta",
+      "unclassified": "Sense classificar",
+      "unknown": "Desconegut"
+    },
+    "basemapTypes": {
+      "topographic": "Topogràfic",
+      "watercolor": "Aquarel·la",
+      "none": "Cap"
+    },
+    "epicTypes": {
+      "wars": "Guerres",
+      "empires": "Imperis",
+      "religion": "Religió",
+      "culture": "Cultura",
+      "people": "Persones",
+      "other": "Altres"
+    }
+  },
+  "settings": {
+    "title": "Configuració",
+    "theme": "Tema",
+    "language": "Idioma",
+    "fullscreen": "Pantalla completa",
+    "toggle": "Activar",
+    "fontType": "Tipus de lletra",
+    "markerType": "Tipus de marcador",
+    "themes": {
+      "light": "Clar",
+      "dark": "Fosc",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Expandir línia temporal",
+    "collapseTimeline": "Contraure línia temporal",
+    "resetView": "Restablir vista de la línia temporal",
+    "searchEpics": "Cercar epopeies",
+    "autoplay": "Iniciar reproducció automàtica",
+    "stopAutoplay": "Aturar reproducció automàtica",
+    "autoplayTitle": "REPRODUCCIÓ AUTOMÀTICA",
+    "autoplaySubtitle": "CANVIA L'ANY SEGONS LA MIDA DEL PAS",
+    "startYear": "Any d'inici",
+    "endYear": "Any de fi",
+    "stepSize": "Mida del pas en anys",
+    "delay": "Retard en segons",
+    "repeat": "Repetir",
+    "startSlideshow": "INICIAR PRESENTACIÓ"
+  },
+  "drawer": {
+    "noContent": "Cap contingut seleccionat",
+    "closePanel": "Tancar panell",
+    "provinceDataNotAvailable": "Dades de província no disponibles per a aquesta selecció."
+  },
+  "common": {
+    "loading": "Carregant...",
+    "close": "Tancar",
+    "cancel": "Cancel·lar",
+    "save": "Desar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "back": "Enrere",
+    "ad": "dC",
+    "bc": "aC"
+  }
 }

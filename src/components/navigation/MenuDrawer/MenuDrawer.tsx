@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './MenuDrawer.module.css';
 
 export interface MenuDrawerProps {
@@ -28,21 +29,12 @@ export interface MenuDrawerProps {
   testId?: string;
 }
 
-/**
- * Gets the title based on content type.
- */
-function getTitle(contentType: 'layers' | 'collections' | 'settings' | null): string {
-  switch (contentType) {
-    case 'layers':
-      return 'Layers';
-    case 'collections':
-      return 'Collections';
-    case 'settings':
-      return 'Configuration';
-    default:
-      return '';
-  }
-}
+/** i18n key for each content type title */
+const TITLE_KEYS: Record<string, { key: string; fallback: string }> = {
+  layers: { key: 'nav.layers', fallback: 'Layers' },
+  collections: { key: 'nav.collections', fallback: 'Collections' },
+  settings: { key: 'nav.configuration', fallback: 'Configuration' },
+};
 
 /**
  * MenuDrawer component that slides out from the left side.
@@ -103,7 +95,9 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
     !isLightTheme && styles['padded'],
   ].filter(Boolean).join(' ');
 
-  const title = getTitle(contentType);
+  const { t } = useTranslation();
+  const titleConfig = contentType ? TITLE_KEYS[contentType] : undefined;
+  const title = titleConfig ? t(titleConfig.key, titleConfig.fallback) : '';
 
   return (
     <div

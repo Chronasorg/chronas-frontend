@@ -41,22 +41,79 @@
     "general": "GENERAL",
     "advanced": "Advanced",
     "area": "Area",
+    "label": "Label",
     "markers": "Markers",
     "epics": "Epics",
+    "migration": "Migration",
     "basemap": "Basemap",
     "showProvinces": "Show Provinces",
     "opacityByPopulation": "Opacity By Population",
     "clusterMarkers": "Cluster Markers",
     "markerLimit": "Marker Limit",
     "uncheckAll": "Uncheck All",
-    "checkAll": "Check All"
+    "checkAll": "Check All",
+    "suggestions": "Suggestions based on your machine...",
+    "markerTypes": {
+      "artifact": "Artifact",
+      "battle": "Battle",
+      "siege": "Siege",
+      "capital": "Capital",
+      "city": "City",
+      "castle": "Castle",
+      "landmark": "Landmark",
+      "military": "Military",
+      "politician": "Politician",
+      "explorer": "Explorer",
+      "scientist": "Scientist",
+      "artist": "Artist",
+      "religious": "Religious",
+      "athlete": "Athlete",
+      "unclassified": "Unclassified",
+      "unknown": "Unknown"
+    },
+    "basemapTypes": {
+      "topographic": "Topographic",
+      "watercolor": "Watercolor",
+      "none": "None"
+    },
+    "epicTypes": {
+      "wars": "Wars",
+      "empires": "Empires",
+      "religion": "Religion",
+      "culture": "Culture",
+      "people": "People",
+      "other": "Other"
+    }
+  },
+  "settings": {
+    "title": "Configuration",
+    "theme": "Theme",
+    "language": "Language",
+    "fullscreen": "Fullscreen",
+    "toggle": "Toggle",
+    "fontType": "Font",
+    "markerType": "Marker Type",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "luther": "Luther"
+    }
   },
   "timeline": {
     "expandTimeline": "Expand Timeline",
+    "collapseTimeline": "Collapse Timeline",
     "resetView": "Reset Timeline View",
     "searchEpics": "Search Epics",
     "autoplay": "Start Autoplay",
-    "stopAutoplay": "Stop Autoplay"
+    "stopAutoplay": "Stop Autoplay",
+    "autoplayTitle": "AUTOPLAY",
+    "autoplaySubtitle": "CHANGES YEAR BY STEP SIZE",
+    "startYear": "Start Year",
+    "endYear": "End Year",
+    "stepSize": "Step Size in Years",
+    "delay": "Delay in Sec",
+    "repeat": "Repeat",
+    "startSlideshow": "START SLIDESHOW"
   },
   "drawer": {
     "noContent": "No content selected",

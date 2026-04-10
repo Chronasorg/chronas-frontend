@@ -54,6 +54,26 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ca', name: 'Català' },
 ] as const;
 
+/**
+ * Read the persisted locale from localStorage so i18next starts
+ * with the correct language before React renders.
+ */
+function getPersistedLocale(): string {
+  try {
+    const raw = localStorage.getItem('chs_ui_preferences');
+    if (raw) {
+      const parsed = JSON.parse(raw) as { state?: { locale?: string } };
+      const locale = parsed.state?.locale;
+      if (typeof locale === 'string' && locale.length > 0) {
+        return locale;
+      }
+    }
+  } catch {
+    // Ignore parse errors — fall back to 'en'
+  }
+  return 'en';
+}
+
 void i18n
   .use(initReactI18next)
   .init({
@@ -77,7 +97,7 @@ void i18n
       vi: { translation: vi },
       ca: { translation: ca },
     },
-    lng: 'en',
+    lng: getPersistedLocale(),
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,

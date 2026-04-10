@@ -3,12 +3,29 @@
     "layers": "Lớp",
     "discover": "Khám phá",
     "random": "Bài viết ngẫu nhiên",
+    "configuration": "Cấu hình",
     "settings": "Cấu hình",
     "pro": "Phiên bản PRO",
     "collections": "Bộ sưu tập",
-    "play": "Chơi",
+    "play": "Phát",
     "help": "Trợ giúp",
-    "logout": "Đăng xuất"
+    "logout": "Đăng xuất",
+    "community": "Diễn đàn cộng đồng",
+    "account": "Quản lý tài khoản"
+  },
+  "auth": {
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "signingIn": "Đang đăng nhập...",
+    "creatingAccount": "Đang tạo tài khoản...",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "username": "Tên người dùng",
+    "or": "hoặc",
+    "noAccount": "Chưa có tài khoản?",
+    "hasAccount": "Đã có tài khoản?",
+    "loginFailed": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.",
+    "signupFailed": "Đăng ký thất bại. Vui lòng thử lại."
   },
   "map": {
     "loading": "Đang tải bản đồ...",
@@ -19,5 +36,99 @@
     "capital": "Thủ đô",
     "population": "Dân số"
   },
-  "common": { "loading": "Đang tải...", "close": "Đóng", "back": "Quay lại", "ad": "SCN", "bc": "TCN" }
+  "layers": {
+    "title": "Lớp",
+    "general": "CHUNG",
+    "advanced": "Nâng cao",
+    "area": "Khu vực",
+    "label": "Nhãn",
+    "markers": "Điểm đánh dấu",
+    "epics": "Sử thi",
+    "migration": "Di cư",
+    "basemap": "Bản đồ nền",
+    "showProvinces": "Hiển thị tỉnh",
+    "opacityByPopulation": "Độ mờ theo dân số",
+    "clusterMarkers": "Gom nhóm điểm đánh dấu",
+    "markerLimit": "Giới hạn điểm đánh dấu",
+    "uncheckAll": "Bỏ chọn tất cả",
+    "checkAll": "Chọn tất cả",
+    "suggestions": "Gợi ý dựa trên thiết bị của bạn...",
+    "markerTypes": {
+      "artifact": "Hiện vật",
+      "battle": "Trận chiến",
+      "siege": "Cuộc vây hãm",
+      "capital": "Thủ đô",
+      "city": "Thành phố",
+      "castle": "Lâu đài",
+      "landmark": "Danh thắng",
+      "military": "Quân sự",
+      "politician": "Chính trị gia",
+      "explorer": "Nhà thám hiểm",
+      "scientist": "Nhà khoa học",
+      "artist": "Nghệ sĩ",
+      "religious": "Tôn giáo",
+      "athlete": "Vận động viên",
+      "unclassified": "Chưa phân loại",
+      "unknown": "Không rõ"
+    },
+    "basemapTypes": {
+      "topographic": "Địa hình",
+      "watercolor": "Màu nước",
+      "none": "Không"
+    },
+    "epicTypes": {
+      "wars": "Chiến tranh",
+      "empires": "Đế chế",
+      "religion": "Tôn giáo",
+      "culture": "Văn hóa",
+      "people": "Nhân vật",
+      "other": "Khác"
+    }
+  },
+  "settings": {
+    "title": "Cấu hình",
+    "theme": "Giao diện",
+    "language": "Ngôn ngữ",
+    "fullscreen": "Toàn màn hình",
+    "toggle": "Chuyển đổi",
+    "fontType": "Phông chữ",
+    "markerType": "Loại điểm đánh dấu",
+    "themes": {
+      "light": "Sáng",
+      "dark": "Tối",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Mở rộng dòng thời gian",
+    "collapseTimeline": "Thu gọn dòng thời gian",
+    "resetView": "Đặt lại chế độ xem dòng thời gian",
+    "searchEpics": "Tìm kiếm sử thi",
+    "autoplay": "Bắt đầu phát tự động",
+    "stopAutoplay": "Dừng phát tự động",
+    "autoplayTitle": "PHÁT TỰ ĐỘNG",
+    "autoplaySubtitle": "THAY ĐỔI NĂM THEO BƯỚC NHẢY",
+    "startYear": "Năm bắt đầu",
+    "endYear": "Năm kết thúc",
+    "stepSize": "Bước nhảy tính theo năm",
+    "delay": "Độ trễ tính theo giây",
+    "repeat": "Lặp lại",
+    "startSlideshow": "BẮT ĐẦU TRÌNH CHIẾU"
+  },
+  "drawer": {
+    "noContent": "Chưa chọn nội dung",
+    "closePanel": "Đóng bảng",
+    "provinceDataNotAvailable": "Dữ liệu tỉnh không khả dụng cho lựa chọn này."
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "close": "Đóng",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "back": "Quay lại",
+    "ad": "SCN",
+    "bc": "TCN"
+  }
 }

@@ -3,21 +3,132 @@
     "layers": "Warstwy",
     "discover": "Odkrywaj",
     "random": "Losowy artykuł",
+    "configuration": "Konfiguracja",
     "settings": "Konfiguracja",
     "pro": "Wersja PRO",
     "collections": "Kolekcje",
     "play": "Graj",
     "help": "Pomoc",
-    "logout": "Wyloguj"
+    "logout": "Wyloguj",
+    "community": "Forum społeczności",
+    "account": "Zarządzaj kontem"
+  },
+  "auth": {
+    "signIn": "Zaloguj się",
+    "signUp": "Zarejestruj się",
+    "signingIn": "Logowanie...",
+    "creatingAccount": "Tworzenie konta...",
+    "email": "E-mail",
+    "password": "Hasło",
+    "username": "Nazwa użytkownika",
+    "or": "lub",
+    "noAccount": "Nie masz konta?",
+    "hasAccount": "Masz już konto?",
+    "loginFailed": "Logowanie nie powiodło się. Sprawdź swoje dane logowania.",
+    "signupFailed": "Rejestracja nie powiodła się. Spróbuj ponownie."
   },
   "map": {
     "loading": "Ładowanie mapy...",
     "ruler": "Władca",
     "culture": "Kultura",
     "religion": "Religia",
-    "religionGeneral": "Religia Ogólna",
+    "religionGeneral": "Religia ogólna",
     "capital": "Stolica",
     "population": "Populacja"
   },
-  "common": { "loading": "Ładowanie...", "close": "Zamknij", "back": "Wstecz", "ad": "n.e.", "bc": "p.n.e." }
+  "layers": {
+    "title": "Warstwy",
+    "general": "OGÓLNE",
+    "advanced": "Zaawansowane",
+    "area": "Obszar",
+    "label": "Etykieta",
+    "markers": "Znaczniki",
+    "epics": "Epopeje",
+    "migration": "Migracja",
+    "basemap": "Mapa bazowa",
+    "showProvinces": "Pokaż prowincje",
+    "opacityByPopulation": "Przezroczystość wg populacji",
+    "clusterMarkers": "Grupuj znaczniki",
+    "markerLimit": "Limit znaczników",
+    "uncheckAll": "Odznacz wszystko",
+    "checkAll": "Zaznacz wszystko",
+    "suggestions": "Sugestie na podstawie Twojego urządzenia...",
+    "markerTypes": {
+      "artifact": "Artefakt",
+      "battle": "Bitwa",
+      "siege": "Oblężenie",
+      "capital": "Stolica",
+      "city": "Miasto",
+      "castle": "Zamek",
+      "landmark": "Punkt orientacyjny",
+      "military": "Wojskowy",
+      "politician": "Polityk",
+      "explorer": "Odkrywca",
+      "scientist": "Naukowiec",
+      "artist": "Artysta",
+      "religious": "Duchowny",
+      "athlete": "Sportowiec",
+      "unclassified": "Niesklasyfikowane",
+      "unknown": "Nieznane"
+    },
+    "basemapTypes": {
+      "topographic": "Topograficzna",
+      "watercolor": "Akwarela",
+      "none": "Brak"
+    },
+    "epicTypes": {
+      "wars": "Wojny",
+      "empires": "Imperia",
+      "religion": "Religia",
+      "culture": "Kultura",
+      "people": "Ludzie",
+      "other": "Inne"
+    }
+  },
+  "settings": {
+    "title": "Konfiguracja",
+    "theme": "Motyw",
+    "language": "Język",
+    "fullscreen": "Pełny ekran",
+    "toggle": "Przełącz",
+    "fontType": "Czcionka",
+    "markerType": "Typ znacznika",
+    "themes": {
+      "light": "Jasny",
+      "dark": "Ciemny",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Rozwiń oś czasu",
+    "collapseTimeline": "Zwiń oś czasu",
+    "resetView": "Resetuj widok osi czasu",
+    "searchEpics": "Szukaj epopei",
+    "autoplay": "Uruchom automatyczne odtwarzanie",
+    "stopAutoplay": "Zatrzymaj automatyczne odtwarzanie",
+    "autoplayTitle": "AUTOMATYCZNE ODTWARZANIE",
+    "autoplaySubtitle": "ZMIENIA ROK O ZADANY KROK",
+    "startYear": "Rok początkowy",
+    "endYear": "Rok końcowy",
+    "stepSize": "Krok w latach",
+    "delay": "Opóźnienie w sekundach",
+    "repeat": "Powtarzaj",
+    "startSlideshow": "ROZPOCZNIJ POKAZ SLAJDÓW"
+  },
+  "drawer": {
+    "noContent": "Nie wybrano treści",
+    "closePanel": "Zamknij panel",
+    "provinceDataNotAvailable": "Dane prowincji niedostępne dla tego wyboru."
+  },
+  "common": {
+    "loading": "Ładowanie...",
+    "close": "Zamknij",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "back": "Wstecz",
+    "ad": "n.e.",
+    "bc": "p.n.e."
+  }
 }

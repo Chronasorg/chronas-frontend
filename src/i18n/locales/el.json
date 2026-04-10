@@ -3,21 +3,132 @@
     "layers": "Επίπεδα",
     "discover": "Ανακαλύψτε",
     "random": "Τυχαίο άρθρο",
+    "configuration": "Διαμόρφωση",
     "settings": "Ρυθμίσεις",
     "pro": "Έκδοση PRO",
     "collections": "Συλλογές",
-    "play": "Παιχνίδι",
+    "play": "Αναπαραγωγή",
     "help": "Βοήθεια",
-    "logout": "Αποσύνδεση"
+    "logout": "Αποσύνδεση",
+    "community": "Φόρουμ κοινότητας",
+    "account": "Διαχείριση λογαριασμού"
+  },
+  "auth": {
+    "signIn": "Σύνδεση",
+    "signUp": "Εγγραφή",
+    "signingIn": "Σύνδεση σε εξέλιξη...",
+    "creatingAccount": "Δημιουργία λογαριασμού...",
+    "email": "Ηλεκτρονικό ταχυδρομείο",
+    "password": "Κωδικός πρόσβασης",
+    "username": "Όνομα χρήστη",
+    "or": "ή",
+    "noAccount": "Δεν έχετε λογαριασμό;",
+    "hasAccount": "Έχετε ήδη λογαριασμό;",
+    "loginFailed": "Η σύνδεση απέτυχε. Ελέγξτε τα στοιχεία σας.",
+    "signupFailed": "Η εγγραφή απέτυχε. Δοκιμάστε ξανά."
   },
   "map": {
     "loading": "Φόρτωση χάρτη...",
     "ruler": "Ηγεμόνας",
     "culture": "Πολιτισμός",
     "religion": "Θρησκεία",
-    "religionGeneral": "Θρησκεία Γενική",
+    "religionGeneral": "Θρησκεία γενική",
     "capital": "Πρωτεύουσα",
     "population": "Πληθυσμός"
   },
-  "common": { "loading": "Φόρτωση...", "close": "Κλείσιμο", "back": "Πίσω", "ad": "μ.Χ.", "bc": "π.Χ." }
+  "layers": {
+    "title": "Επίπεδα",
+    "general": "ΓΕΝΙΚΑ",
+    "advanced": "Προχωρημένα",
+    "area": "Περιοχή",
+    "label": "Ετικέτα",
+    "markers": "Δείκτες",
+    "epics": "Έπη",
+    "migration": "Μετανάστευση",
+    "basemap": "Βασικός χάρτης",
+    "showProvinces": "Εμφάνιση επαρχιών",
+    "opacityByPopulation": "Αδιαφάνεια ανά πληθυσμό",
+    "clusterMarkers": "Ομαδοποίηση δεικτών",
+    "markerLimit": "Όριο δεικτών",
+    "uncheckAll": "Αποεπιλογή όλων",
+    "checkAll": "Επιλογή όλων",
+    "suggestions": "Προτάσεις βάσει της συσκευής σας...",
+    "markerTypes": {
+      "artifact": "Αντικείμενο",
+      "battle": "Μάχη",
+      "siege": "Πολιορκία",
+      "capital": "Πρωτεύουσα",
+      "city": "Πόλη",
+      "castle": "Κάστρο",
+      "landmark": "Τοπόσημο",
+      "military": "Στρατιωτικός",
+      "politician": "Πολιτικός",
+      "explorer": "Εξερευνητής",
+      "scientist": "Επιστήμονας",
+      "artist": "Καλλιτέχνης",
+      "religious": "Θρησκευτικός",
+      "athlete": "Αθλητής",
+      "unclassified": "Αταξινόμητο",
+      "unknown": "Άγνωστο"
+    },
+    "basemapTypes": {
+      "topographic": "Τοπογραφικός",
+      "watercolor": "Ακουαρέλα",
+      "none": "Κανένας"
+    },
+    "epicTypes": {
+      "wars": "Πόλεμοι",
+      "empires": "Αυτοκρατορίες",
+      "religion": "Θρησκεία",
+      "culture": "Πολιτισμός",
+      "people": "Πρόσωπα",
+      "other": "Άλλα"
+    }
+  },
+  "settings": {
+    "title": "Διαμόρφωση",
+    "theme": "Θέμα",
+    "language": "Γλώσσα",
+    "fullscreen": "Πλήρης οθόνη",
+    "toggle": "Εναλλαγή",
+    "fontType": "Γραμματοσειρά",
+    "markerType": "Τύπος δείκτη",
+    "themes": {
+      "light": "Φωτεινό",
+      "dark": "Σκοτεινό",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Ανάπτυξη χρονολογίου",
+    "collapseTimeline": "Σύμπτυξη χρονολογίου",
+    "resetView": "Επαναφορά προβολής χρονολογίου",
+    "searchEpics": "Αναζήτηση επών",
+    "autoplay": "Έναρξη αυτόματης αναπαραγωγής",
+    "stopAutoplay": "Διακοπή αυτόματης αναπαραγωγής",
+    "autoplayTitle": "ΑΥΤΟΜΑΤΗ ΑΝΑΠΑΡΑΓΩΓΗ",
+    "autoplaySubtitle": "ΑΛΛΑΖΕΙ ΤΟ ΕΤΟΣ ΚΑΤΑ ΤΟ ΜΕΓΕΘΟΣ ΒΗΜΑΤΟΣ",
+    "startYear": "Έτος έναρξης",
+    "endYear": "Έτος λήξης",
+    "stepSize": "Μέγεθος βήματος σε έτη",
+    "delay": "Καθυστέρηση σε δευτερόλεπτα",
+    "repeat": "Επανάληψη",
+    "startSlideshow": "ΕΝΑΡΞΗ ΠΑΡΟΥΣΙΑΣΗΣ"
+  },
+  "drawer": {
+    "noContent": "Δεν έχει επιλεγεί περιεχόμενο",
+    "closePanel": "Κλείσιμο πίνακα",
+    "provinceDataNotAvailable": "Τα δεδομένα επαρχίας δεν είναι διαθέσιμα για αυτήν την επιλογή."
+  },
+  "common": {
+    "loading": "Φόρτωση...",
+    "close": "Κλείσιμο",
+    "cancel": "Ακύρωση",
+    "save": "Αποθήκευση",
+    "edit": "Επεξεργασία",
+    "delete": "Διαγραφή",
+    "back": "Πίσω",
+    "ad": "μ.Χ.",
+    "bc": "π.Χ."
+  }
 }

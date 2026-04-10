@@ -4,6 +4,7 @@
     "discover": "Entdecken",
     "random": "Zufälliger Artikel",
     "configuration": "Konfiguration",
+    "settings": "Konfiguration",
     "pro": "PRO Version",
     "collections": "Sammlungen",
     "play": "Spielen",
@@ -34,6 +35,90 @@
     "religionGeneral": "Religion Allgemein",
     "capital": "Hauptstadt",
     "population": "Bevölkerung"
+  },
+  "layers": {
+    "title": "Ebenen",
+    "general": "ALLGEMEIN",
+    "advanced": "Detail",
+    "area": "Karte",
+    "label": "Beschriftung",
+    "markers": "Marker",
+    "epics": "Epen",
+    "migration": "Migration",
+    "basemap": "Grundkarte",
+    "showProvinces": "Provinzen anzeigen",
+    "opacityByPopulation": "Farbintensität nach Bevölkerung",
+    "clusterMarkers": "Cluster Marker",
+    "markerLimit": "Marker-Limit",
+    "uncheckAll": "Keine Marker",
+    "checkAll": "Alle Marker",
+    "suggestions": "Vorschläge basierend auf Ihrem System...",
+    "markerTypes": {
+      "artifact": "Artefakt",
+      "battle": "Schlacht",
+      "siege": "Belagerung",
+      "capital": "Hauptstadt",
+      "city": "Stadt",
+      "castle": "Burg",
+      "landmark": "Wahrzeichen",
+      "military": "Militär",
+      "politician": "Politiker",
+      "explorer": "Explorer",
+      "scientist": "Wissenschaftler",
+      "artist": "Künstler",
+      "religious": "Religiöse",
+      "athlete": "Athleten",
+      "unclassified": "Unklassifiziert",
+      "unknown": "Unbekannt"
+    },
+    "basemapTypes": {
+      "topographic": "Topographisch",
+      "watercolor": "Aquarell",
+      "none": "Transparent"
+    },
+    "epicTypes": {
+      "wars": "Kriege",
+      "empires": "Explorationen",
+      "religion": "Religion",
+      "culture": "Kultur",
+      "people": "Menschen",
+      "other": "Andere Epen"
+    }
+  },
+  "settings": {
+    "title": "Konfiguration",
+    "theme": "Thema",
+    "language": "Sprache",
+    "fullscreen": "Vollbild",
+    "toggle": "Wechseln",
+    "fontType": "Schriftart",
+    "markerType": "Marker-Typ",
+    "themes": {
+      "light": "Licht",
+      "dark": "Dunkel",
+      "luther": "Concordia"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Timeline Vergrößern",
+    "collapseTimeline": "Timeline Verkleinern",
+    "resetView": "Reset-Timeline-Ansicht",
+    "searchEpics": "Epen suchen",
+    "autoplay": "Slideshow-Menü öffnen",
+    "stopAutoplay": "Slideshow stoppen",
+    "autoplayTitle": "AUTOPLAY",
+    "autoplaySubtitle": "WECHSELT JAHR NACH GESETZTEM INTERVAL",
+    "startYear": "Startjahr",
+    "endYear": "Endjahr",
+    "stepSize": "Interval in Jahren",
+    "delay": "Delay in Sek.",
+    "repeat": "Wiederholen",
+    "startSlideshow": "DIASHOW STARTEN"
+  },
+  "drawer": {
+    "noContent": "Kein Inhalt ausgewählt",
+    "closePanel": "Panel schließen",
+    "provinceDataNotAvailable": "Provinzdaten für diese Auswahl nicht verfügbar."
   },
   "common": {
     "loading": "Lädt...",

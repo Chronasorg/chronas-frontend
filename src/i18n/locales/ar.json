@@ -3,12 +3,29 @@
     "layers": "الطبقات",
     "discover": "اكتشف",
     "random": "مقال عشوائي",
+    "configuration": "الإعدادات",
     "settings": "الإعدادات",
     "pro": "النسخة الاحترافية",
     "collections": "المجموعات",
     "play": "تشغيل",
     "help": "مساعدة",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "community": "منتدى المجتمع",
+    "account": "إدارة الحساب"
+  },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "signingIn": "جاري تسجيل الدخول...",
+    "creatingAccount": "جاري إنشاء الحساب...",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "username": "اسم المستخدم",
+    "or": "أو",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "loginFailed": "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك.",
+    "signupFailed": "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى."
   },
   "map": {
     "loading": "جاري تحميل الخريطة...",
@@ -19,5 +36,99 @@
     "capital": "العاصمة",
     "population": "السكان"
   },
-  "common": { "loading": "جاري التحميل...", "close": "إغلاق", "back": "رجوع", "ad": "م", "bc": "ق.م" }
+  "layers": {
+    "title": "الطبقات",
+    "general": "عام",
+    "advanced": "متقدم",
+    "area": "المنطقة",
+    "label": "التسمية",
+    "markers": "العلامات",
+    "epics": "الملاحم",
+    "migration": "الهجرة",
+    "basemap": "الخريطة الأساسية",
+    "showProvinces": "إظهار المقاطعات",
+    "opacityByPopulation": "الشفافية حسب السكان",
+    "clusterMarkers": "تجميع العلامات",
+    "markerLimit": "حد العلامات",
+    "uncheckAll": "إلغاء تحديد الكل",
+    "checkAll": "تحديد الكل",
+    "suggestions": "اقتراحات بناءً على جهازك...",
+    "markerTypes": {
+      "artifact": "أثر",
+      "battle": "معركة",
+      "siege": "حصار",
+      "capital": "عاصمة",
+      "city": "مدينة",
+      "castle": "قلعة",
+      "landmark": "معلم",
+      "military": "عسكري",
+      "politician": "سياسي",
+      "explorer": "مستكشف",
+      "scientist": "عالم",
+      "artist": "فنان",
+      "religious": "ديني",
+      "athlete": "رياضي",
+      "unclassified": "غير مصنف",
+      "unknown": "غير معروف"
+    },
+    "basemapTypes": {
+      "topographic": "طبوغرافي",
+      "watercolor": "ألوان مائية",
+      "none": "لا شيء"
+    },
+    "epicTypes": {
+      "wars": "حروب",
+      "empires": "إمبراطوريات",
+      "religion": "الدين",
+      "culture": "الثقافة",
+      "people": "شخصيات",
+      "other": "أخرى"
+    }
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "theme": "المظهر",
+    "language": "اللغة",
+    "fullscreen": "ملء الشاشة",
+    "toggle": "تبديل",
+    "fontType": "الخط",
+    "markerType": "نوع العلامة",
+    "themes": {
+      "light": "فاتح",
+      "dark": "داكن",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "توسيع الخط الزمني",
+    "collapseTimeline": "طي الخط الزمني",
+    "resetView": "إعادة تعيين عرض الخط الزمني",
+    "searchEpics": "البحث في الملاحم",
+    "autoplay": "بدء التشغيل التلقائي",
+    "stopAutoplay": "إيقاف التشغيل التلقائي",
+    "autoplayTitle": "التشغيل التلقائي",
+    "autoplaySubtitle": "تغيير السنة حسب حجم الخطوة",
+    "startYear": "سنة البداية",
+    "endYear": "سنة النهاية",
+    "stepSize": "حجم الخطوة بالسنوات",
+    "delay": "التأخير بالثواني",
+    "repeat": "تكرار",
+    "startSlideshow": "بدء العرض التقديمي"
+  },
+  "drawer": {
+    "noContent": "لم يتم تحديد أي محتوى",
+    "closePanel": "إغلاق اللوحة",
+    "provinceDataNotAvailable": "بيانات المقاطعة غير متوفرة لهذا التحديد."
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "back": "رجوع",
+    "ad": "م",
+    "bc": "ق.م"
+  }
 }

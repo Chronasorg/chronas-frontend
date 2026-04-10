@@ -3,21 +3,132 @@
     "layers": "Camadas",
     "discover": "Descobrir",
     "random": "Artigo aleatório",
+    "configuration": "Configuração",
     "settings": "Configuração",
     "pro": "Versão PRO",
     "collections": "Coleções",
     "play": "Jogar",
     "help": "Ajuda",
-    "logout": "Sair"
+    "logout": "Sair",
+    "community": "Fórum da comunidade",
+    "account": "Gerir conta"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Registar",
+    "signingIn": "A entrar...",
+    "creatingAccount": "A criar conta...",
+    "email": "E-mail",
+    "password": "Palavra-passe",
+    "username": "Nome de utilizador",
+    "or": "ou",
+    "noAccount": "Não tem uma conta?",
+    "hasAccount": "Já tem uma conta?",
+    "loginFailed": "Falha no login. Verifique as suas credenciais.",
+    "signupFailed": "Falha no registo. Tente novamente."
   },
   "map": {
-    "loading": "Carregando mapa...",
+    "loading": "A carregar mapa...",
     "ruler": "Governante",
     "culture": "Cultura",
     "religion": "Religião",
-    "religionGeneral": "Religião Geral",
+    "religionGeneral": "Religião geral",
     "capital": "Capital",
     "population": "População"
   },
-  "common": { "loading": "Carregando...", "close": "Fechar", "back": "Voltar", "ad": "d.C.", "bc": "a.C." }
+  "layers": {
+    "title": "Camadas",
+    "general": "GERAL",
+    "advanced": "Avançado",
+    "area": "Área",
+    "label": "Rótulo",
+    "markers": "Marcadores",
+    "epics": "Epopeias",
+    "migration": "Migração",
+    "basemap": "Mapa base",
+    "showProvinces": "Mostrar províncias",
+    "opacityByPopulation": "Opacidade por população",
+    "clusterMarkers": "Agrupar marcadores",
+    "markerLimit": "Limite de marcadores",
+    "uncheckAll": "Desmarcar todos",
+    "checkAll": "Marcar todos",
+    "suggestions": "Sugestões com base no seu dispositivo...",
+    "markerTypes": {
+      "artifact": "Artefacto",
+      "battle": "Batalha",
+      "siege": "Cerco",
+      "capital": "Capital",
+      "city": "Cidade",
+      "castle": "Castelo",
+      "landmark": "Marco histórico",
+      "military": "Militar",
+      "politician": "Político",
+      "explorer": "Explorador",
+      "scientist": "Cientista",
+      "artist": "Artista",
+      "religious": "Religioso",
+      "athlete": "Atleta",
+      "unclassified": "Não classificado",
+      "unknown": "Desconhecido"
+    },
+    "basemapTypes": {
+      "topographic": "Topográfico",
+      "watercolor": "Aguarela",
+      "none": "Nenhum"
+    },
+    "epicTypes": {
+      "wars": "Guerras",
+      "empires": "Impérios",
+      "religion": "Religião",
+      "culture": "Cultura",
+      "people": "Pessoas",
+      "other": "Outros"
+    }
+  },
+  "settings": {
+    "title": "Configuração",
+    "theme": "Tema",
+    "language": "Idioma",
+    "fullscreen": "Ecrã inteiro",
+    "toggle": "Alternar",
+    "fontType": "Tipo de letra",
+    "markerType": "Tipo de marcador",
+    "themes": {
+      "light": "Claro",
+      "dark": "Escuro",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Expandir cronologia",
+    "collapseTimeline": "Recolher cronologia",
+    "resetView": "Repor vista da cronologia",
+    "searchEpics": "Pesquisar epopeias",
+    "autoplay": "Iniciar reprodução automática",
+    "stopAutoplay": "Parar reprodução automática",
+    "autoplayTitle": "REPRODUÇÃO AUTOMÁTICA",
+    "autoplaySubtitle": "ALTERA O ANO CONFORME O TAMANHO DO PASSO",
+    "startYear": "Ano de início",
+    "endYear": "Ano de fim",
+    "stepSize": "Tamanho do passo em anos",
+    "delay": "Atraso em segundos",
+    "repeat": "Repetir",
+    "startSlideshow": "INICIAR APRESENTAÇÃO"
+  },
+  "drawer": {
+    "noContent": "Nenhum conteúdo selecionado",
+    "closePanel": "Fechar painel",
+    "provinceDataNotAvailable": "Dados da província não disponíveis para esta seleção."
+  },
+  "common": {
+    "loading": "A carregar...",
+    "close": "Fechar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "back": "Voltar",
+    "ad": "d.C.",
+    "bc": "a.C."
+  }
 }

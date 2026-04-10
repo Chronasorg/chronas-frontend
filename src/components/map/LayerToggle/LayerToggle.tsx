@@ -9,6 +9,7 @@
  */
 
 import type React from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './LayerToggle.module.css';
 import type { AreaColorDimension } from '@/stores/mapStore';
 
@@ -247,6 +248,8 @@ const DimensionRow: React.FC<DimensionRowProps> = ({
   onColorSelect,
   onLabelSelect,
 }) => {
+  const { t } = useTranslation();
+  const label = t(`map.${config.dimension}`, config.label);
   const rowClasses = [
     styles['dimensionRow'],
     isActiveColor ? styles['activeColor'] : '',
@@ -256,36 +259,32 @@ const DimensionRow: React.FC<DimensionRowProps> = ({
 
   return (
     <tr className={rowClasses} data-testid={`dimension-row-${config.dimension}`}>
-      {/* Dimension label */}
       <td className={styles['labelCell']}>
         <span className={styles['dimensionLabel']} id={`dimension-label-${config.dimension}`}>
-          {config.label}
+          {label}
         </span>
       </td>
 
-      {/* Area (color) radio button - Requirement 10.3: Descriptive aria-labels */}
       <td className={styles['radioCell']}>
         <RadioButton
           selected={isActiveColor}
           onClick={onColorSelect}
-          ariaLabel={`Set area color to ${config.label}${locked && config.hasLabelOption ? ' (also sets label when locked)' : ''}`}
+          ariaLabel={label}
           testId={`area-radio-${config.dimension}`}
           groupName="area-color"
         />
       </td>
 
-      {/* Link indicator (only for rows with label option) */}
       <td className={styles['linkCell']}>
         {config.hasLabelOption && <LinkIndicator visible={locked} />}
       </td>
 
-      {/* Label radio button (only for rows with label option) - Requirement 10.3: Descriptive aria-labels */}
       <td className={styles['radioCell']}>
         {config.hasLabelOption ? (
           <RadioButton
             selected={isActiveLabel}
             onClick={onLabelSelect}
-            ariaLabel={`Set label to ${config.label}${locked ? ' (also sets area color when locked)' : ''}`}
+            ariaLabel={label}
             testId={`label-radio-${config.dimension}`}
             groupName="label"
           />
@@ -333,9 +332,8 @@ export const LayerToggle: React.FC<LayerToggleProps> = ({
   onLabelChange,
   onLockChange,
 }) => {
-  /**
-   * Handle lock toggle click
-   */
+  const { t } = useTranslation();
+
   const handleLockToggle = () => {
     onLockChange(!locked);
   };
@@ -392,13 +390,13 @@ export const LayerToggle: React.FC<LayerToggleProps> = ({
               <span className={styles['srOnly']}>Dimension</span>
             </th>
             <th className={styles['areaHeader']} scope="col" role="columnheader">
-              Area
+              {t('layers.area', 'Area')}
             </th>
             <th className={styles['lockHeader']} scope="col" role="columnheader">
               <LockIcon locked={locked} onClick={handleLockToggle} />
             </th>
             <th className={styles['labelColumnHeader']} scope="col" role="columnheader">
-              Label
+              {t('layers.label', 'Label')}
             </th>
           </tr>
         </thead>

@@ -3,12 +3,29 @@
     "layers": "Слои",
     "discover": "Открыть",
     "random": "Случайная статья",
+    "configuration": "Настройка",
     "settings": "Настройки",
     "pro": "PRO версия",
     "collections": "Коллекции",
     "play": "Играть",
     "help": "Помощь",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "community": "Форум сообщества",
+    "account": "Управление аккаунтом"
+  },
+  "auth": {
+    "signIn": "Войти",
+    "signUp": "Зарегистрироваться",
+    "signingIn": "Вход в систему...",
+    "creatingAccount": "Создание аккаунта...",
+    "email": "Электронная почта",
+    "password": "Пароль",
+    "username": "Имя пользователя",
+    "or": "или",
+    "noAccount": "Нет аккаунта?",
+    "hasAccount": "Уже есть аккаунт?",
+    "loginFailed": "Ошибка входа. Пожалуйста, проверьте свои учётные данные.",
+    "signupFailed": "Ошибка регистрации. Пожалуйста, попробуйте снова."
   },
   "map": {
     "loading": "Загрузка карты...",
@@ -19,9 +36,97 @@
     "capital": "Столица",
     "population": "Население"
   },
+  "layers": {
+    "title": "Слои",
+    "general": "ОСНОВНЫЕ",
+    "advanced": "Дополнительно",
+    "area": "Территория",
+    "label": "Подпись",
+    "markers": "Метки",
+    "epics": "Эпопеи",
+    "migration": "Миграция",
+    "basemap": "Подложка",
+    "showProvinces": "Показать области",
+    "opacityByPopulation": "Прозрачность по населению",
+    "clusterMarkers": "Группировать метки",
+    "markerLimit": "Лимит меток",
+    "uncheckAll": "Снять все",
+    "checkAll": "Выбрать все",
+    "suggestions": "Рекомендации на основе вашего устройства...",
+    "markerTypes": {
+      "artifact": "Артефакт",
+      "battle": "Битва",
+      "siege": "Осада",
+      "capital": "Столица",
+      "city": "Город",
+      "castle": "Замок",
+      "landmark": "Достопримечательность",
+      "military": "Военный деятель",
+      "politician": "Государственный деятель",
+      "explorer": "Путешественник",
+      "scientist": "Учёный",
+      "artist": "Деятель искусства",
+      "religious": "Религиозный деятель",
+      "athlete": "Спортсмен",
+      "unclassified": "Не классифицировано",
+      "unknown": "Неизвестно"
+    },
+    "basemapTypes": {
+      "topographic": "Топографическая",
+      "watercolor": "Акварель",
+      "none": "Нет"
+    },
+    "epicTypes": {
+      "wars": "Войны",
+      "empires": "Империи",
+      "religion": "Религия",
+      "culture": "Культура",
+      "people": "Люди",
+      "other": "Прочее"
+    }
+  },
+  "settings": {
+    "title": "Настройка",
+    "theme": "Тема",
+    "language": "Язык",
+    "fullscreen": "Полноэкранный режим",
+    "toggle": "Переключить",
+    "fontType": "Шрифт",
+    "markerType": "Тип метки",
+    "themes": {
+      "light": "Светлая",
+      "dark": "Тёмная",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Развернуть хронологию",
+    "collapseTimeline": "Свернуть хронологию",
+    "resetView": "Сбросить вид хронологии",
+    "searchEpics": "Поиск эпопей",
+    "autoplay": "Запустить автовоспроизведение",
+    "stopAutoplay": "Остановить автовоспроизведение",
+    "autoplayTitle": "АВТОВОСПРОИЗВЕДЕНИЕ",
+    "autoplaySubtitle": "ИЗМЕНЕНИЕ ГОДА С ЗАДАННЫМ ШАГОМ",
+    "startYear": "Начальный год",
+    "endYear": "Конечный год",
+    "stepSize": "Шаг в годах",
+    "delay": "Задержка в секундах",
+    "repeat": "Повторять",
+    "startSlideshow": "ЗАПУСТИТЬ СЛАЙДШОУ"
+  },
+  "drawer": {
+    "noContent": "Содержимое не выбрано",
+    "closePanel": "Закрыть панель",
+    "provinceDataNotAvailable": "Данные провинции недоступны для этого выбора."
+  },
   "common": {
     "loading": "Загрузка...",
     "close": "Закрыть",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "edit": "Редактировать",
+    "delete": "Удалить",
     "back": "Назад",
     "ad": "н.э.",
     "bc": "до н.э."

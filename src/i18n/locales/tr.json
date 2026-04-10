@@ -3,21 +3,132 @@
     "layers": "Katmanlar",
     "discover": "Keşfet",
     "random": "Rastgele makale",
+    "configuration": "Yapılandırma",
     "settings": "Yapılandırma",
     "pro": "PRO Sürüm",
     "collections": "Koleksiyonlar",
-    "play": "Oyna",
+    "play": "Oynat",
     "help": "Yardım",
-    "logout": "Çıkış"
+    "logout": "Çıkış yap",
+    "community": "Topluluk forumu",
+    "account": "Hesabı yönet"
+  },
+  "auth": {
+    "signIn": "Giriş yap",
+    "signUp": "Kayıt ol",
+    "signingIn": "Giriş yapılıyor...",
+    "creatingAccount": "Hesap oluşturuluyor...",
+    "email": "E-posta",
+    "password": "Şifre",
+    "username": "Kullanıcı adı",
+    "or": "veya",
+    "noAccount": "Hesabınız yok mu?",
+    "hasAccount": "Zaten bir hesabınız var mı?",
+    "loginFailed": "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+    "signupFailed": "Kayıt başarısız. Lütfen tekrar deneyin."
   },
   "map": {
     "loading": "Harita yükleniyor...",
     "ruler": "Hükümdar",
     "culture": "Kültür",
     "religion": "Din",
-    "religionGeneral": "Din Genel",
+    "religionGeneral": "Din genel",
     "capital": "Başkent",
     "population": "Nüfus"
   },
-  "common": { "loading": "Yükleniyor...", "close": "Kapat", "back": "Geri", "ad": "MS", "bc": "MÖ" }
+  "layers": {
+    "title": "Katmanlar",
+    "general": "GENEL",
+    "advanced": "Gelişmiş",
+    "area": "Alan",
+    "label": "Etiket",
+    "markers": "İşaretçiler",
+    "epics": "Destanlar",
+    "migration": "Göç",
+    "basemap": "Altlık harita",
+    "showProvinces": "İlleri göster",
+    "opacityByPopulation": "Nüfusa göre opaklık",
+    "clusterMarkers": "İşaretçileri grupla",
+    "markerLimit": "İşaretçi limiti",
+    "uncheckAll": "Tümünü kaldır",
+    "checkAll": "Tümünü seç",
+    "suggestions": "Cihazınıza göre öneriler...",
+    "markerTypes": {
+      "artifact": "Eser",
+      "battle": "Muharebe",
+      "siege": "Kuşatma",
+      "capital": "Başkent",
+      "city": "Şehir",
+      "castle": "Kale",
+      "landmark": "Simge yapı",
+      "military": "Asker",
+      "politician": "Politikacı",
+      "explorer": "Kaşif",
+      "scientist": "Bilim insanı",
+      "artist": "Sanatçı",
+      "religious": "Din adamı",
+      "athlete": "Sporcu",
+      "unclassified": "Sınıflandırılmamış",
+      "unknown": "Bilinmeyen"
+    },
+    "basemapTypes": {
+      "topographic": "Topografik",
+      "watercolor": "Sulu boya",
+      "none": "Yok"
+    },
+    "epicTypes": {
+      "wars": "Savaşlar",
+      "empires": "İmparatorluklar",
+      "religion": "Din",
+      "culture": "Kültür",
+      "people": "Kişiler",
+      "other": "Diğer"
+    }
+  },
+  "settings": {
+    "title": "Yapılandırma",
+    "theme": "Tema",
+    "language": "Dil",
+    "fullscreen": "Tam ekran",
+    "toggle": "Değiştir",
+    "fontType": "Yazı tipi",
+    "markerType": "İşaretçi türü",
+    "themes": {
+      "light": "Açık",
+      "dark": "Koyu",
+      "luther": "Luther"
+    }
+  },
+  "timeline": {
+    "expandTimeline": "Zaman çizelgesini genişlet",
+    "collapseTimeline": "Zaman çizelgesini daralt",
+    "resetView": "Zaman çizelgesi görünümünü sıfırla",
+    "searchEpics": "Destanları ara",
+    "autoplay": "Otomatik oynatmayı başlat",
+    "stopAutoplay": "Otomatik oynatmayı durdur",
+    "autoplayTitle": "OTOMATİK OYNATMA",
+    "autoplaySubtitle": "YILI ADIM BOYUTUNA GÖRE DEĞİŞTİRİR",
+    "startYear": "Başlangıç yılı",
+    "endYear": "Bitiş yılı",
+    "stepSize": "Yıl cinsinden adım boyutu",
+    "delay": "Saniye cinsinden gecikme",
+    "repeat": "Tekrarla",
+    "startSlideshow": "SLAYT GÖSTERİSİNİ BAŞLAT"
+  },
+  "drawer": {
+    "noContent": "İçerik seçilmedi",
+    "closePanel": "Paneli kapat",
+    "provinceDataNotAvailable": "Bu seçim için il verileri mevcut değil."
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "close": "Kapat",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "back": "Geri",
+    "ad": "MS",
+    "bc": "MÖ"
+  }
 }
