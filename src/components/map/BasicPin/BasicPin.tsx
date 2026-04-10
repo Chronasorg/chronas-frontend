@@ -11,70 +11,12 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import { Marker } from 'react-map-gl/mapbox';
 import styles from './BasicPin.module.css';
-
-/**
- * Default pin size in pixels
- * Requirement 16.2: THE BasicPin SHALL have a configurable size (default: 60)
- */
-export const DEFAULT_PIN_SIZE = 60;
+import { DEFAULT_PIN_SIZE, isValidCoordinates, type BasicPinProps } from './BasicPin.utils';
 
 /**
  * Animation delay for hideInit in milliseconds
  */
 const HIDE_INIT_DELAY = 100;
-
-/**
- * BasicPin component props
- * Requirement 16.1: THE BasicPin SHALL render at specified coordinates
- * Requirement 16.2: THE BasicPin SHALL have a configurable size
- * Requirement 16.3: THE BasicPin SHALL support a hideInit property
- */
-export interface BasicPinProps {
-  /** Coordinates [longitude, latitude] */
-  coordinates: [number, number];
-  /** Pin size in pixels (default: 60) */
-  size?: number;
-  /** Whether to hide initially (for animation) */
-  hideInit?: boolean;
-  /** Optional CSS class name */
-  className?: string;
-}
-
-/**
- * Validates that coordinates are valid numbers within geographic bounds.
- *
- * @param coordinates - The [longitude, latitude] tuple to validate
- * @returns true if coordinates are valid
- */
-export function isValidCoordinates(coordinates: unknown): coordinates is [number, number] {
-  if (!Array.isArray(coordinates) || coordinates.length !== 2) {
-    return false;
-  }
-
-  const [longitude, latitude] = coordinates as [unknown, unknown];
-
-  // Check for valid numbers
-  if (typeof longitude !== 'number' || typeof latitude !== 'number') {
-    return false;
-  }
-  
-  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
-    return false;
-  }
-
-  // Check geographic bounds
-  // Longitude: -180 to 180
-  // Latitude: -90 to 90
-  if (longitude < -180 || longitude > 180) {
-    return false;
-  }
-
-  if (latitude < -90 || latitude > 90) {
-    return false;
-  }
-
-  return true;
-}
 
 /**
  * BasicPin Component
@@ -106,14 +48,14 @@ export const BasicPin: React.FC<BasicPinProps> = ({
   useEffect(() => {
     if (hideInit) {
       // Start hidden, then show after a short delay
-      setIsVisible(false);
+      setIsVisible(false); // eslint-disable-line react-hooks/set-state-in-effect -- visibility toggle with delayed timer is intentional for animation
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, HIDE_INIT_DELAY);
 
       return () => clearTimeout(timer);
     }
-    
+
     setIsVisible(true);
     return undefined;
   }, [hideInit]);

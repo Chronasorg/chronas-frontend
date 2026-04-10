@@ -128,6 +128,7 @@ function VisTimelineWrapperComponent(
     timeline.on('rangechange', () => onRangeChange?.());
     timeline.on('rangechanged', () => onRangeChanged?.());
     timeline.on('mouseMove', handleMouseMove);
+    const customTimeIds = customTimeIdsRef.current;
     return () => {
       timeline.off('click', handleClick);
       timeline.off('rangechange', () => onRangeChange?.());
@@ -137,9 +138,10 @@ function VisTimelineWrapperComponent(
       timelineRef.current = null;
       itemsDataSetRef.current = null;
       groupsDataSetRef.current = null;
-      customTimeIdsRef.current.clear();
+      customTimeIds.clear();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- vis-timeline instance created once on mount; options/callbacks are read via refs or stable references
+  }, []);
 
   useEffect(() => {
     if (!itemsDataSetRef.current) return;

@@ -9,7 +9,7 @@
  */
 
 import type React from 'react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { MapView, MapErrorBoundary } from '../../map/MapView';
 import { YearNotification } from '../../map/YearNotification';
 import { useTimelineStore } from '../../../stores/timelineStore';
@@ -30,8 +30,8 @@ export const HomePage: React.FC = () => {
   const selectedYear = useTimelineStore((state) => state.selectedYear);
   
   // Track previous year to detect changes for notification
-  const [prevYear, setPrevYear] = useState(selectedYear);
-  
+  const prevYearRef = useRef(selectedYear);
+
   // Year notification visibility state
   // Requirement 4.6: THE Year_Notification SHALL auto-hide after 6 seconds of inactivity
   const [isYearNotificationVisible, setIsYearNotificationVisible] = useState(false);
@@ -41,11 +41,12 @@ export const HomePage: React.FC = () => {
    * Requirement 4.7: WHEN the year changes, THE Year_Notification SHALL animate into view
    */
   useEffect(() => {
-    if (selectedYear !== prevYear) {
-      setPrevYear(selectedYear);
+    if (selectedYear !== prevYearRef.current) {
+      prevYearRef.current = selectedYear;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- showing notification when external store year changes; this syncs animation state with Zustand store
       setIsYearNotificationVisible(true);
     }
-  }, [selectedYear, prevYear]);
+  }, [selectedYear]);
 
   /**
    * Handle year notification hide callback.

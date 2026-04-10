@@ -10,6 +10,7 @@
 import type React from 'react';
 import { useEffect, useRef, useCallback } from 'react';
 import styles from './YearNotification.module.css';
+import { formatYearWithEra } from './YearNotification.utils';
 
 /**
  * Auto-hide delay in milliseconds
@@ -29,29 +30,6 @@ export interface YearNotificationProps {
   onHide: () => void;
   /** Optional CSS class name */
   className?: string;
-}
-
-/**
- * Formats a year value for display with BC/AD indicator.
- * Requirement 4.2: THE YearNotification SHALL display "(BC)" for negative years
- * Requirement 4.3: THE YearNotification SHALL display "(AD)" for positive years
- * Requirement 4.4: THE YearNotification SHALL display the absolute year value
- *
- * @param year - The year value (negative for BC, positive for AD)
- * @returns Formatted year string with era indicator
- */
-export function formatYearWithEra(year: number): { value: string; era: string } {
-  if (!Number.isFinite(year)) {
-    return { value: '0', era: '' };
-  }
-
-  const absYear = Math.abs(Math.round(year));
-  const era = year < 0 ? 'BC' : 'AD';
-
-  return {
-    value: absYear.toLocaleString('en'),
-    era,
-  };
 }
 
 /**

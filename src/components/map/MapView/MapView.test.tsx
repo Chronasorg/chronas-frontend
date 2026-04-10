@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { checkWebGLSupport } from './MapView';
+import { checkWebGLSupport } from './MapView.utils';
 import { MapErrorBoundary } from './MapErrorBoundary';
 
 // Note: MapView component tests that require react-map-gl are skipped

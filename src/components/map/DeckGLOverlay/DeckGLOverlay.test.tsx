@@ -30,7 +30,7 @@ import {
   CITY_DOT_RADIUS,
   CITY_DOT_HIGHLIGHT_RADIUS,
   type MarkerData,
-} from './DeckGLOverlay';
+} from '.';
 
 // ============================================================================
 // Utility Function Tests

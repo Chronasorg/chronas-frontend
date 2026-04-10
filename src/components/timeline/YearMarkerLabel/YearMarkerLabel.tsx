@@ -56,6 +56,7 @@ export const YearMarkerLabel: React.FC<YearMarkerLabelProps> = ({
   // Show suggested year briefly when it changes
   useEffect(() => {
     if (suggestedYear !== undefined && suggestedYear !== null && suggestedYear !== selectedYear) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- triggering a timed show/hide animation when suggestedYear prop changes
       setShowSuggested(true);
       const timeout = setTimeout(() => setShowSuggested(false), 1000);
       return () => clearTimeout(timeout);

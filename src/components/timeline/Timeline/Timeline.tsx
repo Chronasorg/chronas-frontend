@@ -54,6 +54,19 @@ export const TIMELINE_HEIGHT_COLLAPSED = 110;
 export const TIMELINE_HEIGHT_EXPANDED = 280;
 
 /**
+ * Color dot HTML for each epic type — used as a visual category indicator.
+ */
+const TYPE_DOT_COLORS: Record<string, string> = {
+  ew: '#e74c3c',  // war — red
+  ee: '#2ecc71',  // empire — green
+  ei: '#f39c12',  // discovery — orange
+  ps: '#3498db',  // person — blue
+  ec: '#f39c12',  // culture — orange
+  ebio: '#2ecc71', // biography — green
+  eb: '#e74c3c',  // battle — red
+};
+
+/**
  * Timeline Component
  *
  * The main container component that orchestrates all timeline functionality.
@@ -109,19 +122,6 @@ export const Timeline: React.FC<TimelineProps> = ({
   const [isAutoplayMenuOpen, setIsAutoplayMenuOpen] = useState(false);
   const [isEpicSearchOpen, setIsEpicSearchOpen] = useState(false);
   const [isDefaultView, setIsDefaultView] = useState(true);
-
-  /**
-   * Color dot HTML for each epic type — used as a visual category indicator.
-   */
-  const TYPE_DOT_COLORS: Record<string, string> = {
-    ew: '#e74c3c',  // war — red
-    ee: '#2ecc71',  // empire — green
-    ei: '#f39c12',  // discovery — orange
-    ps: '#3498db',  // person — blue
-    ec: '#f39c12',  // culture — orange
-    ebio: '#2ecc71', // biography — green
-    eb: '#e74c3c',  // battle — red
-  };
 
   const getDotHtml = useCallback((subtype: string): string => {
     const color = TYPE_DOT_COLORS[subtype] ?? 'rgba(180,180,180,0.6)';
@@ -182,7 +182,8 @@ export const Timeline: React.FC<TimelineProps> = ({
       console.log('[Timeline] Sample timeline item:', items[0]);
     }
     return items;
-  }, [getFilteredEpicItems, transformEpicToTimelineItem, epicItems]); // Include epicItems to trigger recompute
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- epicItems included to trigger recompute when store data changes; getFilteredEpicItems is a stable function reference
+  }, [getFilteredEpicItems, transformEpicToTimelineItem, epicItems]);
 
   /**
    * Timeline options configuration
@@ -196,14 +197,16 @@ export const Timeline: React.FC<TimelineProps> = ({
     const d = new Date(0, 0, 1);
     d.setFullYear(y);
     return d.toISOString();
-  }, []); // Only compute on mount — user scrolls from there
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally computed once on mount; selectedYear changes should not reset the user's scroll position
+  }, []);
 
   const viewEnd = useMemo(() => {
     const y = selectedYear + 250;
     const d = new Date(0, 0, 1);
     d.setFullYear(y);
     return d.toISOString();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally computed once on mount; selectedYear changes should not reset the user's scroll position
+  }, []);
 
   const timelineOptions = useMemo((): TimelineOptions => ({
     width: '100%',

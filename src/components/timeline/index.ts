@@ -25,14 +25,14 @@ export type { TimelineControlsProps } from './TimelineControls';
 export { YearDialog } from './YearDialog';
 export type { YearDialogProps } from './YearDialog';
 
+export { EpicSearchAutocomplete } from './EpicSearchAutocomplete';
+export type { EpicSearchAutocompleteProps } from './EpicSearchAutocomplete';
 export {
-  EpicSearchAutocomplete,
   filterEpics,
   calculateNavigationRange,
   MAX_SEARCH_RESULTS,
   EPIC_NAVIGATION_PADDING,
-} from './EpicSearchAutocomplete';
-export type { EpicSearchAutocompleteProps } from './EpicSearchAutocomplete';
+} from './EpicSearchAutocomplete/EpicSearchAutocomplete.utils';
 
 export {
   AutoplayMenu,

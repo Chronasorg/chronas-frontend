@@ -121,6 +121,7 @@ export function ProvinceTimeline({ provinceId, metadata, testId = 'province-time
   // Fetch province timeline data
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting loading/error state before async fetch is a standard data-fetching pattern
     setLoading(true);
     setError(null);
 

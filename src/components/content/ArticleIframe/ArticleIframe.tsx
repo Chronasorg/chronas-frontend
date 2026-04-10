@@ -13,6 +13,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import styles from './ArticleIframe.module.css';
+import { isValidWikiUrl } from './ArticleIframe.utils';
 
 export interface ArticleIframeProps {
   /** Wikipedia URL to display */
@@ -30,25 +31,6 @@ export interface ArticleIframeProps {
  * - allow-popups: Allows opening links in new tabs
  */
 const IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-popups';
-
-/**
- * Validates that a URL is from a trusted Wikipedia/Wikimedia domain.
- * This prevents embedding content from untrusted sources.
- *
- * @param url - The URL to validate
- * @returns true if the URL is from wikipedia.org or wikimedia.org
- */
-export function isValidWikiUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return (
-      parsed.hostname.endsWith('wikipedia.org') ||
-      parsed.hostname.endsWith('wikimedia.org')
-    );
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Loading spinner component for iframe loading state
@@ -172,10 +154,10 @@ export const ArticleIframe: React.FC<ArticleIframeProps> = ({
   const [retryCount, setRetryCount] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Reset state when URL changes
+  // Reset state when URL changes or retry is triggered
   useEffect(() => {
     if (url && isValidWikiUrl(url)) {
-      setIsLoading(true);
+      setIsLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- resetting loading/error state when URL or retryCount changes is intentional
       setError(null);
     }
   }, [url, retryCount]);

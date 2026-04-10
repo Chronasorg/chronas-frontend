@@ -10,18 +10,13 @@
 import type React from 'react';
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { EpicItem } from '../../../stores/timelineStore';
-import { dateToYear } from '../../../utils/yearUtils';
 import styles from './EpicSearchAutocomplete.module.css';
-
-/**
- * Maximum number of search results to display (Requirement 8.7)
- */
-export const MAX_SEARCH_RESULTS = 200;
-
-/**
- * Padding in years to add on each side when navigating to an epic (Requirement 8.5)
- */
-export const EPIC_NAVIGATION_PADDING = 100;
+import {
+  MAX_SEARCH_RESULTS,
+  filterEpics,
+  calculateNavigationRange,
+  type SearchResultItem,
+} from './EpicSearchAutocomplete.utils';
 
 /**
  * EpicSearchAutocomplete component props
@@ -35,15 +30,6 @@ export interface EpicSearchAutocompleteProps {
   onClose: () => void;
   /** Additional CSS class name */
   className?: string;
-}
-
-/**
- * Search result item with computed year
- */
-interface SearchResultItem {
-  epic: EpicItem;
-  startYear: number;
-  endYear: number;
 }
 
 /**
@@ -85,57 +71,6 @@ const SearchIcon: React.FC = () => (
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
-
-/**
- * Filters epics by search query (case-insensitive)
- * Returns at most MAX_SEARCH_RESULTS items
- *
- * @param epics - Array of epic items to filter
- * @param query - Search query string
- * @returns Filtered array of search result items
- */
-export function filterEpics(epics: EpicItem[], query: string): SearchResultItem[] {
-  if (!query.trim()) {
-    return [];
-  }
-
-  const normalizedQuery = query.toLowerCase().trim();
-
-  const filtered = epics
-    .filter((epic) => {
-      // Case-insensitive search on content/name (Requirement 8.6)
-      const name = epic.content || '';
-      return name.toLowerCase().includes(normalizedQuery);
-    })
-    .map((epic) => ({
-      epic,
-      startYear: dateToYear(epic.start),
-      endYear: dateToYear(epic.end),
-    }))
-    // Sort by start year for consistent ordering
-    .sort((a, b) => a.startYear - b.startYear);
-
-  // Limit results to MAX_SEARCH_RESULTS (Requirement 8.7)
-  return filtered.slice(0, MAX_SEARCH_RESULTS);
-}
-
-/**
- * Calculates the navigation range for an epic with padding
- *
- * @param startYear - Epic start year
- * @param endYear - Epic end year
- * @returns Object with padded start and end years
- */
-export function calculateNavigationRange(
-  startYear: number,
-  endYear: number
-): { paddedStart: number; paddedEnd: number } {
-  // Add 100 year padding on each side (Requirement 8.5)
-  return {
-    paddedStart: startYear - EPIC_NAVIGATION_PADDING,
-    paddedEnd: endYear + EPIC_NAVIGATION_PADDING,
-  };
-}
 
 /**
  * Formats a year for display, handling negative years
@@ -186,6 +121,11 @@ export const EpicSearchAutocomplete: React.FC<EpicSearchAutocompleteProps> = ({
   // Determine if results should be visible
   const isResultsVisible = filteredResults.length > 0;
 
+  // Reset selected index when results change
+  useEffect(() => {
+    setSelectedIndex(-1); // eslint-disable-line react-hooks/set-state-in-effect -- resetting selection index when search results change is intentional
+  }, [filteredResults.length]);
+
   // Auto-focus input on mount
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -193,11 +133,6 @@ export const EpicSearchAutocomplete: React.FC<EpicSearchAutocompleteProps> = ({
     }, 50);
     return () => clearTimeout(timeoutId);
   }, []);
-
-  // Reset selected index when results change
-  useEffect(() => {
-    setSelectedIndex(-1);
-  }, [filteredResults.length]);
 
   // Handle click outside to close
   useEffect(() => {

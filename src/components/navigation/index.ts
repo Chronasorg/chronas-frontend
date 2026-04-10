@@ -16,6 +16,8 @@ export {
   getNavItemById,
   type NavItemConfig,
   type NavAction,
+} from './navConfig';
+export {
   LayersIcon,
   DiscoverIcon,
   RandomIcon,
@@ -25,4 +27,4 @@ export {
   PlayIcon,
   HelpIcon,
   LogoutIcon,
-} from './navConfig';
+} from './navConfig.icons';

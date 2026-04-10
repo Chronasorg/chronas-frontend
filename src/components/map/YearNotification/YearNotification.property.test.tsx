@@ -9,7 +9,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import * as fc from 'fast-check';
-import { YearNotification, formatYearWithEra } from './YearNotification';
+import { YearNotification } from './YearNotification';
+import { formatYearWithEra } from './YearNotification.utils';
 
 describe('YearNotification - Property Tests', () => {
   describe('Property 7: Year Era Display', () => {

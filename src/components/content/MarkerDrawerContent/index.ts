@@ -6,4 +6,4 @@
 
 export { MarkerDrawerContent, default } from './MarkerDrawerContent';
 export type { MarkerDrawerContentProps } from './MarkerDrawerContent';
-export { getMarkerIcon, getMarkerTypeName, formatYear } from './MarkerDrawerContent';
+export { getMarkerIcon, getMarkerTypeName, formatYear } from './MarkerDrawerContent.utils';

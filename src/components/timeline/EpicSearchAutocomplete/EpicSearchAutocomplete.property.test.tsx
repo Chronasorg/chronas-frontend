@@ -14,7 +14,7 @@
 
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { filterEpics, MAX_SEARCH_RESULTS } from './EpicSearchAutocomplete';
+import { filterEpics, MAX_SEARCH_RESULTS } from './EpicSearchAutocomplete.utils';
 import type { EpicItem } from '../../../stores/timelineStore';
 import { yearToDate } from '../../../utils/yearUtils';
 
@@ -729,7 +729,7 @@ import { EpicSearchAutocomplete } from './EpicSearchAutocomplete';
  * 5. Padded range is at least 200 years wider than original
  */
 
-import { calculateNavigationRange, EPIC_NAVIGATION_PADDING } from './EpicSearchAutocomplete';
+import { calculateNavigationRange, EPIC_NAVIGATION_PADDING } from './EpicSearchAutocomplete.utils';
 
 describe('Property 13: Epic Selection Navigation', () => {
   /**

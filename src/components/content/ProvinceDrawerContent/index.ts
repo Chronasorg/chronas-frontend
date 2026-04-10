@@ -6,4 +6,4 @@
 
 export { ProvinceDrawerContent, default } from './ProvinceDrawerContent';
 export type { ProvinceDrawerContentProps } from './ProvinceDrawerContent';
-export { getEntityMetadata, getReligionGeneralMetadata } from './ProvinceDrawerContent';
+export { getEntityMetadata, getReligionGeneralMetadata } from './ProvinceDrawerContent.utils';

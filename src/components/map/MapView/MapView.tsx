@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/mapbox';
 import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'geojson';
-import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type AreaColorDimension, type LabelFeatureCollection } from '../../../stores/mapStore';
+import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type LabelFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
@@ -23,49 +23,33 @@ import { getThemeConfig } from '../../../config/mapTheme';
 import { updateYearInURL } from '../../../utils/mapUtils';
 import { updateURLState } from '../../../utils/urlStateUtils';
 import type { Marker } from '../../../api/types';
-import { ProvinceTooltip, type ProvinceFeatureProperties } from '../ProvinceTooltip/ProvinceTooltip';
+import { ProvinceTooltip } from '../ProvinceTooltip/ProvinceTooltip';
+import type { ProvinceFeatureProperties } from '../ProvinceTooltip/ProvinceTooltip.utils';
 import styles from './MapView.module.css';
-
-/**
- * Mapbox GL expression type for data-driven styling.
- * Using ExpressionSpecification from mapbox-gl for proper typing.
- */
-type MapboxExpression = [string, ...unknown[]];
+import {
+  type MapboxExpression,
+  type HoverInfo,
+  YEAR_CHANGE_DEBOUNCE_MS,
+  SIDEBAR_WIDTH_OPEN,
+  SIDEBAR_WIDTH_CLOSED,
+  RIGHT_DRAWER_WIDTH_PERCENT,
+  POPULATION_FILL_COLOR,
+  POPULATION_OPACITY_MIN,
+  POPULATION_OPACITY_MAX,
+  MAX_POPULATION_FOR_OPACITY,
+  DEFAULT_FILL_OPACITY,
+} from './MapView.constants';
+import {
+  useDebounce,
+  buildColorMatchExpression,
+  buildPopulationOpacityExpression,
+  calculateMaxPopulation,
+  checkWebGLSupport,
+  markersToGeoJSON,
+} from './MapView.utils';
 
 // Mapbox access token - should be set via environment variable
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
-/**
- * Debounce delay for year changes in milliseconds.
- * Requirement 11.2: THE MapView SHALL debounce year change events to prevent excessive API calls
- */
-export const YEAR_CHANGE_DEBOUNCE_MS = 300;
-
-/**
- * Custom hook for debouncing a value.
- * Requirement 11.2: Add debounce to year change handler (300ms)
- *
- * @param value - The value to debounce
- * @param delay - The debounce delay in milliseconds
- * @returns The debounced value
- */
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    // Set up the timeout to update the debounced value
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    // Clean up the timeout if value changes before delay completes
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 /**
  * Props for the MapView component
@@ -75,309 +59,6 @@ export interface MapViewProps {
   className?: string;
   /** Whether to apply blur filter (for non-interactive routes) */
   isBlurred?: boolean;
-}
-
-/**
- * Hover information for province interactions
- * Requirement 7.4: WHEN the user hovers over a province, THE MapView SHALL display hover info
- */
-export interface HoverInfo {
-  /** Longitude and latitude of hover position */
-  lngLat: [number, number];
-  /** Feature properties from the hovered layer */
-  feature: Record<string, unknown>;
-  /** Province ID if available */
-  provinceId: string | undefined;
-}
-
-/**
- * Sidebar width constants for layout calculations
- * SIDEBAR_WIDTH_OPEN = 50px sidebar + 300px MenuDrawer = 350px total
- * SIDEBAR_WIDTH_CLOSED = 50px sidebar only
- */
-export const SIDEBAR_WIDTH_OPEN = 350;
-export const SIDEBAR_WIDTH_CLOSED = 50;
-
-/**
- * Right drawer width for layout calculations — must match RightDrawer CSS width (35%)
- */
-export const RIGHT_DRAWER_WIDTH_PERCENT = 35;
-
-/**
- * Province layer configuration for each color dimension.
- * Requirement 3.1, 3.2, 3.3, 3.4: Province coloring by dimension
- */
-export interface ProvinceLayerConfig {
-  /** Layer ID */
-  id: string;
-  /** Property name in GeoJSON feature (r, c, e, g, p) */
-  property: string;
-  /** Color dimension this layer represents */
-  dimension: AreaColorDimension;
-}
-
-/**
- * Province layer configurations for all dimensions.
- * Requirements: 3.1, 3.2, 3.3, 3.4, 4.1, 4.3
- */
-export const PROVINCE_LAYERS: ProvinceLayerConfig[] = [
-  { id: 'ruler-fill', property: 'r', dimension: 'ruler' },
-  { id: 'culture-fill', property: 'c', dimension: 'culture' },
-  { id: 'religion-fill', property: 'e', dimension: 'religion' },
-  { id: 'religionGeneral-fill', property: 'g', dimension: 'religionGeneral' },
-  { id: 'population-fill', property: 'p', dimension: 'population' },
-];
-
-/**
- * Default population fill color for population dimension.
- * Requirement 3.5: Population opacity interpolation
- */
-export const POPULATION_FILL_COLOR = '#4a90d9';
-
-/**
- * Population opacity range for interpolation.
- * Requirement 3.4: Opacity range [0.3, 1.0]
- */
-export const POPULATION_OPACITY_MIN = 0.3;
-export const POPULATION_OPACITY_MAX = 1.0;
-
-/**
- * Maximum population value for opacity interpolation.
- * Requirement 3.4: THE MapView SHALL normalize population values to an opacity range of 0.3 to 1.0
- */
-export const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
-
-/**
- * Default fill opacity for categorical layers.
- */
-export const DEFAULT_FILL_OPACITY = 0.7;
-
-/**
- * Marker icon configuration for each marker type.
- * Requirement 5.5: THE MapView SHALL use appropriate icons for each marker type
- */
-export const MARKER_ICONS: Record<string, string> = {
-  battle: 'castle', // Mapbox Maki icon for battles
-  city: 'town-hall', // Mapbox Maki icon for cities
-  capital: 'star', // Mapbox Maki icon for capitals
-  person: 'monument', // Mapbox Maki icon for persons
-  event: 'information', // Mapbox Maki icon for events
-  other: 'marker', // Default marker icon
-};
-
-/**
- * Default marker icon for unknown types.
- */
-export const DEFAULT_MARKER_ICON = 'marker';
-
-/**
- * Marker icon size.
- */
-export const MARKER_ICON_SIZE = 1.0;
-
-/**
- * Marker icon colors by type.
- * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
- */
-export const MARKER_COLORS: Record<string, string> = {
-  battle: '#e74c3c', // Red for battles
-  city: '#3498db', // Blue for cities
-  capital: '#f1c40f', // Gold for capitals
-  person: '#9b59b6', // Purple for persons
-  event: '#2ecc71', // Green for events
-  other: '#95a5a6', // Gray for other
-};
-
-/**
- * Builds a Mapbox GL match expression for categorical coloring.
- * Requirement 4.3: Data-driven styling with categorical stops
- *
- * @param property - The property name to match against
- * @param colorMap - Map of entity ID to color string
- * @param fallback - Fallback color when no match
- * @returns Mapbox GL match expression
- */
-export function buildColorMatchExpression(
-  property: string,
-  colorMap: Record<string, string>,
-  fallback: string = FALLBACK_COLOR
-): MapboxExpression | string {
-  const entries = Object.entries(colorMap);
-  
-  if (entries.length === 0) {
-    return fallback;
-  }
-  
-  // Build match expression: ['match', ['get', property], id1, color1, id2, color2, ..., fallback]
-  const matchExpr: [string, ...unknown[]] = ['match', ['get', property]];
-  
-  for (const [id, color] of entries) {
-    matchExpr.push(id, color);
-  }
-  
-  matchExpr.push(fallback);
-  
-  return matchExpr;
-}
-
-/**
- * Builds a Mapbox GL interpolate expression for population opacity.
- * Requirement 3.5: Population opacity interpolation [0.3, 0.8]
- *
- * @param maxPopulation - Maximum population value for scaling
- * @returns Mapbox GL interpolate expression
- */
-export function buildPopulationOpacityExpression(maxPopulation: number): MapboxExpression {
-  // Ensure maxPopulation is at least 1 to avoid division issues
-  const safeMax = Math.max(1, maxPopulation);
-  
-  return [
-    'interpolate',
-    ['linear'],
-    ['get', 'p'],
-    0, POPULATION_OPACITY_MIN,
-    safeMax, POPULATION_OPACITY_MAX,
-  ];
-}
-
-/**
- * Calculates the maximum population from provinces GeoJSON.
- * Requirement 3.5: Calculate max population from area data
- *
- * @param geojson - Provinces GeoJSON feature collection
- * @returns Maximum population value
- */
-export function calculateMaxPopulation(
-  geojson: FeatureCollection<Polygon | MultiPolygon> | null
-): number {
-  if (!geojson?.features) {
-    return 1;
-  }
-  
-  let maxPop = 0;
-  for (const feature of geojson.features) {
-    const population = feature.properties?.['p'] as number | undefined;
-    if (typeof population === 'number' && population > maxPop) {
-      maxPop = population;
-    }
-  }
-  
-  return Math.max(1, maxPop);
-}
-
-/**
- * Checks if WebGL is supported in the current browser.
- * Requirement 13.2: THE MapView SHALL check for WebGL support on mount
- *
- * @returns true if WebGL is supported
- */
-export function checkWebGLSupport(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') ?? canvas.getContext('experimental-webgl');
-    return gl !== null;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Converts markers array to GeoJSON FeatureCollection.
- * Requirement 5.2: THE MapView SHALL display markers as icons on the map using a GeoJSON point source
- *
- * @param markers - Array of markers to convert
- * @returns GeoJSON FeatureCollection of Point features
- */
-export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
-  let skippedCount = 0;
-  const result: FeatureCollection<Point> = {
-    type: 'FeatureCollection',
-    features: markers
-      // Filter out markers with invalid coordinates
-      .filter((marker) => {
-        // coo is typed as [number, number], but runtime data may be invalid
-        // Use type assertion to allow runtime validation
-        const coo = marker.coo as unknown;
-        if (!coo || !Array.isArray(coo) || coo.length < 2) {
-          skippedCount++;
-          return false;
-        }
-        const [lng, lat] = coo as [unknown, unknown];
-        if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
-          skippedCount++;
-          return false;
-        }
-        return true;
-      })
-      .map((marker) => ({
-        type: 'Feature' as const,
-        geometry: {
-          type: 'Point' as const,
-          coordinates: marker.coo,
-        },
-        properties: {
-          id: marker._id,
-          name: marker.name,
-          type: marker.type,
-          year: marker.year,
-          wiki: marker.wiki ?? null,
-          description: marker.data?.description ?? null,
-        },
-      })),
-  };
-  if (skippedCount > 0) {
-    console.log(`[MapView] Skipped ${String(skippedCount)} markers with invalid coordinates`);
-  }
-  return result;
-}
-
-/**
- * Builds a Mapbox GL match expression for marker icon colors.
- * Requirement 5.3: THE MapView SHALL support marker types with distinct styling
- * 
- * Maps API short codes (p, b, s, etc.) to colors based on category:
- * - person (p, s, r, h): purple
- * - battle (b, m): red
- * - city (c): blue
- * - capital (ca): gold
- * - event (e): green
- * - other (a, ar, ai, o, si, l): gray
- *
- * @returns Mapbox GL match expression for marker colors
- */
-export function buildMarkerColorExpression(): MapboxExpression {
-  return [
-    'match',
-    ['get', 'type'],
-    // Person category (purple)
-    'p', MARKER_COLORS['person'],
-    's', MARKER_COLORS['person'],  // scholar
-    'r', MARKER_COLORS['person'],  // religious figure
-    'h', MARKER_COLORS['person'],  // historical figure
-    'person', MARKER_COLORS['person'],
-    // Battle category (red)
-    'b', MARKER_COLORS['battle'],
-    'm', MARKER_COLORS['battle'],  // military
-    'battle', MARKER_COLORS['battle'],
-    // City category (blue)
-    'c', MARKER_COLORS['city'],
-    'city', MARKER_COLORS['city'],
-    // Capital category (gold)
-    'ca', MARKER_COLORS['capital'],
-    'capital', MARKER_COLORS['capital'],
-    // Event category (green)
-    'e', MARKER_COLORS['event'],
-    'event', MARKER_COLORS['event'],
-    // Other category (gray) - artists, artwork, architecture, organizations, sites, landmarks
-    'a', MARKER_COLORS['other'],
-    'ar', MARKER_COLORS['other'],
-    'ai', MARKER_COLORS['other'],
-    'o', MARKER_COLORS['other'],
-    'si', MARKER_COLORS['other'],
-    'l', MARKER_COLORS['other'],
-    'other', MARKER_COLORS['other'],
-    MARKER_COLORS['other'], // default fallback
-  ];
 }
 
 /**
@@ -400,7 +81,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [webGLSupported, setWebGLSupported] = useState(true);
+  // Initialize WebGL support check eagerly to avoid a useEffect + setState cascade.
+  // checkWebGLSupport() is synchronous and cheap (creates a temporary canvas).
+  const [webGLSupported] = useState(() => checkWebGLSupport());
   
   // Hover state for province interactions
   // Requirement 7.3, 7.4: Province hover highlighting and info display
@@ -749,12 +432,6 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     return err.message || 'An unexpected error occurred. Please try again.';
   }, []);
 
-  // Check WebGL support on mount
-  // Requirement 13.2: THE MapView SHALL check for WebGL support on mount
-  useEffect(() => {
-    setWebGLSupported(checkWebGLSupport());
-  }, []);
-
   /**
    * Handle window resize events.
    * Requirement 2.8: WHEN the window is resized, THE MapStore SHALL update viewport width and height
@@ -854,6 +531,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       // Clear selected marker when year changes
       setSelectedMarker(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedYear is intentionally omitted; we use debouncedYear to avoid excessive API calls (Requirement 11.2).
   }, [debouncedYear, loadAreaData, loadMarkers, cancelAreaDataRequest, cancelMarkersRequest]);
 
   // Handle flyTo animations

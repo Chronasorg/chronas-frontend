@@ -25,7 +25,8 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { ArticleIframe, isValidWikiUrl } from './ArticleIframe';
+import { ArticleIframe } from './ArticleIframe';
+import { isValidWikiUrl } from './ArticleIframe.utils';
 
 // Sample test data
 const VALID_WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/Roman_Empire';

@@ -27,7 +27,7 @@ import {
   ARC_STROKE_WIDTH,
   type MarkerData,
   type ArcData,
-} from './DeckGLOverlay';
+} from '.';
 
 // ============================================================================
 // Arbitrary Generators

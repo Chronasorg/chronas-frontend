@@ -11,17 +11,21 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+// Give each test enough time for map + API loading
+test.setTimeout(60_000);
+
 // ---------------------------------------------------------------------------
-// Helpers
+// Helpers — no waitForTimeout; use event-driven waits only
 // ---------------------------------------------------------------------------
 
-/** Wait for map canvas to render */
+/** Wait for app shell + map canvas + initial API data to be ready */
 async function waitForMap(page: Page): Promise<void> {
+  await page.waitForSelector('[data-testid="app-shell"]', { timeout: 30_000 });
   await page.waitForSelector('.mapboxgl-canvas, [data-testid="map-container"]', {
     timeout: 15_000,
   });
-  // Let map tiles settle
-  await page.waitForTimeout(2_000);
+  // Wait for sidebar nav to be interactive (signals React hydration is complete)
+  await page.waitForSelector('[data-testid="nav-item-layers"]', { timeout: 10_000 });
 }
 
 /** Open the Layers drawer if it is not already open */
@@ -29,14 +33,17 @@ async function openLayers(page: Page): Promise<void> {
   const drawer = page.getByTestId('layers-content');
   if (!(await drawer.isVisible().catch(() => false))) {
     await page.getByTestId('nav-item-layers').click();
-    await drawer.waitFor({ state: 'visible', timeout: 3_000 });
+    await drawer.waitFor({ state: 'visible', timeout: 5_000 });
   }
 }
 
 /** Open the Settings (Configuration) drawer */
 async function openSettings(page: Page): Promise<void> {
-  await page.getByTestId('nav-item-settings').click();
-  await page.getByTestId('settings-content').waitFor({ state: 'visible', timeout: 3_000 });
+  const drawer = page.getByTestId('settings-content');
+  if (!(await drawer.isVisible().catch(() => false))) {
+    await page.getByTestId('nav-item-settings').click();
+    await drawer.waitFor({ state: 'visible', timeout: 5_000 });
+  }
 }
 
 
@@ -75,17 +82,14 @@ test.describe('Navigation Sidebar', () => {
   });
 
   test('clicking Help toggles the announcement banner', async ({ page }) => {
-    // Banner should be visible on first load
     const banner = page.getByRole('banner');
 
     // Click help to dismiss
     await page.getByTestId('nav-item-help').click();
-    await page.waitForTimeout(500);
     const bannerVisibleAfterFirst = await banner.isVisible().catch(() => false);
 
     // Click help again to toggle back
     await page.getByTestId('nav-item-help').click();
-    await page.waitForTimeout(500);
     const bannerVisibleAfterSecond = await banner.isVisible().catch(() => false);
 
     // States should differ (toggling)
@@ -134,10 +138,8 @@ test.describe('Layers Panel — Area Dimensions', () => {
       const radio = page.getByTestId(`area-radio-${dim}`);
       await radio.scrollIntoViewIfNeeded();
       await radio.click();
+      // Auto-retrying assertion — no waitForTimeout needed
       await expect(radio).toBeChecked();
-
-      // Wait for map re-render
-      await page.waitForTimeout(1_500);
     });
   }
 
@@ -176,13 +178,13 @@ test.describe('Layers Panel — Area Dimensions', () => {
     const pressed = await lockBtn.getAttribute('aria-pressed');
     if (pressed !== 'true') {
       await lockBtn.click();
+      await expect(lockBtn).toHaveAttribute('aria-pressed', 'true');
     }
 
     // Click culture area radio
     await page.getByTestId('area-radio-culture').click();
-    await page.waitForTimeout(500);
 
-    // Label should also be culture
+    // Label should also be culture (auto-retrying)
     await expect(page.getByTestId('label-radio-culture')).toBeChecked();
   });
 });
@@ -217,9 +219,8 @@ test.describe('Layers Panel — Marker Filters', () => {
     await expect(toggleBtn).toContainText(/uncheck all/i);
 
     await toggleBtn.click();
-    await page.waitForTimeout(500);
 
-    // All should be unchecked
+    // All should be unchecked (auto-retrying assertions)
     for (const type of markerTypes) {
       await expect(page.getByTestId(`marker-filter-${type}`)).not.toBeChecked();
     }
@@ -234,11 +235,10 @@ test.describe('Layers Panel — Marker Filters', () => {
 
     // Uncheck all first
     await toggleBtn.click();
-    await page.waitForTimeout(300);
+    await expect(toggleBtn).toContainText(/check all/i);
 
     // Now check all
     await toggleBtn.click();
-    await page.waitForTimeout(500);
 
     for (const type of markerTypes) {
       await expect(page.getByTestId(`marker-filter-${type}`)).toBeChecked();
@@ -275,10 +275,13 @@ test.describe('Layers Panel — Marker Filters', () => {
     const initialChecked = await sw.getAttribute('aria-checked');
 
     await sw.click();
-    await page.waitForTimeout(300);
 
-    const newChecked = await sw.getAttribute('aria-checked');
-    expect(newChecked).not.toBe(initialChecked);
+    // Wait for the attribute to change (auto-retrying)
+    if (initialChecked === 'true') {
+      await expect(sw).toHaveAttribute('aria-checked', 'false');
+    } else {
+      await expect(sw).toHaveAttribute('aria-checked', 'true');
+    }
   });
 });
 
@@ -307,12 +310,11 @@ test.describe('Layers Panel — Epic Filters', () => {
   test('Uncheck All unchecks every epic type', async ({ page }) => {
     // Collapse markers section to bring epics into view
     await page.getByTestId('markers-section-toggle').click();
-    await page.waitForTimeout(300);
+    await expect(page.getByTestId('markers-section-content')).not.toBeVisible();
 
     const toggleBtn = page.getByTestId('toggle-all-epics');
     await toggleBtn.scrollIntoViewIfNeeded();
     await toggleBtn.click();
-    await page.waitForTimeout(500);
 
     for (const type of epicTypes) {
       const cb = page.getByTestId(`epic-filter-${type}`);
@@ -324,7 +326,7 @@ test.describe('Layers Panel — Epic Filters', () => {
   test('individual epic checkbox can be toggled', async ({ page }) => {
     // Collapse markers section to bring epics into view
     await page.getByTestId('markers-section-toggle').click();
-    await page.waitForTimeout(300);
+    await expect(page.getByTestId('markers-section-content')).not.toBeVisible();
 
     const cb = page.getByTestId('epic-filter-war');
     await cb.scrollIntoViewIfNeeded();
@@ -349,18 +351,17 @@ test.describe('Layers Panel — Advanced Section', () => {
     await openLayers(page);
     // Collapse other sections to bring Advanced into view
     await page.getByTestId('area-section-toggle').click();
-    await page.waitForTimeout(200);
+    await expect(page.getByTestId('area-section-content')).not.toBeVisible();
     await page.getByTestId('markers-section-toggle').click();
-    await page.waitForTimeout(200);
+    await expect(page.getByTestId('markers-section-content')).not.toBeVisible();
     await page.getByTestId('epics-section-toggle').click();
-    await page.waitForTimeout(200);
+    await expect(page.getByTestId('epics-section-content')).not.toBeVisible();
   });
 
   test('Advanced section expands on click', async ({ page }) => {
     const toggle = page.getByTestId('advanced-section-toggle');
     await toggle.scrollIntoViewIfNeeded();
     await toggle.click();
-    await page.waitForTimeout(300);
 
     await expect(page.getByTestId('advanced-section-content')).toBeVisible();
   });
@@ -369,7 +370,7 @@ test.describe('Layers Panel — Advanced Section', () => {
     const advToggle = page.getByTestId('advanced-section-toggle');
     await advToggle.scrollIntoViewIfNeeded();
     await advToggle.click();
-    await page.waitForTimeout(300);
+    await expect(page.getByTestId('advanced-section-content')).toBeVisible();
 
     const select = page.getByTestId('basemap-select');
     await select.scrollIntoViewIfNeeded();
@@ -385,7 +386,7 @@ test.describe('Layers Panel — Advanced Section', () => {
     const advToggle = page.getByTestId('advanced-section-toggle');
     await advToggle.scrollIntoViewIfNeeded();
     await advToggle.click();
-    await page.waitForTimeout(300);
+    await expect(page.getByTestId('advanced-section-content')).toBeVisible();
 
     const select = page.getByTestId('basemap-select');
     await select.scrollIntoViewIfNeeded();
@@ -404,7 +405,7 @@ test.describe('Layers Panel — Advanced Section', () => {
     const advToggle = page.getByTestId('advanced-section-toggle');
     await advToggle.scrollIntoViewIfNeeded();
     await advToggle.click();
-    await page.waitForTimeout(300);
+    await expect(page.getByTestId('advanced-section-content')).toBeVisible();
 
     const toggle = page.getByTestId('show-provinces-toggle');
     await toggle.scrollIntoViewIfNeeded();
@@ -439,14 +440,12 @@ test.describe('Settings Panel', () => {
 
   test('clicking Dark applies dark theme', async ({ page }) => {
     await page.getByTestId('theme-btn-dark').click();
-    await page.waitForTimeout(500);
     await expect(page.getByTestId('theme-btn-dark')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('theme-btn-light')).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('clicking Luther applies luther theme', async ({ page }) => {
     await page.getByTestId('theme-btn-luther').click();
-    await page.waitForTimeout(500);
     await expect(page.getByTestId('theme-btn-luther')).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -492,7 +491,6 @@ test.describe('Timeline Controls', () => {
   });
 
   test('year display shows 1000 by default', async ({ page }) => {
-    // The year is displayed in the year notification component
     await expect(page.locator('[data-testid="year-notification"], [role="status"]').first()).toBeVisible();
   });
 
@@ -509,10 +507,8 @@ test.describe('Timeline Controls', () => {
   });
 
   test('epic items are rendered in the timeline', async ({ page }) => {
-    // Check that at least some epic items exist
-    const epics = page.locator('[class*="timelineItem"]');
-    const count = await epics.count();
-    expect(count).toBeGreaterThan(0);
+    // Use auto-retrying assertion instead of snapshot count()
+    await expect(page.locator('[class*="timelineItem"]').first()).toBeAttached();
   });
 });
 
@@ -536,7 +532,6 @@ test.describe('Announcement Banner', () => {
 
     const dismissBtn = page.getByRole('button', { name: 'Dismiss banner' });
     await dismissBtn.click();
-    await page.waitForTimeout(500);
 
     const banner = page.getByRole('banner');
     await expect(banner).not.toBeVisible();
@@ -569,7 +564,6 @@ test.describe('Keyboard Accessibility', () => {
     await expect(page.getByTestId('layers-content')).toBeVisible();
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
 
     await expect(page.getByTestId('layers-content')).not.toBeVisible();
   });
@@ -579,7 +573,6 @@ test.describe('Keyboard Accessibility', () => {
     await expect(page.getByTestId('settings-content')).toBeVisible();
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(500);
 
     await expect(page.getByTestId('settings-content')).not.toBeVisible();
   });
@@ -609,11 +602,9 @@ test.describe('Layers Panel — Section Collapse/Expand', () => {
     await expect(content).toBeVisible();
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(content).not.toBeVisible();
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(content).toBeVisible();
   });
 
@@ -628,11 +619,9 @@ test.describe('Layers Panel — Section Collapse/Expand', () => {
     await expect(content).toBeVisible();
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(content).not.toBeVisible();
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(content).toBeVisible();
   });
 
@@ -647,11 +636,9 @@ test.describe('Layers Panel — Section Collapse/Expand', () => {
     await expect(content).toBeVisible();
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(content).not.toBeVisible();
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(content).toBeVisible();
   });
 
@@ -663,11 +650,9 @@ test.describe('Layers Panel — Section Collapse/Expand', () => {
     const toggle = page.getByTestId('general-section-toggle');
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
     await toggle.click();
-    await page.waitForTimeout(300);
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   });
 });
@@ -686,7 +671,6 @@ test.describe('Layers Panel — Collapse Button', () => {
     await expect(collapseBtn).toBeVisible();
 
     await collapseBtn.click();
-    await page.waitForTimeout(500);
 
     await expect(page.getByTestId('layers-content')).not.toBeVisible();
   });

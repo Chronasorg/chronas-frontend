@@ -7,7 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { BasicPin, DEFAULT_PIN_SIZE, isValidCoordinates } from './BasicPin';
+import { BasicPin } from './BasicPin';
+import { DEFAULT_PIN_SIZE, isValidCoordinates } from './BasicPin.utils';
 
 // Mock react-map-gl/mapbox Marker component
 vi.mock('react-map-gl/mapbox', () => ({

@@ -108,6 +108,7 @@ export const YearDialog: React.FC<YearDialogProps> = ({
       previousActiveElement.current = document.activeElement as HTMLElement;
       // Set initial value if provided
       if (initialYear !== undefined) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting form state when dialog opens; syncing input with initialYear prop
         setInputValue(initialYear.toString());
       } else {
         setInputValue('');

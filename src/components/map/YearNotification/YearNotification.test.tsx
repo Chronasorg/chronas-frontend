@@ -6,7 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { YearNotification, formatYearWithEra } from './YearNotification';
+import { YearNotification } from './YearNotification';
+import { formatYearWithEra } from './YearNotification.utils';
 
 describe('YearNotification', () => {
   beforeEach(() => {

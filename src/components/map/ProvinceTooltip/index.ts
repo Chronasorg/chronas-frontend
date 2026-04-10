@@ -4,10 +4,7 @@
  * Re-exports the ProvinceTooltip component and related types.
  */
 
-export {
-  ProvinceTooltip,
-  default,
-  getEntityMetadata,
-  type ProvinceTooltipProps,
-  type ProvinceFeatureProperties,
-} from './ProvinceTooltip';
+export { ProvinceTooltip, default } from './ProvinceTooltip';
+export type { ProvinceTooltipProps } from './ProvinceTooltip';
+export { getEntityMetadata } from './ProvinceTooltip.utils';
+export type { ProvinceFeatureProperties } from './ProvinceTooltip.utils';

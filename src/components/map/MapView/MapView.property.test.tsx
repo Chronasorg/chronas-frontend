@@ -13,7 +13,7 @@ import * as fc from 'fast-check';
 import { useMapStore, initialState as mapInitialState, BASEMAP_STYLES } from '../../../stores/mapStore';
 import { useTimelineStore, initialState as timelineInitialState, MIN_YEAR, MAX_YEAR } from '../../../stores/timelineStore';
 import { useUIStore, defaultState as uiDefaultState } from '../../../stores/uiStore';
-import { SIDEBAR_WIDTH_OPEN, SIDEBAR_WIDTH_CLOSED } from './MapView';
+import { SIDEBAR_WIDTH_OPEN, SIDEBAR_WIDTH_CLOSED } from './MapView.constants';
 
 // Mock the mapUtils module to track URL updates
 vi.mock('../../../utils/mapUtils', () => ({

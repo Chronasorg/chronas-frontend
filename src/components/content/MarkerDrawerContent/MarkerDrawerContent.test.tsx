@@ -26,12 +26,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import {
-  MarkerDrawerContent,
-  getMarkerIcon,
-  getMarkerTypeName,
-  formatYear,
-} from './MarkerDrawerContent';
+import { MarkerDrawerContent } from './MarkerDrawerContent';
+import { getMarkerIcon, getMarkerTypeName, formatYear } from './MarkerDrawerContent.utils';
 import type { Marker } from '@/api/types';
 
 // Mock the ArticleIframe component to isolate MarkerDrawerContent tests

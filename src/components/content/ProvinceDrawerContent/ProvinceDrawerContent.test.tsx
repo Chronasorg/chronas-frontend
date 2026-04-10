@@ -23,11 +23,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import {
-  ProvinceDrawerContent,
-  getEntityMetadata,
-  getReligionGeneralMetadata,
-} from './ProvinceDrawerContent';
+import { ProvinceDrawerContent } from './ProvinceDrawerContent';
+import { getEntityMetadata, getReligionGeneralMetadata } from './ProvinceDrawerContent.utils';
 import type { EntityMetadata, ProvinceData } from '@/api/types';
 
 // Mock the ArticleIframe component to isolate ProvinceDrawerContent tests

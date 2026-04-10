@@ -22,6 +22,7 @@ export function LoadingBar({ testId = 'loading-bar' }: LoadingBarProps) {
 
   useEffect(() => {
     if (isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local animation state with external loading store
       setVisible(true);
       setComplete(false);
       return undefined;
