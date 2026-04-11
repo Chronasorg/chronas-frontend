@@ -40,6 +40,8 @@ import {
   type AreaData,
   type ProvinceData,
   type EntityMetadata,
+  isValidLabelNameMode,
+  type LabelNameMode,
 } from './mapStore';
 
 describe('mapStore', () => {
@@ -3234,6 +3236,50 @@ describe('markerLimit', () => {
         useMapStore.getState().setMarkerLimit(10000);
       });
       expect(useMapStore.getState().markerLimit).toBe(10000);
+    });
+  });
+
+  describe('setLabelNameMode', () => {
+    it('should default to historical', () => {
+      expect(useMapStore.getState().labelNameMode).toBe('historical');
+    });
+
+    it('should set valid label name modes', () => {
+      const modes: LabelNameMode[] = ['historical', 'modern', 'both'];
+      for (const mode of modes) {
+        act(() => {
+          useMapStore.getState().setLabelNameMode(mode);
+        });
+        expect(useMapStore.getState().labelNameMode).toBe(mode);
+      }
+    });
+
+    it('should reject invalid label name modes', () => {
+      act(() => {
+        useMapStore.getState().setLabelNameMode('historical');
+      });
+      // Try setting an invalid mode
+      act(() => {
+        useMapStore.getState().setLabelNameMode('invalid' as LabelNameMode);
+      });
+      // Should remain unchanged
+      expect(useMapStore.getState().labelNameMode).toBe('historical');
+    });
+  });
+
+  describe('isValidLabelNameMode', () => {
+    it('should return true for valid modes', () => {
+      expect(isValidLabelNameMode('historical')).toBe(true);
+      expect(isValidLabelNameMode('modern')).toBe(true);
+      expect(isValidLabelNameMode('both')).toBe(true);
+    });
+
+    it('should return false for invalid modes', () => {
+      expect(isValidLabelNameMode('invalid')).toBe(false);
+      expect(isValidLabelNameMode('')).toBe(false);
+      expect(isValidLabelNameMode(null)).toBe(false);
+      expect(isValidLabelNameMode(undefined)).toBe(false);
+      expect(isValidLabelNameMode(42)).toBe(false);
     });
   });
 });

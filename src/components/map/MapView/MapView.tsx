@@ -15,11 +15,11 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/mapbox';
 import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'geojson';
-import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type LabelFeatureCollection } from '../../../stores/mapStore';
+import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type LabelFeatureCollection, type LabelLineFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
-import { getThemeConfig } from '../../../config/mapTheme';
+import { getThemeConfig, AREA_LABEL_CONFIG, getAreaLabelFonts, LOCAL_FONT_NAMES } from '../../../config/mapTheme';
 import { updateYearInURL } from '../../../utils/mapUtils';
 import { updateURLState } from '../../../utils/urlStateUtils';
 import type { Marker } from '../../../api/types';
@@ -132,6 +132,8 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const markers = useMapStore((state) => state.markers);
   const markerFilters = useMapStore((state) => state.markerFilters);
   const labelData = useMapStore((state) => state.labelData);
+  const labelLineData = useMapStore((state) => state.labelLineData);
+  const labelNameMode = useMapStore((state) => state.labelNameMode);
   const calculateLabels = useMapStore((state) => state.calculateLabels);
   const activeColor = useMapStore((state) => state.activeColor);
   // Active label dimension for map labels (can be different from activeColor when unlocked)
@@ -278,6 +280,11 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
    */
   const emptyLabelsGeoJSON: LabelFeatureCollection = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: [],
+  }), []);
+
+  const emptyLabelLinesGeoJSON: LabelLineFeatureCollection = useMemo(() => ({
     type: 'FeatureCollection',
     features: [],
   }), []);
@@ -738,6 +745,35 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   }, [locale, isLoaded, basemap]);
 
   /**
+   * Toggle Mapbox basemap country/state/continent labels based on labelNameMode.
+   * In 'historical' mode, hide basemap labels so only custom area-labels are visible.
+   * In 'modern' mode, show basemap labels and hide custom area-labels.
+   * In 'both' mode, show both.
+   */
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !isLoaded) return;
+
+    try {
+      const style = map.getStyle();
+      for (const layer of style.layers) {
+        if (
+          layer.type === 'symbol' &&
+          layer.id.includes('label') &&
+          (layer.id.includes('country') ||
+           layer.id.includes('state') ||
+           layer.id.includes('continent'))
+        ) {
+          const visibility = labelNameMode === 'historical' ? 'none' : 'visible';
+          map.setLayoutProperty(layer.id, 'visibility', visibility);
+        }
+      }
+    } catch {
+      // Style may not be loaded yet
+    }
+  }, [labelNameMode, isLoaded, basemap]);
+
+  /**
    * Handles flyTo animation completion.
    */
   const handleMoveEnd = useCallback(() => {
@@ -797,9 +833,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       const properties = feature.properties ?? {};
       const layerId = feature.layer?.id;
       
-      // Check if hovering over an area label
-      if (layerId === 'area-labels-layer') {
-        const labelName = properties['name'] as string | undefined;
+      // Check if hovering over an area label (line or point)
+      if (layerId === 'area-labels-layer' || layerId === 'area-labels-points') {
+        const labelName = (properties['n'] as string | undefined) ?? (properties['name'] as string | undefined);
         const entityId = properties['entityId'] as string | undefined;
         if (labelName) {
           setHoveredLabel({ name: labelName, entityId: entityId ?? '' });
@@ -894,10 +930,10 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       const properties = feature.properties ?? {};
       const layerId = feature.layer?.id;
       
-      // Check if clicked on an area label
+      // Check if clicked on an area label (line or point)
       // When a label is clicked, open the right drawer with the entity's Wikipedia article
-      if (layerId === 'area-labels-layer') {
-        const labelName = properties['name'] as string | undefined;
+      if (layerId === 'area-labels-layer' || layerId === 'area-labels-points') {
+        const labelName = (properties['n'] as string | undefined) ?? (properties['name'] as string | undefined);
         const entityId = properties['entityId'] as string | undefined;
         
         if (labelName && entityId) {
@@ -1109,6 +1145,25 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     };
   }, [hoverInfo]);
 
+  /**
+   * Intercept Mapbox GL glyph requests to serve locally-hosted fonts
+   * (Cinzel Regular, Cairo, Noto Sans SC) that aren't in the Mapbox CDN.
+   * The PBF files live in public/fonts/{fontstack}/{range}.pbf.
+   */
+  const transformRequest = useCallback((url: string, resourceType?: string) => {
+    if (resourceType === 'Glyphs') {
+      for (const fontName of LOCAL_FONT_NAMES) {
+        if (url.includes(encodeURIComponent(fontName)) || url.includes(fontName)) {
+          const range = /(\d+-\d+\.pbf)/.exec(url)?.[1];
+          if (range) {
+            return { url: `/fonts/${fontName}/${range}` };
+          }
+        }
+      }
+    }
+    return { url };
+  }, []);
+
   // Render WebGL not supported fallback
   // Requirement 13.2: THE MapView SHALL display fallback UI if WebGL not supported
   if (!webGLSupported) {
@@ -1240,6 +1295,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
+        transformRequest={transformRequest}
         initialViewState={{
           latitude: viewport.latitude,
           longitude: viewport.longitude,
@@ -1259,7 +1315,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        interactiveLayerIds={['area-fill', 'provinces-fill', 'ruler-fill', 'culture-fill', 'religion-fill', 'religionGeneral-fill', 'population-fill', 'markers-layer', 'clusters', 'area-labels-layer']}
+        interactiveLayerIds={['area-fill', 'provinces-fill', 'ruler-fill', 'culture-fill', 'religion-fill', 'religionGeneral-fill', 'population-fill', 'markers-layer', 'clusters', 'area-labels-layer', 'area-labels-points']}
         attributionControl={false}
         reuseMaps
         // Requirement 5.3: WHEN the user hovers over a marker, THE Cursor SHALL change to a pointer
@@ -1538,42 +1594,55 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
           />
         </Source>
 
-        {/* Area labels GeoJSON source and layer */}
-        {/* Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension */}
-        {/* Requirement 7.2: WHEN the activeColor dimension is 'ruler', display ruler names at territory centroids */}
-        {/* Requirement 7.3: WHEN the activeColor dimension is 'culture', display culture names at territory centroids */}
-        {/* Requirement 7.4: WHEN the activeColor dimension is 'religion', display religion names at territory centroids */}
-        <Source id="area-labels" type="geojson" data={labelData ?? emptyLabelsGeoJSON}>
+        {/* Area labels - bezier curve line labels (old Chronas-style) */}
+        {/* Labels flow along bezier curves through territory using symbol-placement: line-center */}
+        <Source id="area-label-lines" type="geojson" data={labelLineData ?? emptyLabelLinesGeoJSON}>
           <Layer
             id="area-labels-layer"
             type="symbol"
             layout={{
+              visibility: labelNameMode === 'modern' ? 'none' : 'visible',
+              'symbol-placement': AREA_LABEL_CONFIG.lineLayout.symbolPlacement,
+              'text-field': ['get', 'n'],
+              'text-font': getAreaLabelFonts(locale),
+              'text-transform': AREA_LABEL_CONFIG.lineLayout.textTransform,
+              'text-allow-overlap': AREA_LABEL_CONFIG.lineLayout.textAllowOverlap,
+              'text-size': AREA_LABEL_CONFIG.lineLayout.textSize as MapboxExpression,
+            }}
+            paint={{
+              'text-color': AREA_LABEL_CONFIG.linePaint.textColor,
+              'text-halo-width': AREA_LABEL_CONFIG.linePaint.textHaloWidth,
+              'text-halo-blur': AREA_LABEL_CONFIG.linePaint.textHaloBlur,
+              'text-halo-color': AREA_LABEL_CONFIG.linePaint.textHaloColor,
+            }}
+          />
+        </Source>
+
+        {/* Area labels - point labels (fallback for small entities or when line labels don't render) */}
+        <Source id="area-labels" type="geojson" data={labelData ?? emptyLabelsGeoJSON}>
+          <Layer
+            id="area-labels-points"
+            type="symbol"
+            layout={{
+              visibility: labelNameMode === 'modern' ? 'none' : 'visible',
               'text-field': ['get', 'name'],
-              'text-size': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                1, ['*', ['get', 'fontSize'], 0.2],
-                3, ['*', ['get', 'fontSize'], 0.35],
-                5, ['*', ['get', 'fontSize'], 0.6],
-                7, ['*', ['get', 'fontSize'], 0.85],
-              ],
-              'text-font': ['Noto Serif Regular', 'Arial Unicode MS Regular'],
-              'text-anchor': 'center',
-              'text-allow-overlap': false,
-              'text-ignore-placement': false,
-              'text-optional': true,
-              'text-transform': 'uppercase',
-              'text-letter-spacing': 0.15,
-              'text-max-width': 12,
-              'text-padding': 8,
+              'text-size': AREA_LABEL_CONFIG.pointLayout.textSize as MapboxExpression,
+              'text-font': getAreaLabelFonts(locale),
+              'text-anchor': AREA_LABEL_CONFIG.pointLayout.textAnchor,
+              'text-allow-overlap': AREA_LABEL_CONFIG.pointLayout.textAllowOverlap,
+              'text-ignore-placement': AREA_LABEL_CONFIG.pointLayout.textIgnorePlacement,
+              'text-optional': AREA_LABEL_CONFIG.pointLayout.textOptional,
+              'text-transform': AREA_LABEL_CONFIG.pointLayout.textTransform,
+              'text-letter-spacing': AREA_LABEL_CONFIG.pointLayout.textLetterSpacing,
+              'text-max-width': AREA_LABEL_CONFIG.pointLayout.textMaxWidth,
+              'text-padding': AREA_LABEL_CONFIG.pointLayout.textPadding,
               'symbol-sort-key': ['*', -1, ['get', 'fontSize']],
             }}
             paint={{
-              'text-color': 'rgba(0, 0, 0, 0.78)',
-              'text-halo-color': 'rgba(255, 255, 255, 0.85)',
-              'text-halo-width': 2,
-              'text-halo-blur': 0.5,
+              'text-color': AREA_LABEL_CONFIG.pointPaint.textColor,
+              'text-halo-color': AREA_LABEL_CONFIG.pointPaint.textHaloColor,
+              'text-halo-width': AREA_LABEL_CONFIG.pointPaint.textHaloWidth,
+              'text-halo-blur': AREA_LABEL_CONFIG.pointPaint.textHaloBlur,
             }}
           />
         </Source>

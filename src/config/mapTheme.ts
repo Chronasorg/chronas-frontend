@@ -153,6 +153,111 @@ export function getFontForLocale(locale: string): string {
 }
 
 /**
+ * Area label styling configuration.
+ * Ported from old Chronas map-style-basic-v8.json to match the classical atlas look.
+ *
+ * The `d` property on each label feature is `lineDistance / name.length^0.2` (in km).
+ * The text-size expression interpolates by both zoom level and `d`:
+ *   - At zoom 2: d=1500 → 8px, d=3500 → 30px
+ *   - At zoom 9: d=1500 → 80px, d=3500 → 300px
+ */
+export const AREA_LABEL_CONFIG = {
+  /** Mapbox layout properties for the bezier-curve line labels */
+  lineLayout: {
+    symbolPlacement: 'line-center' as const,
+    textTransform: 'uppercase' as const,
+    textAllowOverlap: false,
+    /**
+     * Nested interpolation: zoom → (d → fontSize).
+     * Exactly matches old Chronas map-style-basic-v8.json.
+     */
+    /**
+     * Based on old Chronas map-style-basic-v8.json formula, scaled up ~50%
+     * to compensate for the busier vector basemap (old Chronas used a
+     * desaturated raster basemap where even small text was prominent).
+     */
+    textSize: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      2,
+      ['interpolate', ['linear'], ['get', 'd'], 1000, 10, 3500, 45],
+      9,
+      ['interpolate', ['linear'], ['get', 'd'], 1000, 120, 3500, 450],
+    ],
+  },
+  /**
+   * Mapbox paint properties for the bezier-curve line labels.
+   * Halo is wider than old Chronas (which used 1px) because our vector basemap
+   * and full-opacity province fills need stronger contrast for legibility.
+   */
+  linePaint: {
+    textColor: '#1a1a1a',
+    textHaloWidth: 3,
+    textHaloBlur: 0,
+    textHaloColor: 'rgba(255, 252, 235, 0.94)',
+  },
+  /** Mapbox layout properties for the point fallback labels */
+  pointLayout: {
+    textTransform: 'uppercase' as const,
+    textAnchor: 'center' as const,
+    textAllowOverlap: false,
+    textIgnorePlacement: false,
+    textOptional: true,
+    textLetterSpacing: 0.15,
+    textMaxWidth: 12,
+    textPadding: 8,
+    textSize: [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      1, ['*', ['get', 'fontSize'], 0.2],
+      3, ['*', ['get', 'fontSize'], 0.35],
+      5, ['*', ['get', 'fontSize'], 0.6],
+      7, ['*', ['get', 'fontSize'], 0.85],
+    ],
+  },
+  /** Mapbox paint properties for the point fallback labels */
+  pointPaint: {
+    textColor: '#1a1a1a',
+    textHaloColor: 'rgba(255, 252, 235, 0.94)',
+    textHaloWidth: 3,
+    textHaloBlur: 0,
+  },
+  /** Fallback font stack when locale-specific font is unavailable */
+  fallbackFonts: ['Arial Unicode MS Regular'] as string[],
+  /** bezierSpline options matching old Chronas turf.bezier behaviour */
+  bezierOptions: {
+    sharpness: 1,
+    resolution: 10000,
+  },
+};
+
+/**
+ * Builds the Mapbox text-font array for area labels based on locale.
+ *
+ * @param locale - The locale code (e.g. 'en', 'zh', 'ar')
+ * @returns A [primaryFont, fallbackFont] tuple for Mapbox GL
+ */
+export function getAreaLabelFonts(locale: string): [string, string] {
+  const primary = getFontForLocale(locale);
+  const fallback = AREA_LABEL_CONFIG.fallbackFonts[0] ?? 'Arial Unicode MS Regular';
+  return [primary, fallback];
+}
+
+/**
+ * Fonts served locally as PBF glyphs in public/fonts/.
+ * Mapbox GL styles resolve font requests via their glyphs endpoint.
+ * Hosted styles (mapbox://...) don't include these fonts, so we intercept
+ * requests via `transformRequest` and redirect to local files.
+ */
+export const LOCAL_FONT_NAMES = new Set([
+  'Cinzel Regular',
+  'Cairo',
+  'Noto Sans SC',
+]);
+
+/**
  * Marker theme types
  */
 export type MarkerTheme = 'themed' | 'abstract';

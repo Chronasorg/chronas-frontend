@@ -76,6 +76,12 @@
       "watercolor": "Aguarela",
       "none": "Nenhum"
     },
+    "mapLabels": "Rótulos do mapa",
+    "labelModes": {
+      "historical": "Nomes históricos",
+      "modern": "Nomes modernos",
+      "both": "Ambos"
+    },
     "epicTypes": {
       "wars": "Guerras",
       "empires": "Impérios",

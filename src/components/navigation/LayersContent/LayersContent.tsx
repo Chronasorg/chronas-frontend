@@ -337,7 +337,6 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
               <ToggleSwitch checked={showProvinceBorders} onChange={setShowProvinceBorders}
                 label="Show province borders" testId="show-provinces-switch" />
             </label>
-
           </div>
         )}
       </div>

@@ -76,6 +76,12 @@
       "watercolor": "水彩",
       "none": "无"
     },
+    "mapLabels": "地图标签",
+    "labelModes": {
+      "historical": "历史名称",
+      "modern": "现代名称",
+      "both": "两者"
+    },
     "epicTypes": {
       "wars": "战争",
       "empires": "帝国",

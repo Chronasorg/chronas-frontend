@@ -9,8 +9,10 @@
 
 import { create } from 'zustand';
 import * as turf from '@turf/turf';
-import type { Feature, Polygon, MultiPolygon, FeatureCollection, Point } from 'geojson';
+import type { Feature, Polygon, MultiPolygon, FeatureCollection, Point, LineString } from 'geojson';
+import type GeoJSON from 'geojson';
 import { apiClient } from '../api/client';
+import { AREA_LABEL_CONFIG } from '../config/mapTheme';
 import { AREAS, METADATA, MARKERS } from '../api/endpoints';
 import type { MapAreaData, Marker, MarkerFilterState, MarkerType } from '../api/types';
 
@@ -68,6 +70,14 @@ export type AreaColorDimension = 'ruler' | 'religion' | 'religionGeneral' | 'cul
  * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
  */
 export type BasemapType = 'topographic' | 'watercolor' | 'none';
+
+/**
+ * Label name display mode for map area labels.
+ * - 'historical': Show historical empire/entity names (hide modern basemap labels)
+ * - 'modern': Show modern country names from basemap (hide custom area labels)
+ * - 'both': Show both historical and modern labels simultaneously
+ */
+export type LabelNameMode = 'historical' | 'modern' | 'both';
 
 /**
  * Mapping of basemap types to Mapbox style URLs.
@@ -167,8 +177,12 @@ export interface MapState {
   clusterMarkers: boolean;
   /** Marker filter state for toggling visibility by type - Requirement 6.3 */
   markerFilters: MarkerFilterState;
+  /** Label name display mode: historical (empire names), modern (country names), or both */
+  labelNameMode: LabelNameMode;
   /** Label data for entity labels on the map - Requirement 7.1 */
   labelData: LabelFeatureCollection | null;
+  /** Label line data for bezier curve labels (old Chronas-style) */
+  labelLineData: LabelLineFeatureCollection | null;
   /** AbortController for cancelling in-flight area data requests - Requirement 9.5, 11.2 */
   areaDataAbortController: AbortController | null;
   /** AbortController for cancelling in-flight marker requests - Requirement 9.5, 11.2 */
@@ -213,13 +227,34 @@ export interface LabelFeatureProperties {
   entityId: string;
   /** Dimension type */
   dimension: AreaColorDimension;
+  /** Normalized distance for zoom-dependent sizing (lineDistance / name.length^0.2) */
+  d?: number;
 }
 
 /**
- * GeoJSON FeatureCollection for label data.
+ * Label line feature properties for bezier curve labels.
+ * Used with symbol-placement: "line-center" for labels that flow along territory paths.
+ */
+export interface LabelLineFeatureProperties {
+  /** Entity display name */
+  n: string;
+  /** Normalized distance for zoom-dependent sizing (lineDistance / name.length^0.2) */
+  d: number;
+  /** Entity ID */
+  entityId: string;
+}
+
+/**
+ * GeoJSON FeatureCollection for label point data (centroids).
  * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
  */
 export type LabelFeatureCollection = FeatureCollection<Point, LabelFeatureProperties>;
+
+/**
+ * GeoJSON FeatureCollection for label line data (bezier curves).
+ * Used with symbol-placement: "line-center" for the old Chronas-style label rendering.
+ */
+export type LabelLineFeatureCollection = FeatureCollection<GeoJSON.LineString, LabelLineFeatureProperties>;
 
 /**
  * Map actions interface
@@ -513,6 +548,14 @@ export interface MapActions {
   cancelMarkersRequest: () => void;
 
   /**
+   * Sets the label name display mode.
+   * Controls whether historical empire names, modern country names, or both are shown on the map.
+   *
+   * @param mode - The label name mode ('historical', 'modern', or 'both')
+   */
+  setLabelNameMode: (mode: LabelNameMode) => void;
+
+  /**
    * Sets the active label dimension for entity labels.
    * Requirement 6.4, 6.5: Layer toggle controls for label dimension.
    *
@@ -718,7 +761,9 @@ export const initialState: MapState = {
   markerLimit: 5000,
   clusterMarkers: false,
   markerFilters: { ...defaultMarkerFilters },
+  labelNameMode: 'historical',
   labelData: null,
+  labelLineData: null,
   areaDataAbortController: null,
   markersAbortController: null,
 };
@@ -792,6 +837,13 @@ export function isValidColorDimension(dimension: unknown): dimension is AreaColo
  * @param basemap - The basemap type to validate
  * @returns true if the basemap type is valid
  */
+/**
+ * Validates that a label name mode is one of the allowed values.
+ */
+export function isValidLabelNameMode(mode: unknown): mode is LabelNameMode {
+  return mode === 'historical' || mode === 'modern' || mode === 'both';
+}
+
 export function isValidBasemapType(basemap: unknown): basemap is BasemapType {
   return basemap === 'topographic' || basemap === 'watercolor' || basemap === 'none';
 }
@@ -2017,13 +2069,8 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
   /**
    * Calculates labels for the active color dimension.
-   * Requirement 7.1: THE MapView SHALL display text labels for the currently active color dimension
-   * Requirement 7.5: THE MapView SHALL calculate label positions by finding the centroid of merged province polygons
-   * Requirement 7.6: THE MapView SHALL use appropriate font sizing based on the entity's territory size
-   *
-   * PERFORMANCE OPTIMIZATION: Instead of using expensive turf.union to merge all provinces,
-   * we calculate a weighted centroid based on individual province centroids and areas.
-   * This is much faster while still producing good label positions.
+   * Generates both Point features (for fallback) and LineString features (bezier curves)
+   * matching the old Chronas label system for historical atlas-style text placement.
    *
    * @param dimension - The color dimension to calculate labels for
    */
@@ -2032,30 +2079,29 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
     // Validate inputs
     if (!state.provincesGeoJSON || !state.currentAreaData || !state.metadata) {
-      set({ labelData: null });
+      set({ labelData: null, labelLineData: null });
       return;
     }
 
     // Population dimension doesn't have entity labels
     if (dimension === 'population') {
-      set({ labelData: null });
+      set({ labelData: null, labelLineData: null });
       return;
     }
 
     // Get dimension index for looking up values
     const dimensionIndex = DIMENSION_INDEX[dimension];
 
-    // Group province data by entity value (store centroid and area for weighted calculation)
-    interface ProvinceData {
+    // Group province coordinate data by entity value
+    interface ProvinceInfo {
       centroid: [number, number];
       area: number;
+      coords: number[][][]; // polygon coordinate rings
     }
-    const entityData = new Map<string, ProvinceData[]>();
+    const entityData = new Map<string, ProvinceInfo[]>();
 
     for (const feature of state.provincesGeoJSON.features) {
-      // Province ID is stored in the 'name' property of the GeoJSON feature
-      // After updateProvinceProperties runs, 'id' is also set
-      const provinceId = (feature.properties?.['id'] as string | undefined) ?? 
+      const provinceId = (feature.properties?.['id'] as string | undefined) ??
                          (feature.properties?.['name'] as string | undefined);
       if (!provinceId) continue;
 
@@ -2065,39 +2111,50 @@ export const useMapStore = create<MapStore>((set, get) => ({
       let entityValue = data[dimensionIndex] as string | undefined;
       if (!entityValue) continue;
 
-      // For religionGeneral, we need to look up the parent category
       if (dimension === 'religionGeneral') {
         entityValue = get().getReligionGeneral(entityValue);
       }
 
-      // Calculate centroid and area for this province
       try {
         const centroid = turf.centroid(feature);
         const area = turf.area(feature);
-        
-        const provinceData: ProvinceData = {
+
+        // Extract coordinate rings for extrema calculation
+        const geom = feature.geometry;
+        let coords: number[][][] = [];
+        if (geom.type === 'Polygon') {
+          coords = geom.coordinates as number[][][];
+        } else {
+          // MultiPolygon: flatten to array of coordinate rings
+          for (const poly of geom.coordinates) {
+            coords.push(...(poly as number[][][]));
+          }
+        }
+
+        const info: ProvinceInfo = {
           centroid: centroid.geometry.coordinates as [number, number],
           area,
+          coords,
         };
 
         const existing = entityData.get(entityValue);
         if (existing) {
-          existing.push(provinceData);
+          existing.push(info);
         } else {
-          entityData.set(entityValue, [provinceData]);
+          entityData.set(entityValue, [info]);
         }
       } catch {
-        // Skip provinces that fail to process
         continue;
       }
     }
 
-    // Calculate labels for each entity using weighted centroid
+    // Generate both point and line label features
     const labelFeatures: Feature<Point, LabelFeatureProperties>[] = [];
+    const labelLineFeatures: Feature<LineString, LabelLineFeatureProperties>[] = [];
 
     for (const [entityId, provinces] of entityData) {
       try {
-        // Calculate weighted centroid (weighted by area)
+        // Calculate weighted centroid
         let totalArea = 0;
         let weightedLng = 0;
         let weightedLat = 0;
@@ -2112,8 +2169,6 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
         const centroidLng = weightedLng / totalArea;
         const centroidLat = weightedLat / totalArea;
-
-        // Calculate font size based on total area
         const fontSize = calculateFontSize(totalArea);
 
         // Get entity name from metadata
@@ -2121,6 +2176,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
         const dimensionMetadata = state.metadata[metadataKey];
         const entityName = dimensionMetadata[entityId]?.name ?? entityId;
 
+        // --- Point feature (fallback) ---
         labelFeatures.push({
           type: 'Feature',
           geometry: {
@@ -2134,8 +2190,89 @@ export const useMapStore = create<MapStore>((set, get) => ({
             dimension,
           },
         });
+
+        // --- LineString feature (bezier curve like old Chronas) ---
+        // Filter to core territory: take provinces closest to the centroid
+        // that make up >= 80% of total area. This excludes distant colonies
+        // (e.g. French Guiana for France) that would produce absurd extrema.
+        const withDist = provinces.map((p) => ({
+          ...p,
+          dist: Math.sqrt(
+            (p.centroid[0] - centroidLng) ** 2 +
+            (p.centroid[1] - centroidLat) ** 2
+          ),
+        }));
+        withDist.sort((a, b) => a.dist - b.dist);
+
+        let cumArea = 0;
+        const areaThreshold = totalArea * 0.8;
+        const coreProvinces: typeof withDist = [];
+        for (const p of withDist) {
+          coreProvinces.push(p);
+          cumArea += p.area;
+          if (cumArea >= areaThreshold) break;
+        }
+
+        // Compute extrema from core provinces only
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let minXPt: [number, number] = [0, 0];
+        let maxXPt: [number, number] = [0, 0];
+        let minYPt: [number, number] = [0, 0];
+        let maxYPt: [number, number] = [0, 0];
+
+        for (const province of coreProvinces) {
+          for (const ring of province.coords) {
+            for (const coord of ring) {
+              const cx = coord[0] ?? 0;
+              const cy = coord[1] ?? 0;
+              if (cx < minX) { minX = cx; minXPt = [cx, cy]; }
+              if (cx > maxX) { maxX = cx; maxXPt = [cx, cy]; }
+              if (cy < minY) { minY = cy; minYPt = [cx, cy]; }
+              if (cy > maxY) { maxY = cy; maxYPt = [cx, cy]; }
+            }
+          }
+        }
+
+        // Determine label path: horizontal if wider, vertical if taller (like old Chronas)
+        const xSpan = maxX - minX;
+        const ySpan = maxY - minY;
+        let lineCoords: [number, number][];
+        if (xSpan > ySpan) {
+          // Horizontal: minX point -> centroid -> maxX point
+          lineCoords = [
+            minXPt,
+            [centroidLng, centroidLat],
+            maxXPt,
+          ];
+        } else {
+          // Vertical: minY point -> centroid -> maxY point
+          if (minYPt[0] - maxYPt[0] < 1) {
+            lineCoords = [minYPt, [centroidLng, centroidLat], maxYPt];
+          } else {
+            lineCoords = [maxYPt, [centroidLng, centroidLat], minYPt];
+          }
+        }
+
+        // Create bezier curve through the 3 control points
+        try {
+          const bareLine = turf.lineString(lineCoords);
+          const bezierLine = turf.bezierSpline(bareLine, AREA_LABEL_CONFIG.bezierOptions);
+          const lineDistance = turf.length(bareLine, { units: 'kilometers' });
+          const d = lineDistance / Math.pow(entityName.length, 0.2);
+
+          labelLineFeatures.push({
+            type: 'Feature',
+            geometry: bezierLine.geometry,
+            properties: {
+              n: entityName,
+              d,
+              entityId,
+            },
+          });
+        } catch {
+          // If bezier fails, skip the line feature (point feature is still available)
+        }
       } catch (error) {
-        // Skip entities that fail to process
         console.warn(`calculateLabels: Failed to process entity ${entityId}`, error);
       }
     }
@@ -2144,6 +2281,10 @@ export const useMapStore = create<MapStore>((set, get) => ({
       labelData: {
         type: 'FeatureCollection',
         features: labelFeatures,
+      },
+      labelLineData: {
+        type: 'FeatureCollection',
+        features: labelLineFeatures,
       },
     });
   },
@@ -2171,6 +2312,17 @@ export const useMapStore = create<MapStore>((set, get) => ({
       state.markersAbortController.abort();
       set({ markersAbortController: null });
     }
+  },
+
+  /**
+   * Sets the label name display mode.
+   */
+  setLabelNameMode: (mode: LabelNameMode) => {
+    if (!isValidLabelNameMode(mode)) {
+      console.warn(`setLabelNameMode: Invalid mode "${String(mode)}"`);
+      return;
+    }
+    set({ labelNameMode: mode });
   },
 
   /**

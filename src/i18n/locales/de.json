@@ -76,6 +76,12 @@
       "watercolor": "Aquarell",
       "none": "Transparent"
     },
+    "mapLabels": "Kartenbeschriftung",
+    "labelModes": {
+      "historical": "Historische Namen",
+      "modern": "Moderne Namen",
+      "both": "Beides"
+    },
     "epicTypes": {
       "wars": "Kriege",
       "empires": "Explorationen",

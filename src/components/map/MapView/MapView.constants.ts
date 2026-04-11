@@ -94,7 +94,7 @@ export const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
 /**
  * Default fill opacity for categorical layers.
  */
-export const DEFAULT_FILL_OPACITY = 0.7;
+export const DEFAULT_FILL_OPACITY = 0.6;
 
 /**
  * Marker icon configuration for each marker type.

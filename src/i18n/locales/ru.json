@@ -76,6 +76,12 @@
       "watercolor": "Акварель",
       "none": "Нет"
     },
+    "mapLabels": "Подписи карты",
+    "labelModes": {
+      "historical": "Исторические названия",
+      "modern": "Современные названия",
+      "both": "Оба"
+    },
     "epicTypes": {
       "wars": "Войны",
       "empires": "Империи",

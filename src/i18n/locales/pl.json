@@ -76,6 +76,12 @@
       "watercolor": "Akwarela",
       "none": "Brak"
     },
+    "mapLabels": "Etykiety mapy",
+    "labelModes": {
+      "historical": "Nazwy historyczne",
+      "modern": "Nazwy współczesne",
+      "both": "Oba"
+    },
     "epicTypes": {
       "wars": "Wojny",
       "empires": "Imperia",

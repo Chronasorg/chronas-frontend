@@ -76,6 +76,12 @@
       "watercolor": "Ακουαρέλα",
       "none": "Κανένας"
     },
+    "mapLabels": "Ετικέτες χάρτη",
+    "labelModes": {
+      "historical": "Ιστορικά ονόματα",
+      "modern": "Σύγχρονα ονόματα",
+      "both": "Και τα δύο"
+    },
     "epicTypes": {
       "wars": "Πόλεμοι",
       "empires": "Αυτοκρατορίες",

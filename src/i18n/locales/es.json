@@ -76,6 +76,12 @@
       "watercolor": "Acuarela",
       "none": "Ninguno"
     },
+    "mapLabels": "Etiquetas del mapa",
+    "labelModes": {
+      "historical": "Nombres históricos",
+      "modern": "Nombres modernos",
+      "both": "Ambos"
+    },
     "epicTypes": {
       "wars": "Guerras",
       "empires": "Imperios",

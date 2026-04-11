@@ -3626,7 +3626,7 @@ describe('MapView Property Tests', () => {
     const POPULATION_OPACITY_MIN = 0.3;
     const POPULATION_OPACITY_MAX = 1.0;
     const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
-    const DEFAULT_FILL_OPACITY = 0.7;
+    const DEFAULT_FILL_OPACITY = 0.6;
 
     /**
      * Builds a Mapbox GL interpolate expression for population opacity.
@@ -3696,7 +3696,7 @@ describe('MapView Property Tests', () => {
       );
     });
 
-    it('should return constant opacity (0.7) when populationOpacity is false', () => {
+    it('should return constant opacity (0.6) when populationOpacity is false', () => {
       fc.assert(
         fc.property(maxPopulationArb, (maxPop) => {
           const expr = getFillOpacityExpression(false, maxPop);
@@ -3704,7 +3704,7 @@ describe('MapView Property Tests', () => {
           // When populationOpacity is false, should return constant DEFAULT_FILL_OPACITY
           expect(typeof expr).toBe('number');
           expect(expr).toBe(DEFAULT_FILL_OPACITY);
-          expect(expr).toBe(0.7);
+          expect(expr).toBe(0.6);
         }),
         { numRuns: 100 }
       );
@@ -3843,7 +3843,7 @@ describe('MapView Property Tests', () => {
       expect(POPULATION_OPACITY_MIN).toBe(0.3);
       expect(POPULATION_OPACITY_MAX).toBe(1.0);
       expect(MAX_POPULATION_FOR_OPACITY).toBe(10000000);
-      expect(DEFAULT_FILL_OPACITY).toBe(0.7);
+      expect(DEFAULT_FILL_OPACITY).toBe(0.6);
     });
   });
 

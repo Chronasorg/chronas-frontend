@@ -76,6 +76,12 @@
       "watercolor": "जलरंग",
       "none": "कोई नहीं"
     },
+    "mapLabels": "मानचित्र लेबल",
+    "labelModes": {
+      "historical": "ऐतिहासिक नाम",
+      "modern": "आधुनिक नाम",
+      "both": "दोनों"
+    },
     "epicTypes": {
       "wars": "युद्ध",
       "empires": "साम्राज्य",

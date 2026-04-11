@@ -76,6 +76,12 @@
       "watercolor": "Sulu boya",
       "none": "Yok"
     },
+    "mapLabels": "Harita etiketleri",
+    "labelModes": {
+      "historical": "Tarihi isimler",
+      "modern": "Modern isimler",
+      "both": "Her ikisi"
+    },
     "epicTypes": {
       "wars": "Savaşlar",
       "empires": "İmparatorluklar",

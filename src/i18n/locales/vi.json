@@ -76,6 +76,12 @@
       "watercolor": "Màu nước",
       "none": "Không"
     },
+    "mapLabels": "Nhãn bản đồ",
+    "labelModes": {
+      "historical": "Tên lịch sử",
+      "modern": "Tên hiện đại",
+      "both": "Cả hai"
+    },
     "epicTypes": {
       "wars": "Chiến tranh",
       "empires": "Đế chế",

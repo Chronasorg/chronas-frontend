@@ -76,6 +76,12 @@
       "watercolor": "Aquarel·la",
       "none": "Cap"
     },
+    "mapLabels": "Etiquetes del mapa",
+    "labelModes": {
+      "historical": "Noms històrics",
+      "modern": "Noms moderns",
+      "both": "Ambdós"
+    },
     "epicTypes": {
       "wars": "Guerres",
       "empires": "Imperis",

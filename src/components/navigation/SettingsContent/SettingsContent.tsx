@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore, type Theme } from '@/stores/uiStore';
+import { useMapStore, type LabelNameMode } from '@/stores/mapStore';
 import { SUPPORTED_LANGUAGES } from '@/i18n/i18n';
 import styles from './SettingsContent.module.css';
 
@@ -10,12 +11,21 @@ interface SettingsContentProps {
 
 const THEME_VALUES: Theme[] = ['light', 'dark', 'luther'];
 
+interface LabelNameModeOption { value: LabelNameMode; label: string; }
+const LABEL_NAME_MODE_OPTIONS: LabelNameModeOption[] = [
+  { value: 'historical', label: 'Historical Names' },
+  { value: 'modern', label: 'Modern Names' },
+  { value: 'both', label: 'Both' },
+];
+
 export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onClose }) => {
   const { t } = useTranslation();
   const theme = useUIStore((s) => s.theme);
   const setTheme = useUIStore((s) => s.setTheme);
   const locale = useUIStore((s) => s.locale);
   const setLocale = useUIStore((s) => s.setLocale);
+  const labelNameMode = useMapStore((s) => s.labelNameMode);
+  const setLabelNameMode = useMapStore((s) => s.setLabelNameMode);
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
@@ -58,6 +68,23 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
           {SUPPORTED_LANGUAGES.map((lang) => (
             <option key={lang.code} value={lang.code}>
               {lang.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className={styles['section']}>
+        <div className={styles['sectionLabel']}>{t('layers.mapLabels', 'Map Labels')}</div>
+        <select
+          className={styles['languageSelect']}
+          value={labelNameMode}
+          onChange={(e) => setLabelNameMode(e.target.value as LabelNameMode)}
+          data-testid="label-name-mode-select"
+          aria-label={t('layers.mapLabels', 'Map Labels')}
+        >
+          {LABEL_NAME_MODE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {t(`layers.labelModes.${o.value}`, o.label)}
             </option>
           ))}
         </select>

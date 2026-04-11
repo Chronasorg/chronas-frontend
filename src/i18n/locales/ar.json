@@ -76,6 +76,12 @@
       "watercolor": "ألوان مائية",
       "none": "لا شيء"
     },
+    "mapLabels": "تسميات الخريطة",
+    "labelModes": {
+      "historical": "أسماء تاريخية",
+      "modern": "أسماء حديثة",
+      "both": "كلاهما"
+    },
     "epicTypes": {
       "wars": "حروب",
       "empires": "إمبراطوريات",

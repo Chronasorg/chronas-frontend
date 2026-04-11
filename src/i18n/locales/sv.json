@@ -76,6 +76,12 @@
       "watercolor": "Akvarell",
       "none": "Ingen"
     },
+    "mapLabels": "Kartetiketter",
+    "labelModes": {
+      "historical": "Historiska namn",
+      "modern": "Moderna namn",
+      "both": "Båda"
+    },
     "epicTypes": {
       "wars": "Krig",
       "empires": "Imperier",

@@ -76,6 +76,12 @@
       "watercolor": "水彩画",
       "none": "なし"
     },
+    "mapLabels": "地図ラベル",
+    "labelModes": {
+      "historical": "歴史的名称",
+      "modern": "現代名",
+      "both": "両方"
+    },
     "epicTypes": {
       "wars": "戦争",
       "empires": "帝国",

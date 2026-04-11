@@ -503,7 +503,6 @@ describe('LayersContent', () => {
       });
     });
 
-
     /**
      * Marker Limit Slider Tests (Requirement 4.1)
      *

@@ -76,6 +76,12 @@
       "watercolor": "Aquarel",
       "none": "Geen"
     },
+    "mapLabels": "Kaartlabels",
+    "labelModes": {
+      "historical": "Historische namen",
+      "modern": "Moderne namen",
+      "both": "Beide"
+    },
     "epicTypes": {
       "wars": "Oorlogen",
       "empires": "Rijken",
