@@ -261,19 +261,19 @@ export const YearDialog: React.FC<YearDialogProps> = ({
       onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
     >
-      <div className={styles['dialogContent']}>
-        {/* Close button in top-right corner (Requirement 7.6) */}
-        <button
-          ref={closeButtonRef}
-          type="button"
-          className={styles['closeButton']}
-          onClick={onClose}
-          aria-label="Close dialog"
-          data-testid="year-dialog-close"
-        >
-          <CloseIcon />
-        </button>
+      {/* Close button in top-right corner — direct child of overlay for correct absolute positioning (Requirement 7.6) */}
+      <button
+        ref={closeButtonRef}
+        type="button"
+        className={styles['closeButton']}
+        onClick={onClose}
+        aria-label="Close dialog"
+        data-testid="year-dialog-close"
+      >
+        <CloseIcon />
+      </button>
 
+      <div className={styles['dialogContent']}>
         {/* Centered input container (Requirement 7.3) */}
         <div className={styles['inputContainer']}>
           <input

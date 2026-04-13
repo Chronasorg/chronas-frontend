@@ -9,6 +9,7 @@ import { LayersContent } from '../navigation/LayersContent';
 import { SettingsContent } from '../navigation/SettingsContent';
 import { LoadingBar } from '../global/LoadingBar';
 import { AnnouncementBanner } from '../global/AnnouncementBanner/AnnouncementBanner';
+import { LoginDialog } from '../auth/LoginDialog/LoginDialog';
 import { useUIStore } from '../../stores/uiStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { clearURLParams } from '../../utils/urlStateUtils';
@@ -26,7 +27,7 @@ export interface AppShellProps {
  * Requirements: 2.1, 2.4, 2.7, 2.8, 2.9
  */
 export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
-  const { sidebarOpen, toggleSidebar, rightDrawerOpen, rightDrawerContent, closeRightDrawer } = useUIStore();
+  const { sidebarOpen, toggleSidebar, rightDrawerOpen, rightDrawerContent, closeRightDrawer, loginDialogOpen, closeLoginDialog } = useUIStore();
   const { drawerOpen, drawerContent, closeDrawer } = useNavigationStore();
 
   /**
@@ -85,6 +86,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
       <Suspense fallback={null}>
         <Timeline />
       </Suspense>
+
+      <LoginDialog isOpen={loginDialogOpen} onClose={closeLoginDialog} />
     </div>
   );
 };

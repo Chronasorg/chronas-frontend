@@ -35,21 +35,28 @@ export const YearMarkerLabel: React.FC<YearMarkerLabelProps> = ({
 
   // Find the custom time marker element
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
     const findMarker = () => {
       const marker = document.querySelector('.vis-custom-time.selectedYear');
       if (marker instanceof HTMLElement) {
         setMarkerElement(marker);
+        // Stop polling once found
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
       }
     };
 
     // Try immediately and then with a delay (marker may not exist yet)
     findMarker();
     const timeout = setTimeout(findMarker, 500);
-    const interval = setInterval(findMarker, 1000);
+    interval = setInterval(findMarker, 1000);
 
     return () => {
       clearTimeout(timeout);
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
   }, []);
 

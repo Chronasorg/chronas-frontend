@@ -124,15 +124,18 @@ function VisTimelineWrapperComponent(
     groupsDataSetRef.current = new DataSet<TimelineGroup>();
     const timeline = new VisTimeline(containerRef.current, itemsDataSetRef.current, groupsDataSetRef.current, options);
     timelineRef.current = timeline;
+    // Store references so off() uses the same function objects as on()
+    const handleRangeChange = () => onRangeChange?.();
+    const handleRangeChanged = () => onRangeChanged?.();
     timeline.on('click', handleClick);
-    timeline.on('rangechange', () => onRangeChange?.());
-    timeline.on('rangechanged', () => onRangeChanged?.());
+    timeline.on('rangechange', handleRangeChange);
+    timeline.on('rangechanged', handleRangeChanged);
     timeline.on('mouseMove', handleMouseMove);
     const customTimeIds = customTimeIdsRef.current;
     return () => {
       timeline.off('click', handleClick);
-      timeline.off('rangechange', () => onRangeChange?.());
-      timeline.off('rangechanged', () => onRangeChanged?.());
+      timeline.off('rangechange', handleRangeChange);
+      timeline.off('rangechanged', handleRangeChanged);
       timeline.off('mouseMove', handleMouseMove);
       timeline.destroy();
       timelineRef.current = null;
@@ -151,7 +154,9 @@ function VisTimelineWrapperComponent(
       className: item.className ? `${item.className} ${EPIC_ITEM_CLASS}` : EPIC_ITEM_CLASS,
       type: item.type ?? (item.end ? 'range' : 'point'),
     }));
-    itemsDataSetRef.current.add(processedItems);
+    if (processedItems.length > 0) {
+      itemsDataSetRef.current.add(processedItems);
+    }
   }, [items]);
 
   useEffect(() => {

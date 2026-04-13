@@ -59,12 +59,12 @@ export const EPIC_TYPES: EpicType[] = ['war', 'empire', 'religion', 'culture', '
  * Default epic filter state - all types enabled
  */
 export const defaultEpicFilters: Record<EpicType, boolean> = {
-  war: true,
-  empire: true,
-  religion: true,
-  culture: true,
-  person: true,
-  other: true,
+  war: false,
+  empire: false,
+  religion: false,
+  culture: false,
+  person: false,
+  other: false,
 };
 
 /**

@@ -1,0 +1,266 @@
+/**
+ * LoginDialog — modal overlay matching old chronas.org login popup.
+ * White card centered over the map with semi-transparent backdrop.
+ */
+
+/* Backdrop overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* White card */
+.card {
+  position: relative;
+  background: #fff;
+  width: 90vw;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.28);
+  animation: slideUp 250ms ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Close X button — top right of card */
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  border: none;
+  background: transparent;
+  padding: 6px;
+  cursor: pointer;
+  color: rgb(160, 160, 160);
+  transition: color 150ms ease;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: rgb(80, 80, 80);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid rgb(173, 135, 27);
+  outline-offset: 2px;
+}
+
+/* Card body */
+.body {
+  padding: 40px 48px 32px;
+}
+
+/* Title — matches old Chronas "SIGN INTO CHRONAS" */
+.title {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgb(73, 73, 73);
+  margin: 0 0 28px;
+}
+
+/* OAuth section header */
+.oauthHeader {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgb(160, 160, 160);
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+/* OAuth buttons row — horizontal like old Chronas */
+.oauthRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.oauthButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+  flex: 1;
+  justify-content: center;
+}
+
+.oauthButton:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  color: #fff;
+  text-decoration: none;
+}
+
+.oauthIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Divider — "OR" */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 20px;
+  color: rgb(180, 180, 180);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgb(224, 224, 224);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 1px solid rgb(224, 224, 224);
+  font-size: 14px;
+  font-family: inherit;
+  color: rgb(73, 73, 73);
+  background: transparent;
+  outline: none;
+  transition: border-color 200ms ease;
+  letter-spacing: 0.3px;
+}
+
+.input:focus {
+  border-bottom-color: rgb(173, 135, 27);
+}
+
+.input::placeholder {
+  color: rgb(189, 189, 189);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  border: none;
+  background: rgb(158, 158, 158);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: rgb(130, 130, 130);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error message */
+.error {
+  padding: 10px 14px;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 13px;
+  border-left: 3px solid #c62828;
+  margin-bottom: 4px;
+}
+
+/* Footer links — "Don't have an account? Join Chronas" / "Forgot password?" */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(240, 240, 240);
+  font-size: 12px;
+  color: rgb(140, 140, 140);
+}
+
+.footerLink {
+  color: rgb(173, 135, 27);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.footerLink:hover {
+  color: rgb(143, 111, 22);
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .body {
+    padding: 32px 24px 24px;
+  }
+
+  .oauthRow {
+    flex-direction: column;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}

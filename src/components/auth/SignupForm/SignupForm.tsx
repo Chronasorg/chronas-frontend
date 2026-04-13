@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { apiClient } from '@/api/client';
 import { AUTH } from '@/api/endpoints';
+import { getApiErrorMessage } from '@/api/errors';
 import { useAuthStore } from '@/stores/authStore';
 import styles from '../LoginForm/LoginForm.module.css';
 
@@ -30,13 +31,14 @@ export function SignupForm({ onSwitchToLogin, testId = 'signup-form' }: SignupFo
     setLoading(true);
 
     try {
-      const response = await apiClient.post<{ token: string }>(AUTH.SIGNUP, { username, email, password });
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await apiClient.post<{ token: string }>(AUTH.SIGNUP, { username, email: normalizedEmail, password });
       if (response.token) {
         setUser(response.token);
         void navigate('/');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');
+      setError(getApiErrorMessage(err, 'Signup failed. Please try again.'));
     } finally {
       setLoading(false);
     }

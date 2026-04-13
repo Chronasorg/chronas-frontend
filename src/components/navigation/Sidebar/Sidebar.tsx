@@ -98,8 +98,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               clearUser();
               void navigate('/');
             } else {
-              // Trigger login flow
-              void navigate('/login');
+              // Open login dialog overlay
+              useUIStore.getState().openLoginDialog();
             }
             break;
         }

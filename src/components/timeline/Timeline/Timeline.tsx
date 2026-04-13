@@ -96,6 +96,7 @@ export const Timeline: React.FC<TimelineProps> = ({
     stopAutoplay,
     getFilteredEpicItems,
     epicItems, // Subscribe to epicItems to trigger re-render when loaded
+    epicFilters, // Subscribe to epicFilters to trigger re-render when filters change
   } = useTimelineStore();
 
   // Get right drawer state to shift timeline away from it
@@ -182,8 +183,8 @@ export const Timeline: React.FC<TimelineProps> = ({
       console.log('[Timeline] Sample timeline item:', items[0]);
     }
     return items;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- epicItems included to trigger recompute when store data changes; getFilteredEpicItems is a stable function reference
-  }, [getFilteredEpicItems, transformEpicToTimelineItem, epicItems]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- epicItems and epicFilters trigger recompute when store data changes; getFilteredEpicItems reads them internally
+  }, [getFilteredEpicItems, transformEpicToTimelineItem, epicItems, epicFilters]);
 
   /**
    * Timeline options configuration
@@ -371,6 +372,11 @@ export const Timeline: React.FC<TimelineProps> = ({
     setYear(year);
     setIsYearDialogOpen(false);
     setIsDefaultView(false);
+    // Move the timeline viewport to center on the new year
+    if (timelineRef.current) {
+      const targetDate = new Date(new Date(0, 1, 1).setFullYear(year));
+      timelineRef.current.moveTo(targetDate, { animation: true });
+    }
   }, [setYear]);
 
   const handleYearClick = useCallback(() => {

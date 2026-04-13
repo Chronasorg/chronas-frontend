@@ -16,8 +16,9 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { createRef } from 'react';
 
 // Mock vis-timeline and vis-data since they require DOM APIs not available in jsdom
-const { mockTimelineClass, mockDataSetClass } = vi.hoisted(() => {
+const { mockTimelineClass, mockDataSetClass, getLastTimelineInstance } = vi.hoisted(() => {
   const fn = () => vi.fn();
+  let lastInstance: InstanceType<typeof mockTimelineClass> | null = null;
   const mockTimelineClass = class {
     destroy = fn();
     on = fn();
@@ -32,15 +33,19 @@ const { mockTimelineClass, mockDataSetClass } = vi.hoisted(() => {
     addCustomTime = fn();
     setCustomTime = fn();
     setOptions = fn();
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- test mock needs to capture instance
+    constructor() { lastInstance = this; }
   };
+  const getLastTimelineInstance = () => lastInstance;
   const mockDataSetClass = class {
     clear = fn();
     add = fn();
     remove = fn();
     update = fn();
     get = fn().mockReturnValue([]);
+    getIds = fn().mockReturnValue([]);
   };
-  return { mockTimelineClass, mockDataSetClass };
+  return { mockTimelineClass, mockDataSetClass, getLastTimelineInstance };
 });
 
 vi.mock('vis-timeline', () => ({
@@ -636,6 +641,31 @@ describe('VisTimelineWrapper Component', () => {
         rerender(<VisTimelineWrapper {...defaultProps} />);
         rerender(<VisTimelineWrapper {...defaultProps} />);
       }).not.toThrow();
+    });
+
+    it('deregisters rangechange/rangechanged with the same function references used to register', () => {
+      const onRangeChange = vi.fn();
+      const onRangeChanged = vi.fn();
+      const { unmount } = render(
+        <VisTimelineWrapper {...defaultProps} onRangeChange={onRangeChange} onRangeChanged={onRangeChanged} />
+      );
+
+      const instance = getLastTimelineInstance();
+      expect(instance).not.toBeNull();
+
+      unmount();
+
+      type CallTuple = [string, (...args: unknown[]) => void];
+      const onCalls = (instance!.on as ReturnType<typeof vi.fn>).mock.calls as CallTuple[];
+      const offCalls = (instance!.off as ReturnType<typeof vi.fn>).mock.calls as CallTuple[];
+
+      const rangeChangeOn = onCalls.find((c) => c[0] === 'rangechange')?.[1];
+      const rangeChangeOff = offCalls.find((c) => c[0] === 'rangechange')?.[1];
+      expect(rangeChangeOn).toBe(rangeChangeOff);
+
+      const rangeChangedOn = onCalls.find((c) => c[0] === 'rangechanged')?.[1];
+      const rangeChangedOff = offCalls.find((c) => c[0] === 'rangechanged')?.[1];
+      expect(rangeChangedOn).toBe(rangeChangedOff);
     });
 
     it('handles prop changes without error', () => {

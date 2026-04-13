@@ -5,9 +5,10 @@
  * Requirements: US-8.2
  */
 
+import { env } from '@/config/env';
 import styles from './OAuthButtons.module.css';
 
-const API_BASE = 'https://api.chronas.org/v1';
+const API_BASE = env.apiBaseUrl;
 
 const PROVIDERS = [
   { id: 'google', label: 'Google', color: '#4285F4', path: '/auth/login/google' },

@@ -399,12 +399,12 @@ describe('Timeline Component', () => {
       
       act(() => {
         useTimelineStore.getState().setEpicItems(epicItems);
-        // Disable war type filter
-        useTimelineStore.getState().setEpicFilter('war', false);
+        // Enable only empire filter (filters start disabled by default)
+        useTimelineStore.getState().setEpicFilter('empire', true);
       });
-      
+
       render(<Timeline />);
-      
+
       // Verify filtered items - only empire items should be included
       const filteredItems = useTimelineStore.getState().getFilteredEpicItems();
       expect(filteredItems).toHaveLength(1);
@@ -427,14 +427,16 @@ describe('Timeline Component', () => {
       
       act(() => {
         useTimelineStore.getState().setEpicItems(epicItems);
+        // Enable all filters first (defaults are disabled)
+        useTimelineStore.getState().setAllEpicFilters(true);
       });
-      
+
       render(<Timeline />);
-      
-      // Initially all filters are enabled
+
+      // Initially all filters are enabled (we just set them)
       let filteredItems = useTimelineStore.getState().getFilteredEpicItems();
       expect(filteredItems).toHaveLength(1);
-      
+
       // Disable empire filter
       act(() => {
         useTimelineStore.getState().setEpicFilter('empire', false);

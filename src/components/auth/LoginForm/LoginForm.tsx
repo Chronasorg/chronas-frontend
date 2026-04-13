@@ -9,6 +9,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { apiClient } from '@/api/client';
 import { AUTH } from '@/api/endpoints';
+import { getApiErrorMessage } from '@/api/errors';
 import { useAuthStore } from '@/stores/authStore';
 import { OAuthButtons } from '../OAuthButtons/OAuthButtons';
 import styles from './LoginForm.module.css';
@@ -32,13 +33,14 @@ export function LoginForm({ onSwitchToSignup, testId = 'login-form' }: LoginForm
     setLoading(true);
 
     try {
-      const response = await apiClient.post<{ token: string }>(AUTH.LOGIN, { email, password });
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await apiClient.post<{ token: string }>(AUTH.LOGIN, { email: normalizedEmail, password });
       if (response.token) {
         setUser(response.token);
         void navigate('/');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
+      setError(getApiErrorMessage(err, 'Login failed. Please check your credentials.'));
     } finally {
       setLoading(false);
     }

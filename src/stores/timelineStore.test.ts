@@ -89,15 +89,15 @@ describe('useTimelineStore', () => {
       expect(state.isYearDialogOpen).toBe(false);
     });
 
-    it('should have all epic filters enabled initially', () => {
+    it('should have all epic filters disabled initially', () => {
       const state = useTimelineStore.getState();
       expect(state.epicFilters).toEqual(defaultEpicFilters);
-      expect(state.epicFilters.war).toBe(true);
-      expect(state.epicFilters.empire).toBe(true);
-      expect(state.epicFilters.religion).toBe(true);
-      expect(state.epicFilters.culture).toBe(true);
-      expect(state.epicFilters.person).toBe(true);
-      expect(state.epicFilters.other).toBe(true);
+      expect(state.epicFilters.war).toBe(false);
+      expect(state.epicFilters.empire).toBe(false);
+      expect(state.epicFilters.religion).toBe(false);
+      expect(state.epicFilters.culture).toBe(false);
+      expect(state.epicFilters.person).toBe(false);
+      expect(state.epicFilters.other).toBe(false);
     });
   });
 
@@ -560,44 +560,43 @@ describe('useTimelineStore', () => {
   });
 
   describe('setEpicFilter', () => {
-    it('should set a single epic filter to false', () => {
-      const { setEpicFilter } = useTimelineStore.getState();
-      setEpicFilter('war', false);
-
-      const state = useTimelineStore.getState();
-      expect(state.epicFilters.war).toBe(false);
-      // Other filters should remain true
-      expect(state.epicFilters.empire).toBe(true);
-      expect(state.epicFilters.religion).toBe(true);
-      expect(state.epicFilters.culture).toBe(true);
-      expect(state.epicFilters.person).toBe(true);
-      expect(state.epicFilters.other).toBe(true);
-    });
-
     it('should set a single epic filter to true', () => {
       const { setEpicFilter } = useTimelineStore.getState();
-      // First disable it
-      setEpicFilter('empire', false);
-      expect(useTimelineStore.getState().epicFilters.empire).toBe(false);
-      
-      // Then enable it
+      setEpicFilter('war', true);
+
+      const state = useTimelineStore.getState();
+      expect(state.epicFilters.war).toBe(true);
+      // Other filters should remain false (default)
+      expect(state.epicFilters.empire).toBe(false);
+      expect(state.epicFilters.religion).toBe(false);
+      expect(state.epicFilters.culture).toBe(false);
+      expect(state.epicFilters.person).toBe(false);
+      expect(state.epicFilters.other).toBe(false);
+    });
+
+    it('should toggle a single epic filter on and off', () => {
+      const { setEpicFilter } = useTimelineStore.getState();
+      // Enable it (starts disabled)
       setEpicFilter('empire', true);
       expect(useTimelineStore.getState().epicFilters.empire).toBe(true);
+
+      // Then disable it again
+      setEpicFilter('empire', false);
+      expect(useTimelineStore.getState().epicFilters.empire).toBe(false);
     });
 
     it('should set multiple epic filters independently', () => {
       const { setEpicFilter } = useTimelineStore.getState();
-      setEpicFilter('war', false);
-      setEpicFilter('religion', false);
-      setEpicFilter('person', false);
+      setEpicFilter('war', true);
+      setEpicFilter('culture', true);
 
       const state = useTimelineStore.getState();
-      expect(state.epicFilters.war).toBe(false);
-      expect(state.epicFilters.empire).toBe(true);
+      expect(state.epicFilters.war).toBe(true);
+      expect(state.epicFilters.empire).toBe(false);
       expect(state.epicFilters.religion).toBe(false);
       expect(state.epicFilters.culture).toBe(true);
       expect(state.epicFilters.person).toBe(false);
-      expect(state.epicFilters.other).toBe(true);
+      expect(state.epicFilters.other).toBe(false);
     });
 
     it('should handle all epic types', () => {
@@ -723,16 +722,18 @@ describe('useTimelineStore', () => {
     ];
 
     it('should return all items when all filters are enabled', () => {
-      const { setEpicItems, getFilteredEpicItems } = useTimelineStore.getState();
+      const { setEpicItems, setAllEpicFilters, getFilteredEpicItems } = useTimelineStore.getState();
       setEpicItems(sampleEpicItems);
+      setAllEpicFilters(true);
 
       const filtered = getFilteredEpicItems();
       expect(filtered).toHaveLength(6);
     });
 
     it('should filter out war items when war filter is disabled', () => {
-      const { setEpicItems, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
+      const { setEpicItems, setAllEpicFilters, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
       setEpicItems(sampleEpicItems);
+      setAllEpicFilters(true);
       setEpicFilter('war', false);
 
       const filtered = getFilteredEpicItems();
@@ -741,8 +742,9 @@ describe('useTimelineStore', () => {
     });
 
     it('should filter out empire items when empire filter is disabled', () => {
-      const { setEpicItems, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
+      const { setEpicItems, setAllEpicFilters, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
       setEpicItems(sampleEpicItems);
+      setAllEpicFilters(true);
       setEpicFilter('empire', false);
 
       const filtered = getFilteredEpicItems();
@@ -751,8 +753,9 @@ describe('useTimelineStore', () => {
     });
 
     it('should filter out person items when person filter is disabled', () => {
-      const { setEpicItems, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
+      const { setEpicItems, setAllEpicFilters, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
       setEpicItems(sampleEpicItems);
+      setAllEpicFilters(true);
       setEpicFilter('person', false);
 
       const filtered = getFilteredEpicItems();
@@ -761,8 +764,9 @@ describe('useTimelineStore', () => {
     });
 
     it('should filter out multiple types when multiple filters are disabled', () => {
-      const { setEpicItems, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
+      const { setEpicItems, setAllEpicFilters, setEpicFilter, getFilteredEpicItems } = useTimelineStore.getState();
       setEpicItems(sampleEpicItems);
+      setAllEpicFilters(true);
       setEpicFilter('war', false);
       setEpicFilter('religion', false);
       setEpicFilter('other', false);
@@ -809,11 +813,12 @@ describe('useTimelineStore', () => {
         },
       ];
       setEpicItems(itemsWithUnknown);
-      
+
       // With 'other' enabled, should include the item
+      setEpicFilter('other', true);
       let filtered = getFilteredEpicItems();
       expect(filtered).toHaveLength(1);
-      
+
       // With 'other' disabled, should exclude the item
       setEpicFilter('other', false);
       filtered = getFilteredEpicItems();
@@ -1091,13 +1096,13 @@ describe('EPIC_TYPES constant', () => {
 });
 
 describe('defaultEpicFilters constant', () => {
-  it('should have all filters enabled by default', () => {
-    expect(defaultEpicFilters.war).toBe(true);
-    expect(defaultEpicFilters.empire).toBe(true);
-    expect(defaultEpicFilters.religion).toBe(true);
-    expect(defaultEpicFilters.culture).toBe(true);
-    expect(defaultEpicFilters.person).toBe(true);
-    expect(defaultEpicFilters.other).toBe(true);
+  it('should have all filters disabled by default', () => {
+    expect(defaultEpicFilters.war).toBe(false);
+    expect(defaultEpicFilters.empire).toBe(false);
+    expect(defaultEpicFilters.religion).toBe(false);
+    expect(defaultEpicFilters.culture).toBe(false);
+    expect(defaultEpicFilters.person).toBe(false);
+    expect(defaultEpicFilters.other).toBe(false);
   });
 });
 

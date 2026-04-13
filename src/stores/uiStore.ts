@@ -55,6 +55,8 @@ export interface UIState {
   rightDrawerContent: DrawerContent | null;
   /** Whether the announcement banner is visible */
   bannerVisible: boolean;
+  /** Whether the login dialog is open */
+  loginDialogOpen: boolean;
 }
 
 /**
@@ -73,6 +75,10 @@ export interface UIActions {
   closeRightDrawer: () => void;
   /** Toggles the announcement banner */
   toggleBanner: () => void;
+  /** Opens the login dialog */
+  openLoginDialog: () => void;
+  /** Closes the login dialog */
+  closeLoginDialog: () => void;
 }
 
 /**
@@ -91,6 +97,7 @@ const defaultState: UIState = {
   rightDrawerOpen: false,
   rightDrawerContent: null,
   bannerVisible: true,
+  loginDialogOpen: false,
 };
 
 /**
@@ -213,6 +220,14 @@ export const useUIStore = create<UIStore>()(
 
       toggleBanner: () => {
         set((state) => ({ bannerVisible: !state.bannerVisible }));
+      },
+
+      openLoginDialog: () => {
+        set({ loginDialogOpen: true });
+      },
+
+      closeLoginDialog: () => {
+        set({ loginDialogOpen: false });
       },
     }),
     {

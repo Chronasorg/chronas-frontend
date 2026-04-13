@@ -18,6 +18,7 @@ import type {
 } from 'axios';
 import { env } from '../config/env';
 import { useAuthStore } from '../stores/authStore';
+import { useUIStore } from '../stores/uiStore';
 
 // localStorage key for token (matches authStore)
 const TOKEN_STORAGE_KEY = 'chs_token';
@@ -100,8 +101,8 @@ function createApiClient(): AxiosInstance {
         // Clear auth state using Zustand store
         useAuthStore.getState().clearUser();
 
-        // Redirect to login page using hash routing
-        window.location.hash = '#/login';
+        // Open login dialog overlay
+        useUIStore.getState().openLoginDialog();
       }
 
       // Handle 403 Forbidden errors
