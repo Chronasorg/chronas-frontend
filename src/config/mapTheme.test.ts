@@ -18,6 +18,9 @@ import {
   getClusterIconAtlasUrl,
   THEME_NAMES,
   isValidThemeName,
+  AREA_LABEL_CONFIG,
+  getAreaLabelFonts,
+  LOCAL_FONT_NAMES,
 } from './mapTheme';
 
 describe('mapTheme', () => {
@@ -225,6 +228,173 @@ describe('mapTheme', () => {
       expect(isValidThemeName('invalid')).toBe(false);
       expect(isValidThemeName('')).toBe(false);
       expect(isValidThemeName('LIGHT')).toBe(false);
+    });
+  });
+
+  describe('AREA_LABEL_CONFIG', () => {
+    describe('lineLayout', () => {
+      it('should use line-center symbol placement', () => {
+        expect(AREA_LABEL_CONFIG.lineLayout.symbolPlacement).toBe('line-center');
+      });
+
+      it('should use uppercase text transform', () => {
+        expect(AREA_LABEL_CONFIG.lineLayout.textTransform).toBe('uppercase');
+      });
+
+      it('should not allow text overlap', () => {
+        expect(AREA_LABEL_CONFIG.lineLayout.textAllowOverlap).toBe(false);
+      });
+
+      it('should have letter spacing for cartographic feel', () => {
+        expect(AREA_LABEL_CONFIG.lineLayout.textLetterSpacing).toBeGreaterThan(0);
+        expect(AREA_LABEL_CONFIG.lineLayout.textLetterSpacing).toBe(0.18);
+      });
+
+      it('should limit text bending angle', () => {
+        expect(AREA_LABEL_CONFIG.lineLayout.textMaxAngle).toBeLessThanOrEqual(45);
+        expect(AREA_LABEL_CONFIG.lineLayout.textMaxAngle).toBe(25);
+      });
+
+      it('should have collision padding', () => {
+        expect(AREA_LABEL_CONFIG.lineLayout.textPadding).toBeGreaterThan(0);
+      });
+
+      it('should have a zoom-interpolated textSize expression with 4 zoom stops', () => {
+        const expr = AREA_LABEL_CONFIG.lineLayout.textSize;
+        expect(Array.isArray(expr)).toBe(true);
+        expect(expr[0]).toBe('interpolate');
+        // 4 zoom stops: zoom values at indices 3, 5, 7, 9
+        expect(expr[3]).toBe(2);
+        expect(expr[5]).toBe(4);
+        expect(expr[7]).toBe(7);
+        expect(expr[9]).toBe(9);
+      });
+    });
+
+    describe('linePaint', () => {
+      it('should use warm dark brown text color instead of harsh black', () => {
+        expect(AREA_LABEL_CONFIG.linePaint.textColor).toBe('#1a1206');
+      });
+
+      it('should have a strong halo width for readability over colorful polygons', () => {
+        expect(AREA_LABEL_CONFIG.linePaint.textHaloWidth).toBe(3);
+      });
+
+      it('should have sharp halo for maximum contrast', () => {
+        expect(AREA_LABEL_CONFIG.linePaint.textHaloBlur).toBe(0);
+      });
+
+      it('should use a warm parchment halo color', () => {
+        expect(AREA_LABEL_CONFIG.linePaint.textHaloColor).toMatch(/^rgba\(/);
+      });
+    });
+
+    describe('pointLayout', () => {
+      it('should have letter spacing for atlas-style text', () => {
+        expect(AREA_LABEL_CONFIG.pointLayout.textLetterSpacing).toBe(0.2);
+      });
+
+      it('should not allow text overlap', () => {
+        expect(AREA_LABEL_CONFIG.pointLayout.textAllowOverlap).toBe(false);
+      });
+
+      it('should set text as optional for collision handling', () => {
+        expect(AREA_LABEL_CONFIG.pointLayout.textOptional).toBe(true);
+      });
+
+      it('should have a zoom-interpolated textSize expression', () => {
+        const expr = AREA_LABEL_CONFIG.pointLayout.textSize;
+        expect(Array.isArray(expr)).toBe(true);
+        expect(expr[0]).toBe('interpolate');
+      });
+    });
+
+    describe('pointPaint', () => {
+      it('should match line paint colors for visual consistency', () => {
+        expect(AREA_LABEL_CONFIG.pointPaint.textColor).toBe(
+          AREA_LABEL_CONFIG.linePaint.textColor
+        );
+        expect(AREA_LABEL_CONFIG.pointPaint.textHaloColor).toBe(
+          AREA_LABEL_CONFIG.linePaint.textHaloColor
+        );
+      });
+
+      it('should match line paint halo width', () => {
+        expect(AREA_LABEL_CONFIG.pointPaint.textHaloWidth).toBe(
+          AREA_LABEL_CONFIG.linePaint.textHaloWidth
+        );
+      });
+    });
+
+    describe('opacity transitions', () => {
+      it('should have line text opacity fade-in expression', () => {
+        const expr = AREA_LABEL_CONFIG.lineTextOpacity;
+        expect(Array.isArray(expr)).toBe(true);
+        expect(expr[0]).toBe('interpolate');
+        // Should start at 0 opacity and reach 1
+        expect(expr[4]).toBe(0);
+        expect(expr[6]).toBe(1);
+      });
+
+      it('should have point text opacity fade-in expression', () => {
+        const expr = AREA_LABEL_CONFIG.pointTextOpacity;
+        expect(Array.isArray(expr)).toBe(true);
+        expect(expr[0]).toBe('interpolate');
+      });
+    });
+
+    describe('bezierOptions', () => {
+      it('should have sharpness and resolution settings', () => {
+        expect(AREA_LABEL_CONFIG.bezierOptions.sharpness).toBe(1);
+        expect(AREA_LABEL_CONFIG.bezierOptions.resolution).toBe(10000);
+      });
+    });
+
+    describe('fallbackFonts', () => {
+      it('should have Arial Unicode MS Regular as fallback', () => {
+        expect(AREA_LABEL_CONFIG.fallbackFonts).toContain('Arial Unicode MS Regular');
+      });
+    });
+  });
+
+  describe('getAreaLabelFonts', () => {
+    it('should return Cinzel Regular as primary for English', () => {
+      const fonts = getAreaLabelFonts('en');
+      expect(fonts[0]).toBe('Cinzel Regular');
+      expect(fonts[1]).toBe('Arial Unicode MS Regular');
+    });
+
+    it('should return Noto Sans SC as primary for Chinese', () => {
+      const fonts = getAreaLabelFonts('zh');
+      expect(fonts[0]).toBe('Noto Sans SC');
+    });
+
+    it('should return Cairo as primary for Arabic', () => {
+      const fonts = getAreaLabelFonts('ar');
+      expect(fonts[0]).toBe('Cairo');
+    });
+
+    it('should always return a 2-element tuple', () => {
+      const fonts = getAreaLabelFonts('en');
+      expect(fonts).toHaveLength(2);
+    });
+  });
+
+  describe('LOCAL_FONT_NAMES', () => {
+    it('should include Cinzel Regular', () => {
+      expect(LOCAL_FONT_NAMES.has('Cinzel Regular')).toBe(true);
+    });
+
+    it('should include Cairo', () => {
+      expect(LOCAL_FONT_NAMES.has('Cairo')).toBe(true);
+    });
+
+    it('should include Noto Sans SC', () => {
+      expect(LOCAL_FONT_NAMES.has('Noto Sans SC')).toBe(true);
+    });
+
+    it('should not include fonts served by Mapbox CDN', () => {
+      expect(LOCAL_FONT_NAMES.has('Arial Unicode MS Regular')).toBe(false);
     });
   });
 });

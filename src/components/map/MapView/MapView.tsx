@@ -1608,12 +1608,17 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-transform': AREA_LABEL_CONFIG.lineLayout.textTransform,
               'text-allow-overlap': AREA_LABEL_CONFIG.lineLayout.textAllowOverlap,
               'text-size': AREA_LABEL_CONFIG.lineLayout.textSize as MapboxExpression,
+              'text-letter-spacing': AREA_LABEL_CONFIG.lineLayout.textLetterSpacing,
+              'text-max-angle': AREA_LABEL_CONFIG.lineLayout.textMaxAngle,
+              'text-padding': AREA_LABEL_CONFIG.lineLayout.textPadding,
+              'symbol-sort-key': ['*', -1, ['get', 'd']],
             }}
             paint={{
               'text-color': AREA_LABEL_CONFIG.linePaint.textColor,
               'text-halo-width': AREA_LABEL_CONFIG.linePaint.textHaloWidth,
               'text-halo-blur': AREA_LABEL_CONFIG.linePaint.textHaloBlur,
               'text-halo-color': AREA_LABEL_CONFIG.linePaint.textHaloColor,
+              'text-opacity': AREA_LABEL_CONFIG.lineTextOpacity as MapboxExpression,
             }}
           />
         </Source>
@@ -1643,6 +1648,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-halo-color': AREA_LABEL_CONFIG.pointPaint.textHaloColor,
               'text-halo-width': AREA_LABEL_CONFIG.pointPaint.textHaloWidth,
               'text-halo-blur': AREA_LABEL_CONFIG.pointPaint.textHaloBlur,
+              'text-opacity': AREA_LABEL_CONFIG.pointTextOpacity as MapboxExpression,
             }}
           />
         </Source>

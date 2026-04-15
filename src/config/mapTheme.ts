@@ -154,12 +154,15 @@ export function getFontForLocale(locale: string): string {
 
 /**
  * Area label styling configuration.
- * Ported from old Chronas map-style-basic-v8.json to match the classical atlas look.
+ * Styled to match the classical atlas / historical cartography aesthetic of old Chronas,
+ * while preserving the higher label density of the new version.
  *
  * The `d` property on each label feature is `lineDistance / name.length^0.2` (in km).
- * The text-size expression interpolates by both zoom level and `d`:
- *   - At zoom 2: d=1500 → 8px, d=3500 → 30px
- *   - At zoom 9: d=1500 → 80px, d=3500 → 300px
+ * Text size uses a nested zoom × d interpolation with 4 zoom stops for smooth scaling:
+ *   - zoom 2 (far):  only major empires (high d) are legible
+ *   - zoom 4 (mid):  secondary labels become readable
+ *   - zoom 7 (close): dense local labels fill in
+ *   - zoom 9 (max):  full detail
  */
 export const AREA_LABEL_CONFIG = {
   /** Mapbox layout properties for the bezier-curve line labels */
@@ -167,35 +170,47 @@ export const AREA_LABEL_CONFIG = {
     symbolPlacement: 'line-center' as const,
     textTransform: 'uppercase' as const,
     textAllowOverlap: false,
+    /** Letter spacing for a spread-out atlas / cartographic feel */
+    textLetterSpacing: 0.18,
+    /** Max angle change per character along bezier — keeps text from bending too sharply */
+    textMaxAngle: 25,
+    /** Padding for collision detection — prevents overlapping nearby labels */
+    textPadding: 14,
     /**
      * Nested interpolation: zoom → (d → fontSize).
-     * Exactly matches old Chronas map-style-basic-v8.json.
-     */
-    /**
-     * Based on old Chronas map-style-basic-v8.json formula, scaled up ~50%
-     * to compensate for the busier vector basemap (old Chronas used a
-     * desaturated raster basemap where even small text was prominent).
+     * 4 zoom stops give a gradual reveal from far to close zoom.
+     * At each zoom level, 3 d-stops define a clear hierarchy:
+     *   low d (small entities) → small text
+     *   mid d (medium entities) → medium text
+     *   high d (major empires) → large text
      */
     textSize: [
       'interpolate',
       ['linear'],
       ['zoom'],
       2,
-      ['interpolate', ['linear'], ['get', 'd'], 1000, 10, 3500, 45],
+      ['interpolate', ['linear'], ['get', 'd'], 600, 8, 1800, 16, 4000, 46],
+      4,
+      ['interpolate', ['linear'], ['get', 'd'], 600, 16, 1800, 36, 4000, 100],
+      7,
+      ['interpolate', ['linear'], ['get', 'd'], 600, 40, 1800, 80, 4000, 240],
       9,
-      ['interpolate', ['linear'], ['get', 'd'], 1000, 120, 3500, 450],
+      ['interpolate', ['linear'], ['get', 'd'], 600, 90, 1800, 150, 4000, 440],
     ],
   },
   /**
    * Mapbox paint properties for the bezier-curve line labels.
-   * Halo is wider than old Chronas (which used 1px) because our vector basemap
-   * and full-opacity province fills need stronger contrast for legibility.
+   * Warm charcoal text with a subtle parchment halo for the editorial atlas look.
    */
   linePaint: {
-    textColor: '#1a1a1a',
+    /** Dark warm brown — maximum readability over saturated polygon fills */
+    textColor: '#1a1206',
+    /** Wide halo to cut through colorful backgrounds; vector basemap needs more than old Chronas */
     textHaloWidth: 3,
+    /** Sharp halo edge for best contrast on busy backgrounds */
     textHaloBlur: 0,
-    textHaloColor: 'rgba(255, 252, 235, 0.94)',
+    /** Opaque warm parchment halo */
+    textHaloColor: 'rgba(255, 252, 235, 0.97)',
   },
   /** Mapbox layout properties for the point fallback labels */
   pointLayout: {
@@ -204,26 +219,45 @@ export const AREA_LABEL_CONFIG = {
     textAllowOverlap: false,
     textIgnorePlacement: false,
     textOptional: true,
-    textLetterSpacing: 0.15,
+    textLetterSpacing: 0.2,
     textMaxWidth: 12,
-    textPadding: 8,
+    textPadding: 10,
     textSize: [
       'interpolate',
       ['linear'],
       ['zoom'],
-      1, ['*', ['get', 'fontSize'], 0.2],
+      1, ['*', ['get', 'fontSize'], 0.18],
       3, ['*', ['get', 'fontSize'], 0.35],
       5, ['*', ['get', 'fontSize'], 0.6],
-      7, ['*', ['get', 'fontSize'], 0.85],
+      7, ['*', ['get', 'fontSize'], 0.9],
     ],
   },
   /** Mapbox paint properties for the point fallback labels */
   pointPaint: {
-    textColor: '#1a1a1a',
-    textHaloColor: 'rgba(255, 252, 235, 0.94)',
+    textColor: '#1a1206',
+    textHaloColor: 'rgba(255, 252, 235, 0.97)',
     textHaloWidth: 3,
     textHaloBlur: 0,
   },
+  /**
+   * Zoom-dependent text opacity for smooth label fade-in.
+   * Prevents abrupt popping when labels appear at zoom thresholds.
+   */
+  lineTextOpacity: [
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    1.5, 0,
+    2.2, 1,
+  ],
+  /** Zoom-dependent opacity for point fallback labels */
+  pointTextOpacity: [
+    'interpolate',
+    ['linear'],
+    ['zoom'],
+    1.5, 0,
+    2.5, 1,
+  ],
   /** Fallback font stack when locale-specific font is unavailable */
   fallbackFonts: ['Arial Unicode MS Regular'] as string[],
   /** bezierSpline options matching old Chronas turf.bezier behaviour */

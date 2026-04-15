@@ -3039,9 +3039,9 @@ describe('Property 12: Label Positioning by Dimension', () => {
             expect(typeof fontSize).toBe('number');
             expect(fontSize).toBeGreaterThan(0);
             
-            // Font size should be within the defined range [10, 20]
-            expect(fontSize).toBeGreaterThanOrEqual(10);
-            expect(fontSize).toBeLessThanOrEqual(20);
+            // Font size should be within the defined range [LABEL_FONT_SIZE_MIN, LABEL_FONT_SIZE_MAX]
+            expect(fontSize).toBeGreaterThanOrEqual(8);
+            expect(fontSize).toBeLessThanOrEqual(28);
           }
         }
       }),

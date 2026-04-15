@@ -34,6 +34,11 @@ import {
   DEFAULT_FLY_TO_DURATION,
   FALLBACK_COLOR,
   BASEMAP_STYLES,
+  calculateFontSize,
+  LABEL_FONT_SIZE_MIN,
+  LABEL_FONT_SIZE_MAX,
+  LABEL_AREA_MIN,
+  LABEL_AREA_MAX,
   type ViewportState,
   type AreaColorDimension,
   type BasemapType,
@@ -3280,6 +3285,54 @@ describe('markerLimit', () => {
       expect(isValidLabelNameMode(null)).toBe(false);
       expect(isValidLabelNameMode(undefined)).toBe(false);
       expect(isValidLabelNameMode(42)).toBe(false);
+    });
+  });
+
+  describe('calculateFontSize', () => {
+    it('should return minimum font size for very small territories', () => {
+      // Area smaller than LABEL_AREA_MIN should clamp to min
+      expect(calculateFontSize(100)).toBe(LABEL_FONT_SIZE_MIN);
+      expect(calculateFontSize(0)).toBe(LABEL_FONT_SIZE_MIN);
+    });
+
+    it('should return maximum font size for very large territories', () => {
+      // Area larger than LABEL_AREA_MAX should clamp to max
+      expect(calculateFontSize(1e15)).toBe(LABEL_FONT_SIZE_MAX);
+    });
+
+    it('should return min for area at LABEL_AREA_MIN', () => {
+      expect(calculateFontSize(LABEL_AREA_MIN)).toBe(LABEL_FONT_SIZE_MIN);
+    });
+
+    it('should return max for area at LABEL_AREA_MAX', () => {
+      expect(calculateFontSize(LABEL_AREA_MAX)).toBe(LABEL_FONT_SIZE_MAX);
+    });
+
+    it('should increase monotonically with area', () => {
+      const areas = [1e9, 1e10, 1e11, 1e12];
+      const sizes = areas.map(calculateFontSize);
+      for (let i = 1; i < sizes.length; i++) {
+        expect(sizes[i]).toBeGreaterThan(sizes[i - 1]!);
+      }
+    });
+
+    it('should return a value between min and max for mid-range area', () => {
+      // ~100,000 km² = 1e11 m² (mid-range between 1e9 and 1e12)
+      const size = calculateFontSize(1e11);
+      expect(size).toBeGreaterThan(LABEL_FONT_SIZE_MIN);
+      expect(size).toBeLessThan(LABEL_FONT_SIZE_MAX);
+    });
+
+    it('should use logarithmic scaling (mid-area is not linearly in the middle)', () => {
+      const midArea = (LABEL_AREA_MIN + LABEL_AREA_MAX) / 2;
+      const midSize = calculateFontSize(midArea);
+      const linearMid = (LABEL_FONT_SIZE_MIN + LABEL_FONT_SIZE_MAX) / 2;
+      // Logarithmic scaling means midpoint of linear area range maps above linear midpoint
+      expect(midSize).toBeGreaterThan(linearMid);
+    });
+
+    it('should have sufficient range for clear hierarchy (max - min >= 15)', () => {
+      expect(LABEL_FONT_SIZE_MAX - LABEL_FONT_SIZE_MIN).toBeGreaterThanOrEqual(15);
     });
   });
 });
