@@ -791,18 +791,32 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     // Only trigger on actual state change, not initial render
     if (prevRightDrawerOpenRef.current !== rightDrawerOpen) {
       prevRightDrawerOpenRef.current = rightDrawerOpen;
-      
+
       // Wait for the CSS transition to complete (300ms) then resize the map
       const timeoutId = setTimeout(() => {
         if (mapRef.current) {
           mapRef.current.resize();
         }
       }, 350); // Slightly longer than the 300ms CSS transition
-      
+
       return () => { clearTimeout(timeoutId); };
     }
     return undefined;
   }, [rightDrawerOpen]);
+
+  /**
+   * Resize map when left drawer (layers panel) opens/closes.
+   * Without this, Mapbox GL's internal canvas bounding rect becomes stale
+   * and hover/click detection is offset by the drawer width.
+   */
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    }, 350);
+    return () => { clearTimeout(timeoutId); };
+  }, [drawerOpen]);
 
   /**
    * Handles mouse hover over map features (provinces and markers).
