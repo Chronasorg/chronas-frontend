@@ -1713,7 +1713,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       {/* Requirement 1.2, 1.3, 1.4, 1.5: Show entity info with color chips and icons */}
       {/* Requirement 1.6: Show province name and formatted population */}
       {/* Requirement 1.7: WHEN the user moves the cursor away, THE Tooltip SHALL disappear within 50ms */}
-      {tooltipFeatureProps && metadata && !rightDrawerOpen && (
+      {tooltipFeatureProps && metadata && (
         <ProvinceTooltip
           feature={tooltipFeatureProps}
           metadata={metadata}
