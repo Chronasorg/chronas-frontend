@@ -54,6 +54,26 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'ca', name: 'Català' },
 ] as const;
 
+const SUPPORTED_CODES = new Set<string>(SUPPORTED_LANGUAGES.map((l) => l.code));
+
+/**
+ * Detect locale from a language subdomain (e.g. de.chronas.org → 'de').
+ * Returns the locale code if matched, otherwise undefined.
+ */
+function getSubdomainLocale(): string | undefined {
+  try {
+    const host = window.location.hostname;
+    const match = /^([a-z]{2})\.chronas\.org$/i.exec(host);
+    const code = match?.[1];
+    if (code && SUPPORTED_CODES.has(code)) {
+      return code;
+    }
+  } catch {
+    // SSR or test environment — ignore
+  }
+  return undefined;
+}
+
 /**
  * Read the persisted locale from localStorage so i18next starts
  * with the correct language before React renders.
@@ -72,6 +92,13 @@ function getPersistedLocale(): string {
     // Ignore parse errors — fall back to 'en'
   }
   return 'en';
+}
+
+/**
+ * Determine the initial locale. Subdomain takes precedence over localStorage.
+ */
+function getInitialLocale(): string {
+  return getSubdomainLocale() ?? getPersistedLocale();
 }
 
 void i18n
@@ -97,11 +124,12 @@ void i18n
       vi: { translation: vi },
       ca: { translation: ca },
     },
-    lng: getPersistedLocale(),
+    lng: getInitialLocale(),
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
   });
 
+export { getSubdomainLocale };
 export default i18n;

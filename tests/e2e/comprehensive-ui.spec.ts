@@ -523,7 +523,7 @@ test.describe('Announcement Banner', () => {
 
     const banner = page.getByRole('banner');
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText('Welcome to the new Chronas frontend');
+    await expect(banner).toContainText('Welcome to Chronas');
   });
 
   test('dismiss button hides the banner', async ({ page }) => {
@@ -546,6 +546,14 @@ test.describe('Announcement Banner', () => {
       'href',
       'https://github.com/Chronasorg/chronas-frontend/issues'
     );
+  });
+
+  test('classic version link points to old.chronas.org', async ({ page }) => {
+    await page.goto('/');
+    await waitForMap(page);
+
+    const link = page.getByRole('link', { name: 'Classic version' });
+    await expect(link).toHaveAttribute('href', 'https://old.chronas.org');
   });
 });
 

@@ -58,6 +58,8 @@ Axios client with JWT Bearer token injection (request interceptor) and 401 redir
 
 i18next via react-i18next. Setup in `src/i18n/`. Locale preference managed by uiStore.
 
+**Subdomain locale detection:** When the app loads on a language subdomain (e.g. `de.chronas.org`), `getSubdomainLocale()` in `src/i18n/i18n.ts` parses the hostname and sets the initial locale automatically. Subdomain locale takes precedence over the localStorage-persisted preference. Supported codes are validated against `SUPPORTED_LANGUAGES`.
+
 ## Path Alias
 
 `@/` maps to `src/` (configured in both `vite.config.ts` and `tsconfig.json`).
@@ -67,7 +69,7 @@ i18next via react-i18next. Setup in `src/i18n/`. Locale preference managed by ui
 - **Unit/integration:** Vitest + React Testing Library. Tests live alongside source as `*.test.ts` / `*.spec.tsx`.
 - **Property-based:** fast-check library, files named `*.property.test.ts`.
 - **E2E:** Playwright (Chromium only), tests in `tests/e2e/`.
-  - **Comprehensive UI suite:** `tests/e2e/comprehensive-ui.spec.ts` — 53 tests covering navigation sidebar, layers panel (area dimensions, marker filters, epic filters, advanced section), settings panel, right drawer, timeline controls, announcement banner, keyboard accessibility, and section collapse/expand.
+  - **Comprehensive UI suite:** `tests/e2e/comprehensive-ui.spec.ts` — 54 tests covering navigation sidebar, layers panel (area dimensions, marker filters, epic filters, advanced section), settings panel, right drawer, timeline controls, announcement banner, keyboard accessibility, and section collapse/expand.
   - **Other E2E suites:** `navigation.spec.ts`, `layer-controls.spec.ts`, `map-interactions.spec.ts`, `marker-features.spec.ts`, `timeline-interactions.spec.ts`, etc.
 - **Setup file:** `tests/setup.ts` — mocks localStorage, atob/btoa, and environment.
 - **Mocks:** `tests/__mocks__/` — react-map-gl is mocked in unit tests.
@@ -86,7 +88,7 @@ Validated at startup in `src/config/env.ts`.
 
 ## Deployment
 
-**Infrastructure:** AWS S3 + CloudFront, region `eu-west-1`.
+**Infrastructure:** AWS S3 + CloudFront, region `eu-west-1`, account `937826731833`.
 
 **Deploy script:** `scripts/deploy.ts` — builds the app, syncs `dist/` to S3, and invalidates the CloudFront cache. It auto-creates buckets and CloudFront distributions if they don't exist. Distribution IDs are cached in `.deploy-config.json`.
 
@@ -97,6 +99,41 @@ Validated at startup in `src/config/env.ts`.
 | Development | `npm run deploy` | `chronas-dev` | `chronas-frontend-dev` | `https://api.chronas.org/v1` |
 | Staging | `npm run deploy:staging` | `chronas-dev` | `chronas-frontend-staging` | `https://api-staging.chronas.org/v1` |
 | Production | `npm run deploy:prod` | `chronas-prod` | `chronas-frontend-new` | `https://api.chronas.org/v1` |
+
+### CloudFront Distributions
+
+| Distribution | ID | Domain | Aliases | S3 Origin | Serves |
+|---|---|---|---|---|---|
+| **Production** | `E2ZHTJ5XV3DHIV` | `d3bfof98puvj92.cloudfront.net` | `chronas.org`, `*.chronas.org` | `chronas-frontend-new` | New frontend (main site + all subdomains) |
+| **Legacy** | `E3V9JG5DMH4162` | `d2ou8t1mjzx1m7.cloudfront.net` | `old.chronas.org` | `chronas-frontend-937826731833` | Old/classic frontend |
+
+Both distributions use Origin Access Control (OAC) with SigV4 signing. Custom error responses map 403/404 → `index.html` for SPA routing.
+
+### DNS (Route53)
+
+Hosted zone: `chronas.org` (ID: `Z005461139KF8GDMY491N`)
+
+| Record | Type | Target |
+|---|---|---|
+| `chronas.org` | A (alias) | `d3bfof98puvj92.cloudfront.net` (production dist) |
+| `old.chronas.org` | CNAME | `d2ou8t1mjzx1m7.cloudfront.net` (legacy dist) |
+| `www.chronas.org` | CNAME | `d3bfof98puvj92.cloudfront.net` |
+| `api.chronas.org` | A (alias) | API Gateway (`d-hghcknax0i.execute-api.eu-west-1.amazonaws.com`) |
+| **Language subdomains** | CNAME | `d3bfof98puvj92.cloudfront.net` |
+| **Special subdomains** | CNAME | `d3bfof98puvj92.cloudfront.net` |
+
+**Language subdomains** (all point to production dist): `ar`, `ca`, `de`, `el`, `en`, `es`, `fr`, `hi`, `it`, `ja`, `nl`, `pl`, `pt`, `ru`, `sv`, `tr`, `vi`, `zh`
+
+**Special subdomains** (all point to production dist): `adtest`, `edu`, `light`, `play`, `us`
+
+When a user visits e.g. `de.chronas.org`, the app's subdomain locale detection (`src/i18n/i18n.ts`) automatically sets the locale to German.
+
+### SSL Certificate
+
+- **ARN:** `arn:aws:acm:us-east-1:937826731833:certificate/b9685497-6e5f-4965-ab54-7f1ea1aee8ec`
+- **Domains:** `chronas.org`, `*.chronas.org` (wildcard)
+- **Expires:** 2026-10-10
+- **Shared** by both CloudFront distributions
 
 ### CI/CD (GitHub Actions)
 
@@ -120,9 +157,9 @@ Workflow at `.github/workflows/deploy-prod.yml`:
 
 ### Production URLs
 
-- **App:** Served via CloudFront (URL in `.deploy-config.json` after first deploy)
+- **App:** `https://chronas.org` (served via CloudFront distribution `E2ZHTJ5XV3DHIV`)
 - **API:** `https://api.chronas.org/v1`
-- **Current production (old frontend):** `https://chronas.org`
+- **Legacy frontend:** `https://old.chronas.org` (served via CloudFront distribution `E3V9JG5DMH4162`)
 
 ## Completion Checklist
 

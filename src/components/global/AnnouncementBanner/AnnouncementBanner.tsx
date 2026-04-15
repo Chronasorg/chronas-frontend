@@ -9,7 +9,7 @@ export const AnnouncementBanner: React.FC = () => {
 
   return (
     <div className={styles['banner']} role="banner">
-      Welcome to the new Chronas frontend! Found a bug or have an idea?{' '}
+      Welcome to Chronas! Found a bug or have an idea?{' '}
       <a
         className={styles['link']}
         href="https://github.com/Chronasorg/chronas-frontend/issues"
@@ -17,6 +17,15 @@ export const AnnouncementBanner: React.FC = () => {
         rel="noopener noreferrer"
       >
         Let us know on GitHub
+      </a>
+      {' · '}
+      <a
+        className={styles['link']}
+        href="https://old.chronas.org"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Classic version
       </a>
       <button
         className={styles['closeButton']}
