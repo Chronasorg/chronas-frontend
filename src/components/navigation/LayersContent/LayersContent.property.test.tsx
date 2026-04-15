@@ -107,7 +107,7 @@ describe('LayersContent Property Tests', () => {
     activeColor: fc.constantFrom<AreaColorDimension>('ruler', 'culture', 'religion', 'religionGeneral', 'population'),
     activeLabel: fc.constantFrom<AreaColorDimension>('ruler', 'culture', 'religion', 'religionGeneral', 'population'),
     colorLabelLocked: fc.boolean(),
-    basemap: fc.constantFrom<BasemapType>('topographic', 'watercolor', 'none'),
+    basemap: fc.constantFrom<BasemapType>('topographic', 'satellite', 'light', 'none'),
     showProvinceBorders: fc.boolean(),
     populationOpacity: fc.boolean(),
     markerLimit: fc.integer({ min: 0, max: 10000 }),

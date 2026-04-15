@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Топографическая",
-      "watercolor": "Акварель",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Нет"
     },
     "mapLabels": "Подписи карты",

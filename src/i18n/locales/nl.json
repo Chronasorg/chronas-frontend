@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Topografisch",
-      "watercolor": "Aquarel",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Geen"
     },
     "mapLabels": "Kaartlabels",

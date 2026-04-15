@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "地形図",
-      "watercolor": "水彩画",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "なし"
     },
     "mapLabels": "地図ラベル",

@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Topográfico",
-      "watercolor": "Aguarela",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Nenhum"
     },
     "mapLabels": "Rótulos do mapa",

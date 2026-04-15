@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "स्थलाकृतिक",
-      "watercolor": "जलरंग",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "कोई नहीं"
     },
     "mapLabels": "मानचित्र लेबल",

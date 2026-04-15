@@ -6318,9 +6318,9 @@ describe('Property 1: State Update Consistency', () => {
 
   /**
    * Arbitrary for generating valid basemap types.
-   * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+   * Requirement 1.3: THE MapView SHALL support four basemap options: topographic, satellite, light, and none
    */
-  const basemapTypeArb: fc.Arbitrary<'topographic' | 'watercolor' | 'none'> = fc.constantFrom('topographic', 'watercolor', 'none');
+  const basemapTypeArb: fc.Arbitrary<'topographic' | 'satellite' | 'light' | 'none'> = fc.constantFrom('topographic', 'satellite', 'light', 'none');
 
   /**
    * Arbitrary for generating boolean values for toggle controls.
@@ -7403,8 +7403,8 @@ describe('Property 7: Clustering Configuration Consistency', () => {
    * other layer control states (basemap, showProvinceBorders, populationOpacity, markerLimit).
    */
   it('should have clustering configuration independent of other layer controls', () => {
-    type BasemapType = 'topographic' | 'watercolor' | 'none';
-    const basemapArb: fc.Arbitrary<BasemapType> = fc.constantFrom('topographic', 'watercolor', 'none');
+    type BasemapType = 'topographic' | 'satellite' | 'light' | 'none';
+    const basemapArb: fc.Arbitrary<BasemapType> = fc.constantFrom('topographic', 'satellite', 'light', 'none');
     const markerLimitArb = fc.integer({ min: 0, max: 10000 });
 
     fc.assert(

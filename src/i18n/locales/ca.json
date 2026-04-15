@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Topogràfic",
-      "watercolor": "Aquarel·la",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Cap"
     },
     "mapLabels": "Etiquetes del mapa",

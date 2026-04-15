@@ -366,7 +366,7 @@ test.describe('Layers Panel — Advanced Section', () => {
     await expect(page.getByTestId('advanced-section-content')).toBeVisible();
   });
 
-  test('basemap select has three options', async ({ page }) => {
+  test('basemap select has four options', async ({ page }) => {
     const advToggle = page.getByTestId('advanced-section-toggle');
     await advToggle.scrollIntoViewIfNeeded();
     await advToggle.click();
@@ -378,7 +378,7 @@ test.describe('Layers Panel — Advanced Section', () => {
 
     const options = await select.locator('option').allTextContents();
     expect(options.map((o) => o.toLowerCase())).toEqual(
-      expect.arrayContaining(['topographic', 'watercolor', 'none'])
+      expect.arrayContaining(['topographic', 'satellite', 'light', 'none'])
     );
   });
 
@@ -391,8 +391,8 @@ test.describe('Layers Panel — Advanced Section', () => {
     const select = page.getByTestId('basemap-select');
     await select.scrollIntoViewIfNeeded();
 
-    await select.selectOption('watercolor');
-    await expect(select).toHaveValue('watercolor');
+    await select.selectOption('satellite');
+    await expect(select).toHaveValue('satellite');
 
     await select.selectOption('none');
     await expect(select).toHaveValue('none');

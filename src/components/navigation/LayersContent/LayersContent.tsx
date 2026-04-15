@@ -57,7 +57,8 @@ const MARKER_TYPES: MarkerTypeConfig[] = [
 interface BasemapOption { value: BasemapType; label: string; }
 const BASEMAP_OPTIONS: BasemapOption[] = [
   { value: 'topographic', label: 'Topographic' },
-  { value: 'watercolor', label: 'Watercolor' },
+  { value: 'satellite', label: 'Satellite' },
+  { value: 'light', label: 'Light' },
   { value: 'none', label: 'None' },
 ];
 

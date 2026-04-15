@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Τοπογραφικός",
-      "watercolor": "Ακουαρέλα",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Κανένας"
     },
     "mapLabels": "Ετικέτες χάρτη",

@@ -325,7 +325,7 @@ describe('LayersContent', () => {
       
       // Check options exist
       const options = within(select).getAllByRole('option');
-      expect(options).toHaveLength(3);
+      expect(options).toHaveLength(4);
     });
   });
 
@@ -381,25 +381,25 @@ describe('LayersContent', () => {
         expect(basemapSelect).toHaveValue('topographic');
       });
 
-      it('should display watercolor when store has watercolor basemap', () => {
-        // Update mock state to have watercolor basemap
-        const watercolorState = { ...mockMapState, basemap: 'watercolor' as 'topographic' | 'watercolor' | 'none' };
+      it('should display satellite when store has satellite basemap', () => {
+        // Update mock state to have satellite basemap
+        const satelliteState = { ...mockMapState, basemap: 'satellite' as 'topographic' | 'satellite' | 'light' | 'none' };
         (useMapStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-          (selector: (state: typeof watercolorState) => unknown) => selector(watercolorState)
+          (selector: (state: typeof satelliteState) => unknown) => selector(satelliteState)
         );
 
         render(<LayersContent />);
-        
+
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-        
+
         const basemapSelect = screen.getByTestId('basemap-select');
-        expect(basemapSelect).toHaveValue('watercolor');
+        expect(basemapSelect).toHaveValue('satellite');
       });
 
       it('should display none when store has none basemap', () => {
         // Update mock state to have none basemap
-        const noneState = { ...mockMapState, basemap: 'none' as 'topographic' | 'watercolor' | 'none' };
+        const noneState = { ...mockMapState, basemap: 'none' as 'topographic' | 'satellite' | 'light' | 'none' };
         (useMapStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
           (selector: (state: typeof noneState) => unknown) => selector(noneState)
         );
@@ -413,16 +413,16 @@ describe('LayersContent', () => {
         expect(basemapSelect).toHaveValue('none');
       });
 
-      it('should call setBasemap action when basemap is changed to watercolor', () => {
+      it('should call setBasemap action when basemap is changed to satellite', () => {
         render(<LayersContent />);
-        
+
         // Expand advanced section
         fireEvent.click(screen.getByTestId('advanced-section-toggle'));
-        
+
         const basemapSelect = screen.getByTestId('basemap-select');
-        fireEvent.change(basemapSelect, { target: { value: 'watercolor' } });
-        
-        expect(mockMapState.setBasemap).toHaveBeenCalledWith('watercolor');
+        fireEvent.change(basemapSelect, { target: { value: 'satellite' } });
+
+        expect(mockMapState.setBasemap).toHaveBeenCalledWith('satellite');
       });
 
       it('should call setBasemap action when basemap is changed to none', () => {

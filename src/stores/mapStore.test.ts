@@ -303,13 +303,13 @@ describe('mapStore', () => {
       expect(state.basemap).toBe('topographic');
     });
 
-    it('should set basemap to watercolor', () => {
+    it('should set basemap to satellite', () => {
       act(() => {
-        useMapStore.getState().setBasemap('watercolor');
+        useMapStore.getState().setBasemap('satellite');
       });
 
       const state = useMapStore.getState();
-      expect(state.basemap).toBe('watercolor');
+      expect(state.basemap).toBe('satellite');
     });
 
     it('should set basemap to none', () => {
@@ -335,9 +335,9 @@ describe('mapStore', () => {
 
     it('should allow switching between all basemap types', () => {
       act(() => {
-        useMapStore.getState().setBasemap('watercolor');
+        useMapStore.getState().setBasemap('satellite');
       });
-      expect(useMapStore.getState().basemap).toBe('watercolor');
+      expect(useMapStore.getState().basemap).toBe('satellite');
 
       act(() => {
         useMapStore.getState().setBasemap('none');
@@ -1138,12 +1138,13 @@ describe('utility functions', () => {
 
   describe('isValidBasemapType', () => {
     /**
-     * Requirement 1.3: THE MapView SHALL support three basemap options:
-     * topographic, watercolor, and none
+     * Requirement 1.3: THE MapView SHALL support four basemap options:
+     * topographic, satellite, light, and none
      */
     it('should return true for valid basemap types', () => {
       expect(isValidBasemapType('topographic')).toBe(true);
-      expect(isValidBasemapType('watercolor')).toBe(true);
+      expect(isValidBasemapType('satellite')).toBe(true);
+      expect(isValidBasemapType('light')).toBe(true);
       expect(isValidBasemapType('none')).toBe(true);
     });
 
@@ -1153,7 +1154,7 @@ describe('utility functions', () => {
       expect(isValidBasemapType(null)).toBe(false);
       expect(isValidBasemapType(undefined)).toBe(false);
       expect(isValidBasemapType(123)).toBe(false);
-      expect(isValidBasemapType('satellite')).toBe(false);
+      expect(isValidBasemapType('watercolor')).toBe(false);
     });
   });
 
@@ -1166,18 +1167,24 @@ describe('utility functions', () => {
       expect(BASEMAP_STYLES.topographic).toBe('mapbox://styles/mapbox/outdoors-v12');
     });
 
-    it('should have style URL for watercolor', () => {
-      expect(BASEMAP_STYLES.watercolor).toBeDefined();
-      expect(typeof BASEMAP_STYLES.watercolor).toBe('string');
-      expect(BASEMAP_STYLES.watercolor.length).toBeGreaterThan(0);
+    it('should have style URL for satellite', () => {
+      expect(BASEMAP_STYLES.satellite).toBeDefined();
+      expect(typeof BASEMAP_STYLES.satellite).toBe('string');
+      expect(BASEMAP_STYLES.satellite.length).toBeGreaterThan(0);
+    });
+
+    it('should have style URL for light', () => {
+      expect(BASEMAP_STYLES.light).toBeDefined();
+      expect(typeof BASEMAP_STYLES.light).toBe('string');
+      expect(BASEMAP_STYLES.light.length).toBeGreaterThan(0);
     });
 
     it('should have style URL for none (empty/minimal style)', () => {
       expect(BASEMAP_STYLES.none).toBe('mapbox://styles/mapbox/empty-v9');
     });
 
-    it('should have all three basemap types defined', () => {
-      const basemapTypes: BasemapType[] = ['topographic', 'watercolor', 'none'];
+    it('should have all four basemap types defined', () => {
+      const basemapTypes: BasemapType[] = ['topographic', 'satellite', 'light', 'none'];
       for (const type of basemapTypes) {
         expect(BASEMAP_STYLES[type]).toBeDefined();
         expect(typeof BASEMAP_STYLES[type]).toBe('string');

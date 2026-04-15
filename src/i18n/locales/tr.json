@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Topografik",
-      "watercolor": "Sulu boya",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Yok"
     },
     "mapLabels": "Harita etiketleri",

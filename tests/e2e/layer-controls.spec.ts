@@ -2,7 +2,7 @@
  * Layer Controls E2E Tests
  *
  * E2E tests for layer control features in the Layers menu:
- * - Basemap selection (topographic, watercolor, none)
+ * - Basemap selection (topographic, satellite, light, none)
  * - Province borders toggle
  * - Population opacity toggle
  *
@@ -194,7 +194,7 @@ test.describe('Basemap Selection Tests', () => {
     }
   });
 
-  test('should have three basemap options: topographic, watercolor, none', async ({ page }) => {
+  test('should have four basemap options: topographic, satellite, light, none', async ({ page }) => {
     await page.goto(`${BASE_URL}/#/?year=1000`, { waitUntil: 'networkidle' });
     await waitForAppLoad(page);
     await waitForMapLoad(page);
@@ -216,10 +216,11 @@ test.describe('Basemap Selection Tests', () => {
 
       // Verify expected options exist
       expect(options.some((opt) => opt.toLowerCase().includes('topographic'))).toBe(true);
-      expect(options.some((opt) => opt.toLowerCase().includes('watercolor'))).toBe(true);
+      expect(options.some((opt) => opt.toLowerCase().includes('satellite'))).toBe(true);
+      expect(options.some((opt) => opt.toLowerCase().includes('light'))).toBe(true);
       expect(options.some((opt) => opt.toLowerCase().includes('none'))).toBe(true);
 
-      console.log('   ✅ All three basemap options are available');
+      console.log('   ✅ All four basemap options are available');
     } else {
       console.log('   ⚠️ Basemap selection dropdown not found');
     }
@@ -250,7 +251,7 @@ test.describe('Basemap Selection Tests', () => {
       console.log(`   📋 Current basemap: ${currentValue}`);
 
       // Change to a different basemap
-      const newValue = currentValue === 'topographic' ? 'watercolor' : 'topographic';
+      const newValue = currentValue === 'topographic' ? 'satellite' : 'topographic';
       await basemapSelect.selectOption(newValue);
       console.log(`   🔄 Changed basemap to: ${newValue}`);
 
@@ -706,12 +707,12 @@ test.describe('Layer Controls Visual Regression Tests', () => {
     console.log('   ✅ Topographic basemap screenshot captured');
   });
 
-  test('should capture map with watercolor basemap', async ({ page }) => {
+  test('should capture map with satellite basemap', async ({ page }) => {
     await page.goto(`${BASE_URL}/#/?year=1000`, { waitUntil: 'networkidle' });
     await waitForAppLoad(page);
     await waitForMapLoad(page);
 
-    // Open Layers menu and set watercolor basemap
+    // Open Layers menu and set satellite basemap
     await openLayersMenu(page);
     await expandAdvancedSection(page);
 
@@ -719,7 +720,7 @@ test.describe('Layer Controls Visual Regression Tests', () => {
     const isVisible = await basemapSelect.isVisible().catch(() => false);
 
     if (isVisible) {
-      await basemapSelect.selectOption('watercolor');
+      await basemapSelect.selectOption('satellite');
       await page.waitForTimeout(2000);
     }
 
@@ -727,11 +728,11 @@ test.describe('Layer Controls Visual Regression Tests', () => {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
 
-    await expect(page).toHaveScreenshot('basemap-watercolor.png', {
+    await expect(page).toHaveScreenshot('basemap-satellite.png', {
       fullPage: false,
       maxDiffPixelRatio: 0.2,
     });
 
-    console.log('   ✅ Watercolor basemap screenshot captured');
+    console.log('   ✅ Satellite basemap screenshot captured');
   });
 });

@@ -1290,7 +1290,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
 
       {/* Map component */}
       {/* Requirement 1.2: WHEN the basemap state changes, THE MapView SHALL update the map style */}
-      {/* Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none */}
+      {/* Requirement 1.3: THE MapView SHALL support four basemap options: topographic, satellite, light, and none */}
       {/* Requirement 1.4: WHEN basemap is set to "none", THE MapView SHALL display only province fill layers */}
       <Map
         ref={mapRef}

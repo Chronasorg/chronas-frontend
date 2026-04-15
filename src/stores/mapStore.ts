@@ -67,9 +67,8 @@ export type AreaColorDimension = 'ruler' | 'religion' | 'religionGeneral' | 'cul
 
 /**
  * Basemap type for map background style.
- * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
  */
-export type BasemapType = 'topographic' | 'watercolor' | 'none';
+export type BasemapType = 'topographic' | 'satellite' | 'light' | 'none';
 
 /**
  * Label name display mode for map area labels.
@@ -81,12 +80,12 @@ export type LabelNameMode = 'historical' | 'modern' | 'both';
 
 /**
  * Mapping of basemap types to Mapbox style URLs.
- * Requirement 1.2: WHEN the basemap state changes, THE MapView SHALL update the map style
  */
 export const BASEMAP_STYLES: Record<BasemapType, string> = {
   topographic: 'mapbox://styles/mapbox/outdoors-v12',
-  watercolor: 'mapbox://styles/stamen/cj3hzkdwfaw1v2sqmrlvmdqjf', // Stamen watercolor style
-  none: 'mapbox://styles/mapbox/empty-v9', // Minimal style with no features
+  satellite: 'mapbox://styles/mapbox/satellite-v9',
+  light: 'mapbox://styles/mapbox/light-v11',
+  none: 'mapbox://styles/mapbox/empty-v9',
 };
 
 /**
@@ -273,7 +272,7 @@ export interface MapActions {
    * Sets the basemap style for the map.
    * Requirement 1.1: WHEN the user selects a basemap option, THE MapStore SHALL update the basemap state
    *
-   * @param basemap - The basemap style to set ('topographic', 'watercolor', or 'none')
+   * @param basemap - The basemap style to set ('topographic', 'satellite', 'light', or 'none')
    */
   setBasemap: (basemap: BasemapType) => void;
 
@@ -832,7 +831,7 @@ export function isValidColorDimension(dimension: unknown): dimension is AreaColo
 
 /**
  * Validates that a basemap type is one of the allowed values.
- * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+ * Requirement 1.3: THE MapView SHALL support four basemap options: topographic, satellite, light, and none
  *
  * @param basemap - The basemap type to validate
  * @returns true if the basemap type is valid
@@ -845,7 +844,7 @@ export function isValidLabelNameMode(mode: unknown): mode is LabelNameMode {
 }
 
 export function isValidBasemapType(basemap: unknown): basemap is BasemapType {
-  return basemap === 'topographic' || basemap === 'watercolor' || basemap === 'none';
+  return basemap === 'topographic' || basemap === 'satellite' || basemap === 'light' || basemap === 'none';
 }
 
 /**
@@ -994,7 +993,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
    * Sets the basemap style for the map.
    * Requirement 1.1: WHEN the user selects a basemap option, THE MapStore SHALL update the basemap state
    *
-   * @param basemap - The basemap style to set ('topographic', 'watercolor', or 'none')
+   * @param basemap - The basemap style to set ('topographic', 'satellite', 'light', or 'none')
    */
   setBasemap: (basemap: BasemapType) => {
     // Validate basemap is a valid type

@@ -3064,7 +3064,7 @@ describe('MapView Property Tests', () => {
    * Feature: production-parity-fixes, Property 2: Basemap Style Mapping
    *
    * Property 2 states:
-   * *For any* basemap state value ('topographic', 'watercolor', 'none'), the MapView
+   * *For any* basemap state value ('topographic', 'satellite', 'light', 'none'), the MapView
    * SHALL use the corresponding Mapbox style URL from the BASEMAP_STYLES mapping.
    *
    * **Validates: Requirements 1.2**
@@ -3072,11 +3072,12 @@ describe('MapView Property Tests', () => {
   describe('Property 2: Basemap Style Mapping', () => {
     /**
      * Arbitrary for generating valid basemap types.
-     * Requirement 1.3: THE MapView SHALL support three basemap options: topographic, watercolor, and none
+     * Requirement 1.3: THE MapView SHALL support four basemap options: topographic, satellite, light, and none
      */
-    const basemapTypeArb: fc.Arbitrary<'topographic' | 'watercolor' | 'none'> = fc.constantFrom(
+    const basemapTypeArb: fc.Arbitrary<'topographic' | 'satellite' | 'light' | 'none'> = fc.constantFrom(
       'topographic',
-      'watercolor',
+      'satellite',
+      'light',
       'none'
     );
 
@@ -3094,9 +3095,10 @@ describe('MapView Property Tests', () => {
      * Expected Mapbox style URLs for each basemap type.
      * These must match the BASEMAP_STYLES constant in mapStore.
      */
-    const EXPECTED_BASEMAP_STYLES: Record<'topographic' | 'watercolor' | 'none', string> = {
+    const EXPECTED_BASEMAP_STYLES: Record<'topographic' | 'satellite' | 'light' | 'none', string> = {
       topographic: 'mapbox://styles/mapbox/outdoors-v12',
-      watercolor: 'mapbox://styles/stamen/cj3hzkdwfaw1v2sqmrlvmdqjf',
+      satellite: 'mapbox://styles/mapbox/satellite-v9',
+      light: 'mapbox://styles/mapbox/light-v11',
       none: 'mapbox://styles/mapbox/empty-v9',
     };
 
@@ -3223,15 +3225,16 @@ describe('MapView Property Tests', () => {
       );
     });
 
-    it('should have all three basemap types defined in BASEMAP_STYLES', () => {
+    it('should have all four basemap types defined in BASEMAP_STYLES', () => {
       fc.assert(
         fc.property(basemapTypeArb, (basemapType) => {
           // Verify the basemap type exists in BASEMAP_STYLES
           expect(basemapType in BASEMAP_STYLES).toBe(true);
 
-          // Verify the mapping is complete (all three types are defined)
+          // Verify the mapping is complete (all four types are defined)
           expect('topographic' in BASEMAP_STYLES).toBe(true);
-          expect('watercolor' in BASEMAP_STYLES).toBe(true);
+          expect('satellite' in BASEMAP_STYLES).toBe(true);
+          expect('light' in BASEMAP_STYLES).toBe(true);
           expect('none' in BASEMAP_STYLES).toBe(true);
         }),
         { numRuns: 100 }
@@ -3492,7 +3495,7 @@ describe('MapView Property Tests', () => {
       fc.assert(
         fc.property(
           distinctBooleanPairArb,
-          fc.constantFrom<'topographic' | 'watercolor' | 'none'>('topographic', 'watercolor', 'none'),
+          fc.constantFrom<'topographic' | 'satellite' | 'light' | 'none'>('topographic', 'satellite', 'light', 'none'),
           fc.boolean(),
           fc.integer({ min: 0, max: 10000 }),
           ([fromState, toState], basemap, populationOpacity, markerLimit) => {
@@ -3769,7 +3772,7 @@ describe('MapView Property Tests', () => {
       fc.assert(
         fc.property(
           populationOpacityPairArb,
-          fc.constantFrom<'topographic' | 'watercolor' | 'none'>('topographic', 'watercolor', 'none'),
+          fc.constantFrom<'topographic' | 'satellite' | 'light' | 'none'>('topographic', 'satellite', 'light', 'none'),
           fc.boolean(),
           fc.integer({ min: 0, max: 10000 }),
           ([fromState, toState], basemap, showProvinceBorders, markerLimit) => {

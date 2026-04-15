@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "Địa hình",
-      "watercolor": "Màu nước",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "Không"
     },
     "mapLabels": "Nhãn bản đồ",

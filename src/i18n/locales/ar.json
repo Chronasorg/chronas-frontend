@@ -73,7 +73,8 @@
     },
     "basemapTypes": {
       "topographic": "طبوغرافي",
-      "watercolor": "ألوان مائية",
+      "satellite": "Satellite",
+      "light": "Light",
       "none": "لا شيء"
     },
     "mapLabels": "تسميات الخريطة",
