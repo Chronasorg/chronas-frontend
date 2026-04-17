@@ -252,7 +252,7 @@ describe('mapTheme', () => {
 
       it('should limit text bending angle', () => {
         expect(AREA_LABEL_CONFIG.lineLayout.textMaxAngle).toBeLessThanOrEqual(45);
-        expect(AREA_LABEL_CONFIG.lineLayout.textMaxAngle).toBe(25);
+        expect(AREA_LABEL_CONFIG.lineLayout.textMaxAngle).toBe(45);
       });
 
       it('should have collision padding', () => {
@@ -277,11 +277,11 @@ describe('mapTheme', () => {
       });
 
       it('should have a strong halo width for readability over colorful polygons', () => {
-        expect(AREA_LABEL_CONFIG.linePaint.textHaloWidth).toBe(3);
+        expect(AREA_LABEL_CONFIG.linePaint.textHaloWidth).toBe(2);
       });
 
-      it('should have sharp halo for maximum contrast', () => {
-        expect(AREA_LABEL_CONFIG.linePaint.textHaloBlur).toBe(0);
+      it('should have halo blur matching old Chronas style', () => {
+        expect(AREA_LABEL_CONFIG.linePaint.textHaloBlur).toBe(1);
       });
 
       it('should use a warm parchment halo color', () => {
@@ -345,7 +345,7 @@ describe('mapTheme', () => {
 
     describe('bezierOptions', () => {
       it('should have sharpness and resolution settings', () => {
-        expect(AREA_LABEL_CONFIG.bezierOptions.sharpness).toBe(1);
+        expect(AREA_LABEL_CONFIG.bezierOptions.sharpness).toBe(0.85);
         expect(AREA_LABEL_CONFIG.bezierOptions.resolution).toBe(10000);
       });
     });

@@ -233,8 +233,8 @@ export const AREA_LABEL_CONFIG = {
   pointPaint: {
     textColor: '#1a1206',
     textHaloColor: 'rgba(255, 252, 235, 0.97)',
-    textHaloWidth: 3,
-    textHaloBlur: 0,
+    textHaloWidth: 2,
+    textHaloBlur: 1,
   },
   /**
    * Zoom-dependent text opacity for smooth label fade-in.
