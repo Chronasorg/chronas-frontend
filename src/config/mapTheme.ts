@@ -173,9 +173,8 @@ export const AREA_LABEL_CONFIG = {
     /** Letter spacing for a spread-out atlas / cartographic feel */
     textLetterSpacing: 0.18,
     /** Max angle change per character along bezier — keeps text from bending too sharply */
-    textMaxAngle: 25,
-    /** Padding for collision detection — prevents overlapping nearby labels */
-    textPadding: 14,
+    textMaxAngle: 45,
+    textPadding: 6,
     /**
      * Nested interpolation: zoom → (d → fontSize).
      * 4 zoom stops give a gradual reveal from far to close zoom.
@@ -189,13 +188,13 @@ export const AREA_LABEL_CONFIG = {
       ['linear'],
       ['zoom'],
       2,
-      ['interpolate', ['linear'], ['get', 'd'], 600, 8, 1800, 16, 4000, 46],
+      ['interpolate', ['linear'], ['get', 'd'], 500, 8, 1500, 18, 3500, 42],
       4,
-      ['interpolate', ['linear'], ['get', 'd'], 600, 16, 1800, 36, 4000, 100],
+      ['interpolate', ['linear'], ['get', 'd'], 500, 18, 1500, 48, 3500, 120],
       7,
-      ['interpolate', ['linear'], ['get', 'd'], 600, 40, 1800, 80, 4000, 240],
+      ['interpolate', ['linear'], ['get', 'd'], 500, 50, 1500, 120, 3500, 300],
       9,
-      ['interpolate', ['linear'], ['get', 'd'], 600, 90, 1800, 150, 4000, 440],
+      ['interpolate', ['linear'], ['get', 'd'], 500, 90, 1500, 200, 3500, 440],
     ],
   },
   /**
@@ -205,10 +204,8 @@ export const AREA_LABEL_CONFIG = {
   linePaint: {
     /** Dark warm brown — maximum readability over saturated polygon fills */
     textColor: '#1a1206',
-    /** Wide halo to cut through colorful backgrounds; vector basemap needs more than old Chronas */
-    textHaloWidth: 3,
-    /** Sharp halo edge for best contrast on busy backgrounds */
-    textHaloBlur: 0,
+    textHaloWidth: 2,
+    textHaloBlur: 1,
     /** Opaque warm parchment halo */
     textHaloColor: 'rgba(255, 252, 235, 0.97)',
   },
@@ -226,10 +223,10 @@ export const AREA_LABEL_CONFIG = {
       'interpolate',
       ['linear'],
       ['zoom'],
-      1, ['*', ['get', 'fontSize'], 0.18],
-      3, ['*', ['get', 'fontSize'], 0.35],
-      5, ['*', ['get', 'fontSize'], 0.6],
-      7, ['*', ['get', 'fontSize'], 0.9],
+      1, ['*', ['get', 'fontSize'], 0.25],
+      3, ['*', ['get', 'fontSize'], 0.5],
+      5, ['*', ['get', 'fontSize'], 0.85],
+      7, ['*', ['get', 'fontSize'], 1.2],
     ],
   },
   /** Mapbox paint properties for the point fallback labels */
@@ -260,9 +257,8 @@ export const AREA_LABEL_CONFIG = {
   ],
   /** Fallback font stack when locale-specific font is unavailable */
   fallbackFonts: ['Arial Unicode MS Regular'] as string[],
-  /** bezierSpline options matching old Chronas turf.bezier behaviour */
   bezierOptions: {
-    sharpness: 1,
+    sharpness: 0.85,
     resolution: 10000,
   },
 };

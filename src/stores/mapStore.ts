@@ -13,6 +13,8 @@ import type { Feature, Polygon, MultiPolygon, FeatureCollection, Point, LineStri
 import type GeoJSON from 'geojson';
 import { apiClient } from '../api/client';
 import { AREA_LABEL_CONFIG } from '../config/mapTheme';
+import { computeAdjacencyGraph, findConnectedComponents } from '../utils/geoLabelUtils';
+import type { AdjacencyGraph } from '../utils/geoLabelUtils';
 import { AREAS, METADATA, MARKERS } from '../api/endpoints';
 import type { MapAreaData, Marker, MarkerFilterState, MarkerType } from '../api/types';
 
@@ -182,6 +184,8 @@ export interface MapState {
   labelData: LabelFeatureCollection | null;
   /** Label line data for bezier curve labels (old Chronas-style) */
   labelLineData: LabelLineFeatureCollection | null;
+  /** Province adjacency graph — computed once when provincesGeoJSON loads */
+  adjacencyGraph: AdjacencyGraph | null;
   /** AbortController for cancelling in-flight area data requests - Requirement 9.5, 11.2 */
   areaDataAbortController: AbortController | null;
   /** AbortController for cancelling in-flight marker requests - Requirement 9.5, 11.2 */
@@ -763,6 +767,7 @@ export const initialState: MapState = {
   labelNameMode: 'historical',
   labelData: null,
   labelLineData: null,
+  adjacencyGraph: null,
   areaDataAbortController: null,
   markersAbortController: null,
 };
@@ -1606,7 +1611,8 @@ export const useMapStore = create<MapStore>((set, get) => ({
    * @param geojson - The provinces GeoJSON feature collection
    */
   setProvincesGeoJSON: (geojson: FeatureCollection<Polygon | MultiPolygon>) => {
-    set({ provincesGeoJSON: geojson });
+    const adjacencyGraph = computeAdjacencyGraph(geojson);
+    set({ provincesGeoJSON: geojson, adjacencyGraph });
   },
 
   /**
@@ -1690,9 +1696,10 @@ export const useMapStore = create<MapStore>((set, get) => ({
         religionGeneral: convertToMetadataEntry(religionGeneralData, false, localizedNames?.['religionGeneral']),
       };
 
-      // Set provinces GeoJSON if available
+      // Set provinces GeoJSON and compute adjacency graph if available
       if (provincesData?.features) {
-        set({ provincesGeoJSON: provincesData });
+        const adjacencyGraph = computeAdjacencyGraph(provincesData);
+        set({ provincesGeoJSON: provincesData, adjacencyGraph });
       }
 
       set({
@@ -2076,30 +2083,31 @@ export const useMapStore = create<MapStore>((set, get) => ({
   calculateLabels: (dimension: AreaColorDimension) => {
     const state = get();
 
-    // Validate inputs
     if (!state.provincesGeoJSON || !state.currentAreaData || !state.metadata) {
       set({ labelData: null, labelLineData: null });
       return;
     }
 
-    // Population dimension doesn't have entity labels
     if (dimension === 'population') {
       set({ labelData: null, labelLineData: null });
       return;
     }
 
-    // Get dimension index for looking up values
     const dimensionIndex = DIMENSION_INDEX[dimension];
+    const features = state.provincesGeoJSON.features;
 
-    // Group province coordinate data by entity value
+    // Build province index → feature index mapping, grouped by entity
     interface ProvinceInfo {
+      featureIndex: number;
       centroid: [number, number];
       area: number;
-      coords: number[][][]; // polygon coordinate rings
+      coords: number[][][];
     }
-    const entityData = new Map<string, ProvinceInfo[]>();
+    const entityProvinces = new Map<string, ProvinceInfo[]>();
 
-    for (const feature of state.provincesGeoJSON.features) {
+    for (let fi = 0; fi < features.length; fi++) {
+      const feature = features[fi];
+      if (!feature) continue;
       const provinceId = (feature.properties?.['id'] as string | undefined) ??
                          (feature.properties?.['name'] as string | undefined);
       if (!provinceId) continue;
@@ -2118,158 +2126,154 @@ export const useMapStore = create<MapStore>((set, get) => ({
         const centroid = turf.centroid(feature);
         const area = turf.area(feature);
 
-        // Extract coordinate rings for extrema calculation
         const geom = feature.geometry;
         let coords: number[][][] = [];
         if (geom.type === 'Polygon') {
           coords = geom.coordinates as number[][][];
         } else {
-          // MultiPolygon: flatten to array of coordinate rings
           for (const poly of geom.coordinates) {
             coords.push(...(poly as number[][][]));
           }
         }
 
         const info: ProvinceInfo = {
+          featureIndex: fi,
           centroid: centroid.geometry.coordinates as [number, number],
           area,
           coords,
         };
 
-        const existing = entityData.get(entityValue);
+        const existing = entityProvinces.get(entityValue);
         if (existing) {
           existing.push(info);
         } else {
-          entityData.set(entityValue, [info]);
+          entityProvinces.set(entityValue, [info]);
         }
       } catch {
         continue;
       }
     }
 
-    // Generate both point and line label features
     const labelFeatures: Feature<Point, LabelFeatureProperties>[] = [];
     const labelLineFeatures: Feature<LineString, LabelLineFeatureProperties>[] = [];
 
-    for (const [entityId, provinces] of entityData) {
+    const adjacency = state.adjacencyGraph;
+
+    for (const [entityId, provinces] of entityProvinces) {
       try {
-        // Calculate weighted centroid
-        let totalArea = 0;
-        let weightedLng = 0;
-        let weightedLat = 0;
-
-        for (const province of provinces) {
-          totalArea += province.area;
-          weightedLng += province.centroid[0] * province.area;
-          weightedLat += province.centroid[1] * province.area;
-        }
-
-        if (totalArea === 0) continue;
-
-        const centroidLng = weightedLng / totalArea;
-        const centroidLat = weightedLat / totalArea;
-        const fontSize = calculateFontSize(totalArea);
-
-        // Get entity name from metadata
         const metadataKey = dimension === 'religionGeneral' ? 'religionGeneral' : dimension;
         const dimensionMetadata = state.metadata[metadataKey];
         const entityName = dimensionMetadata[entityId]?.name ?? entityId;
 
-        // --- Point feature (fallback) ---
-        labelFeatures.push({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [centroidLng, centroidLat],
-          },
-          properties: {
-            name: entityName,
-            fontSize,
-            entityId,
-            dimension,
-          },
+        // Split into connected components using adjacency graph
+        let clusters: ProvinceInfo[][];
+        if (adjacency) {
+          const featureIndices = provinces.map((p) => p.featureIndex);
+          const components = findConnectedComponents(featureIndices, adjacency);
+          const indexToProvince = new Map(provinces.map((p) => [p.featureIndex, p]));
+          clusters = components.map((comp) =>
+            comp.map((idx) => indexToProvince.get(idx)).filter(
+              (p): p is ProvinceInfo => p !== undefined
+            )
+          );
+        } else {
+          clusters = [provinces];
+        }
+
+        // Filter out tiny clusters (< 5% of entity's total area)
+        const entityTotalArea = provinces.reduce((sum, p) => sum + p.area, 0);
+        const MIN_CLUSTER_FRACTION = 0.05;
+        clusters = clusters.filter((cluster) => {
+          const clusterArea = cluster.reduce((sum, p) => sum + p.area, 0);
+          return clusterArea >= entityTotalArea * MIN_CLUSTER_FRACTION;
         });
 
-        // --- LineString feature (bezier curve like old Chronas) ---
-        // Filter to core territory: take provinces closest to the centroid
-        // that make up >= 80% of total area. This excludes distant colonies
-        // (e.g. French Guiana for France) that would produce absurd extrema.
-        const withDist = provinces.map((p) => ({
-          ...p,
-          dist: Math.sqrt(
-            (p.centroid[0] - centroidLng) ** 2 +
-            (p.centroid[1] - centroidLat) ** 2
-          ),
-        }));
-        withDist.sort((a, b) => a.dist - b.dist);
+        // Generate a label for each connected cluster
+        for (const cluster of clusters) {
+          let totalArea = 0;
+          let weightedLng = 0;
+          let weightedLat = 0;
 
-        let cumArea = 0;
-        const areaThreshold = totalArea * 0.8;
-        const coreProvinces: typeof withDist = [];
-        for (const p of withDist) {
-          coreProvinces.push(p);
-          cumArea += p.area;
-          if (cumArea >= areaThreshold) break;
-        }
-
-        // Compute extrema from core provinces only
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        let minXPt: [number, number] = [0, 0];
-        let maxXPt: [number, number] = [0, 0];
-        let minYPt: [number, number] = [0, 0];
-        let maxYPt: [number, number] = [0, 0];
-
-        for (const province of coreProvinces) {
-          for (const ring of province.coords) {
-            for (const coord of ring) {
-              const cx = coord[0] ?? 0;
-              const cy = coord[1] ?? 0;
-              if (cx < minX) { minX = cx; minXPt = [cx, cy]; }
-              if (cx > maxX) { maxX = cx; maxXPt = [cx, cy]; }
-              if (cy < minY) { minY = cy; minYPt = [cx, cy]; }
-              if (cy > maxY) { maxY = cy; maxYPt = [cx, cy]; }
-            }
+          for (const province of cluster) {
+            totalArea += province.area;
+            weightedLng += province.centroid[0] * province.area;
+            weightedLat += province.centroid[1] * province.area;
           }
-        }
 
-        // Determine label path: horizontal if wider, vertical if taller (like old Chronas)
-        const xSpan = maxX - minX;
-        const ySpan = maxY - minY;
-        let lineCoords: [number, number][];
-        if (xSpan > ySpan) {
-          // Horizontal: minX point -> centroid -> maxX point
-          lineCoords = [
-            minXPt,
-            [centroidLng, centroidLat],
-            maxXPt,
-          ];
-        } else {
-          // Vertical: minY point -> centroid -> maxY point
-          if (minYPt[0] - maxYPt[0] < 1) {
-            lineCoords = [minYPt, [centroidLng, centroidLat], maxYPt];
-          } else {
-            lineCoords = [maxYPt, [centroidLng, centroidLat], minYPt];
-          }
-        }
+          if (totalArea === 0) continue;
 
-        // Create bezier curve through the 3 control points
-        try {
-          const bareLine = turf.lineString(lineCoords);
-          const bezierLine = turf.bezierSpline(bareLine, AREA_LABEL_CONFIG.bezierOptions);
-          const lineDistance = turf.length(bareLine, { units: 'kilometers' });
-          const d = lineDistance / Math.pow(entityName.length, 0.2);
+          const centroidLng = weightedLng / totalArea;
+          const centroidLat = weightedLat / totalArea;
+          const fontSize = calculateFontSize(totalArea);
 
-          labelLineFeatures.push({
+          // Point feature (fallback)
+          labelFeatures.push({
             type: 'Feature',
-            geometry: bezierLine.geometry,
+            geometry: {
+              type: 'Point',
+              coordinates: [centroidLng, centroidLat],
+            },
             properties: {
-              n: entityName,
-              d,
+              name: entityName,
+              fontSize,
               entityId,
+              dimension,
             },
           });
-        } catch {
-          // If bezier fails, skip the line feature (point feature is still available)
+
+          // LineString feature (bezier curve — old Chronas style)
+          // Compute extrema from the cluster's provinces
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          let minXPt: [number, number] = [0, 0];
+          let maxXPt: [number, number] = [0, 0];
+          let minYPt: [number, number] = [0, 0];
+          let maxYPt: [number, number] = [0, 0];
+
+          for (const province of cluster) {
+            for (const ring of province.coords) {
+              for (const coord of ring) {
+                const cx = coord[0] ?? 0;
+                const cy = coord[1] ?? 0;
+                if (cx < minX) { minX = cx; minXPt = [cx, cy]; }
+                if (cx > maxX) { maxX = cx; maxXPt = [cx, cy]; }
+                if (cy < minY) { minY = cy; minYPt = [cx, cy]; }
+                if (cy > maxY) { maxY = cy; maxYPt = [cx, cy]; }
+              }
+            }
+          }
+
+          // Label path: horizontal if wider, vertical if taller
+          const xSpan = maxX - minX;
+          const ySpan = maxY - minY;
+          let lineCoords: [number, number][];
+          if (xSpan > ySpan) {
+            lineCoords = [minXPt, [centroidLng, centroidLat], maxXPt];
+          } else {
+            if (minYPt[0] - maxYPt[0] < 1) {
+              lineCoords = [minYPt, [centroidLng, centroidLat], maxYPt];
+            } else {
+              lineCoords = [maxYPt, [centroidLng, centroidLat], minYPt];
+            }
+          }
+
+          try {
+            const bareLine = turf.lineString(lineCoords);
+            const bezierLine = turf.bezierSpline(bareLine, AREA_LABEL_CONFIG.bezierOptions);
+            const lineDistance = turf.length(bareLine, { units: 'kilometers' });
+            const d = lineDistance / Math.pow(entityName.length, 0.2);
+
+            labelLineFeatures.push({
+              type: 'Feature',
+              geometry: bezierLine.geometry,
+              properties: {
+                n: entityName,
+                d,
+                entityId,
+              },
+            });
+          } catch {
+            // bezier failed — point feature is still available
+          }
         }
       } catch (error) {
         console.warn(`calculateLabels: Failed to process entity ${entityId}`, error);
