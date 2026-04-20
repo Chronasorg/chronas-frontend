@@ -731,6 +731,8 @@ export function getMarkerFilterCategory(type: string): keyof MarkerFilterState {
  */
 export const CACHED_SWITCH_THRESHOLD_MS = 100;
 
+export const AREA_DATA_CACHE_MAX_SIZE = 20;
+
 /**
  * Initial map state
  */
@@ -1217,12 +1219,18 @@ export const useMapStore = create<MapStore>((set, get) => ({
         );
       }
       
-      set({ currentAreaData: cachedData, isLoadingAreaData: false, areaDataAbortController: null });
-      
+      // Promote to most-recently-used position for LRU eviction
+      set((state) => {
+        const newCache = new Map(state.areaDataCache);
+        newCache.delete(year);
+        newCache.set(year, cachedData);
+        return { areaDataCache: newCache, currentAreaData: cachedData, isLoadingAreaData: false, areaDataAbortController: null };
+      });
+
       // Update province properties with the cached area data
       // Requirement 4.2: WHEN area data changes, THE MapView SHALL update the province feature properties
       get().updateProvinceProperties(cachedData);
-      
+
       return cachedData;
     }
 
@@ -1257,6 +1265,14 @@ export const useMapStore = create<MapStore>((set, get) => ({
       set((state) => {
         const newCache = new Map(state.areaDataCache);
         newCache.set(year, areaData);
+
+        // LRU eviction: remove oldest entries when cache exceeds max size
+        if (newCache.size > AREA_DATA_CACHE_MAX_SIZE) {
+          const keysToRemove = [...newCache.keys()].slice(0, newCache.size - AREA_DATA_CACHE_MAX_SIZE);
+          for (const key of keysToRemove) {
+            newCache.delete(key);
+          }
+        }
 
         return {
           areaDataCache: newCache,
@@ -1323,9 +1339,15 @@ export const useMapStore = create<MapStore>((set, get) => ({
     }
 
     set((state) => {
-      // Create a new Map to ensure immutability
       const newCache = new Map(state.areaDataCache);
       newCache.set(year, data);
+
+      if (newCache.size > AREA_DATA_CACHE_MAX_SIZE) {
+        const keysToRemove = [...newCache.keys()].slice(0, newCache.size - AREA_DATA_CACHE_MAX_SIZE);
+        for (const key of keysToRemove) {
+          newCache.delete(key);
+        }
+      }
 
       return {
         areaDataCache: newCache,
@@ -1876,38 +1898,42 @@ export const useMapStore = create<MapStore>((set, get) => ({
   updateProvinceProperties: (areaData: AreaData) => {
     const state = get();
 
-    if (!state.provincesGeoJSON) {
-      // Silently return - provinces GeoJSON will be loaded later
+    const { provincesGeoJSON } = state;
+    if (!provincesGeoJSON) {
       return;
     }
 
-    // Create updated features with new properties
-    const updatedFeatures = state.provincesGeoJSON.features.map((feature) => {
-      // Province ID is stored in the 'name' property of the GeoJSON feature
+    // Create updated features, reusing unchanged objects to reduce allocations
+    const updatedFeatures = provincesGeoJSON.features.map((feature) => {
       const provinceId = feature.properties?.['name'] as string | undefined;
-      
+
       if (!provinceId) {
         return feature;
       }
 
       const data = areaData[provinceId];
-      
+
       if (!data || !Array.isArray(data)) {
         return feature;
       }
 
-      // Extract values from area data tuple
-      // [ruler, culture, religion, capital, population]
       const ruler = data[0];
       const culture = data[1];
       const religion = data[2];
       const population = data[4];
-
-      // Calculate religionGeneral from religion using metadata
       const religionGeneral = get().getReligionGeneral(religion);
 
-      // Return feature with updated properties
-      // Also set 'id' property to match provinceId for layer interactions
+      const props = feature.properties as Record<string, unknown>;
+      if (
+        props['r'] === ruler &&
+        props['c'] === culture &&
+        props['e'] === religion &&
+        props['g'] === religionGeneral &&
+        props['p'] === population
+      ) {
+        return feature;
+      }
+
       return {
         ...feature,
         properties: {
@@ -1922,10 +1948,12 @@ export const useMapStore = create<MapStore>((set, get) => ({
       };
     });
 
-    // Update the provincesGeoJSON with new features
+    // Skip update if no features actually changed (same object references)
+    if (updatedFeatures.every((f, i) => f === provincesGeoJSON.features[i])) return;
+
     set({
       provincesGeoJSON: {
-        ...state.provincesGeoJSON,
+        ...provincesGeoJSON,
         features: updatedFeatures,
       },
     });

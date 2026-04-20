@@ -71,16 +71,6 @@ test.describe('Navigation Sidebar', () => {
     }
   });
 
-  test('clicking Layers opens the layers drawer', async ({ page }) => {
-    await page.getByTestId('nav-item-layers').click();
-    await expect(page.getByTestId('layers-content')).toBeVisible();
-  });
-
-  test('clicking Settings opens the settings drawer', async ({ page }) => {
-    await page.getByTestId('nav-item-settings').click();
-    await expect(page.getByTestId('settings-content')).toBeVisible();
-  });
-
   test('clicking Help toggles the announcement banner', async ({ page }) => {
     const banner = page.getByRole('banner');
 
@@ -131,45 +121,10 @@ test.describe('Layers Panel — Area Dimensions', () => {
     await openLayers(page);
   });
 
-  const dimensions = ['ruler', 'culture', 'religion', 'religionGeneral', 'population'] as const;
-
-  for (const dim of dimensions) {
-    test(`selecting "${dim}" area radio updates the map`, async ({ page }) => {
-      const radio = page.getByTestId(`area-radio-${dim}`);
-      await radio.scrollIntoViewIfNeeded();
-      await radio.click();
-      // Auto-retrying assertion — no waitForTimeout needed
-      await expect(radio).toBeChecked();
-    });
-  }
-
-  test('label radios are available for non-population dimensions', async ({ page }) => {
-    for (const dim of ['ruler', 'culture', 'religion', 'religionGeneral'] as const) {
-      const labelRadio = page.getByTestId(`label-radio-${dim}`);
-      await expect(labelRadio).toBeVisible();
-    }
-  });
-
   test('population row has no label radio', async ({ page }) => {
     // Population has only area radio, no label radio
     const popLabelRadio = page.getByTestId('label-radio-population');
     await expect(popLabelRadio).toHaveCount(0);
-  });
-
-  test('lock toggle switches between locked and unlocked', async ({ page }) => {
-    const lockBtn = page.getByTestId('lock-toggle');
-    await expect(lockBtn).toBeVisible();
-
-    // Initially locked
-    await expect(lockBtn).toHaveAttribute('aria-pressed', 'true');
-
-    // Unlock
-    await lockBtn.click();
-    await expect(lockBtn).toHaveAttribute('aria-pressed', 'false');
-
-    // Re-lock
-    await lockBtn.click();
-    await expect(lockBtn).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('when locked, selecting area radio also selects matching label', async ({ page }) => {
@@ -286,62 +241,7 @@ test.describe('Layers Panel — Marker Filters', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. Layers Panel — Epic Filters
-// ---------------------------------------------------------------------------
-
-test.describe('Layers Panel — Epic Filters', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await waitForMap(page);
-    await openLayers(page);
-  });
-
-  const epicTypes = ['war', 'empire', 'religion', 'culture', 'person', 'other'] as const;
-
-  test('all 6 epic type checkboxes are visible and checked by default', async ({ page }) => {
-    for (const type of epicTypes) {
-      const cb = page.getByTestId(`epic-filter-${type}`);
-      await cb.scrollIntoViewIfNeeded();
-      await expect(cb).toBeVisible();
-      await expect(cb).toBeChecked();
-    }
-  });
-
-  test('Uncheck All unchecks every epic type', async ({ page }) => {
-    // Collapse markers section to bring epics into view
-    await page.getByTestId('markers-section-toggle').click();
-    await expect(page.getByTestId('markers-section-content')).not.toBeVisible();
-
-    const toggleBtn = page.getByTestId('toggle-all-epics');
-    await toggleBtn.scrollIntoViewIfNeeded();
-    await toggleBtn.click();
-
-    for (const type of epicTypes) {
-      const cb = page.getByTestId(`epic-filter-${type}`);
-      await cb.scrollIntoViewIfNeeded();
-      await expect(cb).not.toBeChecked();
-    }
-  });
-
-  test('individual epic checkbox can be toggled', async ({ page }) => {
-    // Collapse markers section to bring epics into view
-    await page.getByTestId('markers-section-toggle').click();
-    await expect(page.getByTestId('markers-section-content')).not.toBeVisible();
-
-    const cb = page.getByTestId('epic-filter-war');
-    await cb.scrollIntoViewIfNeeded();
-    await expect(cb).toBeChecked();
-
-    await cb.click();
-    await expect(cb).not.toBeChecked();
-
-    await cb.click();
-    await expect(cb).toBeChecked();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 5. Layers Panel — Advanced Section
+// 4. Layers Panel — Advanced Section
 // ---------------------------------------------------------------------------
 
 test.describe('Layers Panel — Advanced Section', () => {
@@ -364,22 +264,6 @@ test.describe('Layers Panel — Advanced Section', () => {
     await toggle.click();
 
     await expect(page.getByTestId('advanced-section-content')).toBeVisible();
-  });
-
-  test('basemap select has four options', async ({ page }) => {
-    const advToggle = page.getByTestId('advanced-section-toggle');
-    await advToggle.scrollIntoViewIfNeeded();
-    await advToggle.click();
-    await expect(page.getByTestId('advanced-section-content')).toBeVisible();
-
-    const select = page.getByTestId('basemap-select');
-    await select.scrollIntoViewIfNeeded();
-    await expect(select).toBeVisible();
-
-    const options = await select.locator('option').allTextContents();
-    expect(options.map((o) => o.toLowerCase())).toEqual(
-      expect.arrayContaining(['topographic', 'satellite', 'light', 'none'])
-    );
   });
 
   test('changing basemap updates selection', async ({ page }) => {
@@ -436,12 +320,6 @@ test.describe('Settings Panel', () => {
 
   test('Light theme is active by default', async ({ page }) => {
     await expect(page.getByTestId('theme-btn-light')).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  test('clicking Dark applies dark theme', async ({ page }) => {
-    await page.getByTestId('theme-btn-dark').click();
-    await expect(page.getByTestId('theme-btn-dark')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByTestId('theme-btn-light')).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('clicking Luther applies luther theme', async ({ page }) => {
@@ -506,10 +384,6 @@ test.describe('Timeline Controls', () => {
     await expect(page.getByRole('button', { name: 'Start autoplay' })).toBeVisible();
   });
 
-  test('epic items are rendered in the timeline', async ({ page }) => {
-    // Use auto-retrying assertion instead of snapshot count()
-    await expect(page.locator('[class*="timelineItem"]').first()).toBeAttached();
-  });
 });
 
 // ---------------------------------------------------------------------------

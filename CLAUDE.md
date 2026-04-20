@@ -168,7 +168,7 @@ Workflow at `.github/workflows/deploy-prod.yml`:
 1. `npm run lint` — ensure no lint errors
 2. `npm run build` — ensure the build succeeds
 3. `npm run test:e2e -- tests/e2e/comprehensive-ui.spec.ts` — run the comprehensive Playwright E2E test suite
-4. **MCP browser verification** — use the Playwright MCP server to navigate the running app (`http://localhost:5173`), take screenshots, and visually confirm the UI works correctly
+4. **MCP browser verification** — use the Playwright MCP server to walk through `tests/BROWSER_SANITY_CHECK.md` against the running app (`http://localhost:5173`), validating all sections relevant to the change
 
 If Playwright browsers are not installed, run `npx playwright install chromium` first.
 

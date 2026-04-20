@@ -80,6 +80,7 @@ export interface MapViewProps {
 export function MapView({ className, isBlurred = false }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const styleMissingHandlerRef = useRef<((e: { id: string }) => void) | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   // Initialize WebGL support check eagerly to avoid a useEffect + setState cascade.
   // checkWebGLSupport() is synchronous and cheap (creates a temporary canvas).
@@ -688,12 +689,19 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         }
       };
       
+      // Remove previous listener if map reloaded
+      if (styleMissingHandlerRef.current) {
+        map.off('styleimagemissing', styleMissingHandlerRef.current);
+      }
+
       // Handle missing images on-demand (fixes race condition)
-      map.on('styleimagemissing', (e: { id: string }) => {
+      const missingHandler = (e: { id: string }) => {
         if (atlasImage && iconConfigs[e.id]) {
           addIconFromAtlas(e.id, atlasImage);
         }
-      });
+      };
+      styleMissingHandlerRef.current = missingHandler;
+      map.on('styleimagemissing', missingHandler);
       
       // Load the sprite atlas image
       const img = new Image();
@@ -712,6 +720,17 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       
       img.src = '/images/themed-atlas.png';
     }
+  }, []);
+
+  // Cleanup styleimagemissing listener on unmount
+  useEffect(() => {
+    const ref = mapRef.current;
+    return () => {
+      const map = ref?.getMap();
+      if (map && styleMissingHandlerRef.current) {
+        map.off('styleimagemissing', styleMissingHandlerRef.current);
+      }
+    };
   }, []);
 
   /**
