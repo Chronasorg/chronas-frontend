@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import i18n from '@/i18n/i18n';
+import i18n, { getSubdomainLocale } from '@/i18n/i18n';
 import type { Marker } from '@/api/types';
 
 /**
@@ -263,8 +263,11 @@ export const useUIStore = create<UIStore>()(
           }
           // Apply the theme to the document element on rehydration
           applyThemeToDocument(state.theme);
-          // Sync persisted locale to i18next
-          void i18n.changeLanguage(state.locale);
+          // Subdomain locale takes precedence over persisted locale
+          const subdomainLocale = getSubdomainLocale();
+          const effectiveLocale = subdomainLocale ?? state.locale;
+          state.locale = effectiveLocale;
+          void i18n.changeLanguage(effectiveLocale);
         }
       },
     }
