@@ -1,19 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { getSubdomainLocale, SUPPORTED_LANGUAGES } from './i18n';
 
 describe('getSubdomainLocale', () => {
-  const originalHostname = window.location.hostname;
+  const originalLocation = window.location;
 
   afterEach(() => {
     Object.defineProperty(window, 'location', {
-      value: { ...window.location, hostname: originalHostname },
+      value: originalLocation,
       writable: true,
     });
   });
 
   function setHostname(hostname: string) {
     Object.defineProperty(window, 'location', {
-      value: { ...window.location, hostname },
+      value: { hostname },
       writable: true,
     });
   }
