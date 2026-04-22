@@ -93,6 +93,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           case 'help':
             useUIStore.getState().toggleBanner();
             break;
+          case 'info':
+            useUIStore.getState().openInfoDialog();
+            break;
           case 'logout':
             if (isAuthenticated) {
               clearUser();

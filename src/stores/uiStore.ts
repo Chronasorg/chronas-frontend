@@ -57,6 +57,8 @@ export interface UIState {
   bannerVisible: boolean;
   /** Whether the login dialog is open */
   loginDialogOpen: boolean;
+  /** Whether the info dialog (Welcome/How To/Contact) is open */
+  infoDialogOpen: boolean;
 }
 
 /**
@@ -79,6 +81,10 @@ export interface UIActions {
   openLoginDialog: () => void;
   /** Closes the login dialog */
   closeLoginDialog: () => void;
+  /** Opens the info dialog (Welcome/How To/Contact) */
+  openInfoDialog: () => void;
+  /** Closes the info dialog */
+  closeInfoDialog: () => void;
 }
 
 /**
@@ -98,6 +104,7 @@ const defaultState: UIState = {
   rightDrawerContent: null,
   bannerVisible: true,
   loginDialogOpen: false,
+  infoDialogOpen: false,
 };
 
 /**
@@ -228,6 +235,14 @@ export const useUIStore = create<UIStore>()(
 
       closeLoginDialog: () => {
         set({ loginDialogOpen: false });
+      },
+
+      openInfoDialog: () => {
+        set({ infoDialogOpen: true });
+      },
+
+      closeInfoDialog: () => {
+        set({ infoDialogOpen: false });
       },
     }),
     {

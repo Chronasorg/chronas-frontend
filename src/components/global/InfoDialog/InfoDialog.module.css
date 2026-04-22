@@ -1,0 +1,560 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  animation: fadeIn 200ms ease-out;
+  overflow: auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog {
+  position: relative;
+  background: #fff;
+  width: 90vw;
+  max-width: 1024px;
+  min-width: 0;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 250ms ease-out;
+  overflow: auto;
+  font-family: Cinzel, sans-serif;
+}
+
+/* ── Header & Tabs ── */
+
+.header {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.tabs {
+  display: flex;
+  flex: 1;
+  width: calc(100% - 100px);
+  position: relative;
+}
+
+.tab {
+  padding: 16px 32px;
+  border: none;
+  background: transparent;
+  font-family: Cinzel, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: uppercase;
+  color: #757575;
+  cursor: pointer;
+  position: relative;
+  transition: color 200ms ease;
+}
+
+.tab:hover {
+  color: #494949;
+}
+
+.tab:focus-visible {
+  outline: 2px solid rgb(173, 135, 27);
+  outline-offset: -2px;
+}
+
+.tab[data-active='true'] {
+  color: rgb(173, 135, 27);
+}
+
+.tab[data-active='true']::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgb(173, 135, 27);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 12px;
+}
+
+.headerButton {
+  border: none;
+  background: transparent;
+  padding: 8px;
+  cursor: pointer;
+  color: #757575;
+  transition: color 150ms ease;
+  line-height: 1;
+}
+
+.headerButton:hover {
+  color: #494949;
+}
+
+.headerButton:focus-visible {
+  outline: 2px solid rgb(173, 135, 27);
+  outline-offset: 2px;
+}
+
+/* ── Scrollable content ── */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 800px;
+}
+
+/* ── Welcome tab ── */
+
+.welcomeWrapper {
+  background: url('/images/compass.png') center bottom no-repeat;
+  background-color: #fff;
+  min-height: 348px;
+  padding: 0 40px 40px;
+  position: relative;
+}
+
+.welcomeTitle {
+  font-family: Cinzel, sans-serif;
+  font-size: 33px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-align: center;
+  color: #6a6a6a;
+  margin: 0 auto 16px;
+  line-height: 1.5;
+}
+
+.welcomeText {
+  font-family: Cinzel, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #6a6a6a;
+  letter-spacing: normal;
+  margin: 0 0 16px;
+}
+
+.welcomeHighlight {
+  color: rgb(173, 135, 27);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.welcomeHighlight:hover {
+  opacity: 0.6;
+}
+
+.welcomeLink {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: Cinzel, sans-serif;
+  font-size: 16px;
+  color: rgb(173, 135, 27);
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.welcomeLink:hover {
+  opacity: 0.6;
+}
+
+.beginButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  background: rgb(173, 135, 27);
+  color: #fff;
+  font-family: Cinzel, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+  margin: 12px;
+}
+
+.beginButton:hover {
+  opacity: 0.88;
+}
+
+.beginButton:focus-visible {
+  outline: 2px solid #494949;
+  outline-offset: 2px;
+}
+
+.welcomeFooter {
+  position: relative;
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.buildInfo {
+  font-family: Cinzel, sans-serif;
+  font-size: small;
+  color: #6a6a6a;
+}
+
+.socialLinks {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  z-index: 4;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: Cinzel, sans-serif;
+  font-size: small;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.socialLink:hover {
+  opacity: 0.5;
+}
+
+.socialLinkTwitter {
+  composes: socialLink;
+  color: #1ea1f2;
+}
+
+.socialLinkFacebook {
+  composes: socialLink;
+  color: #4267b2;
+}
+
+/* ── How To tab ── */
+
+.howtoWrapper {
+  padding: 20px 40px 40px;
+}
+
+.sectionTitle {
+  font-family: Cinzel, sans-serif;
+  font-size: 33px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: #6a6a6a;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.videoWrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  margin-bottom: 36px;
+  background: #000;
+}
+
+.videoWrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ── Contact tab ── */
+
+.contactWrapper {
+  padding: 20px 40px 40px;
+}
+
+.githubSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-left: 4px solid rgb(173, 135, 27);
+  margin-bottom: 28px;
+  box-shadow: none;
+}
+
+.githubIcon {
+  flex-shrink: 0;
+  color: #242a2e;
+}
+
+.githubContent {
+  flex: 1;
+}
+
+.githubTitle {
+  font-family: Cinzel, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: uppercase;
+  color: #6a6a6a;
+  margin: 0 0 4px;
+}
+
+.githubText {
+  font-family: Cinzel, sans-serif;
+  font-size: 13px;
+  color: #757575;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.githubButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #242a2e;
+  color: #fff;
+  text-decoration: none;
+  font-family: Cinzel, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: uppercase;
+  transition: opacity 200ms ease;
+  flex-shrink: 0;
+}
+
+.githubButton:hover {
+  opacity: 0.5;
+  color: #fff;
+}
+
+.contactSectionTitle {
+  font-family: Cinzel, sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: #6a6a6a;
+  margin: 0 0 16px;
+}
+
+.separator {
+  height: 1px;
+  background: #eee;
+  margin: 20px 0;
+  border: none;
+}
+
+.developerCard {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  background: transparent;
+  box-shadow: none;
+  min-width: 300px;
+}
+
+.developerAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+
+.developerAvatarFallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Cinzel, sans-serif;
+  font-size: 18px;
+  color: #6a6a6a;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+
+.developerInfo {
+  flex: 1;
+}
+
+.developerRole {
+  font-family: Cinzel, sans-serif;
+  font-size: 16px;
+  color: #6a6a6a;
+  margin: 0;
+}
+
+.developerName {
+  font-family: Cinzel, sans-serif;
+  font-size: 14px;
+  color: #757575;
+  margin: 2px 0 0;
+}
+
+.emailButton {
+  border: none;
+  background: transparent;
+  padding: 8px;
+  cursor: help;
+  color: #757575;
+  position: relative;
+  transition: color 200ms ease;
+}
+
+.emailButton:hover {
+  color: rgb(173, 135, 27);
+}
+
+.emailButton:focus-visible {
+  outline: 2px solid rgb(173, 135, 27);
+  outline-offset: 2px;
+}
+
+.emailTooltip {
+  display: none;
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px 12px;
+  background: rgb(97, 97, 97);
+  color: #fff;
+  font-family: Cinzel, sans-serif;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-right: 8px;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+.emailTooltip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: rgb(97, 97, 97);
+}
+
+.emailButton:hover .emailTooltip {
+  display: block;
+}
+
+.translationsText {
+  font-family: Cinzel, sans-serif;
+  font-size: 16px;
+  color: #6a6a6a;
+  line-height: 22px;
+  margin: 20px 0 0;
+  padding: 12px 0;
+}
+
+.translatorLink {
+  color: rgb(173, 135, 27);
+  text-decoration: none;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.translatorLink:hover {
+  opacity: 0.6;
+}
+
+.contactDescription {
+  font-family: Cinzel, sans-serif;
+  font-size: 16px;
+  color: #6a6a6a;
+  letter-spacing: normal;
+  margin: 0;
+  line-height: 22px;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .dialog {
+    width: 95vw;
+    height: auto;
+    max-height: 90vh;
+  }
+
+  .welcomeWrapper {
+    padding: 0 20px 20px;
+  }
+
+  .howtoWrapper {
+    padding: 20px;
+  }
+
+  .contactWrapper {
+    padding: 20px;
+  }
+
+  .tab {
+    padding: 14px 16px;
+    font-size: 12px;
+  }
+
+  .welcomeTitle {
+    font-size: 24px;
+  }
+
+  .sectionTitle {
+    font-size: 24px;
+  }
+
+  .githubSection {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .socialLinks {
+    position: static;
+    align-items: flex-end;
+    margin-top: 16px;
+  }
+
+  .welcomeFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+}
