@@ -133,11 +133,13 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
 
   // Sync local state when config changes externally
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setStartYearInput(config.startYear.toString());
     setEndYearInput(config.endYear.toString());
     setStepSizeInput(config.stepSize.toString());
     setDelayInput((config.delay / 1000).toString());
     setRepeat(config.repeat);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [config]);
 
   // Focus first input on mount

@@ -1,6 +1,6 @@
 # Chronas Frontend
 
-Modern React 19 + Vite 7 + TypeScript frontend shell for the Chronas interactive historical map application.
+Modern React 19 + Vite 8 + TypeScript frontend shell for the Chronas interactive historical map application.
 
 ## Quick Start
 
@@ -55,8 +55,8 @@ Requires AWS CLI configured with `chronas-dev` profile.
 ## Tech Stack
 
 - React 19
-- Vite 7
-- TypeScript 5
+- Vite 8
+- TypeScript 6
 - Zustand (state management)
 - React Router v6 (HashRouter)
 - Axios (API client)

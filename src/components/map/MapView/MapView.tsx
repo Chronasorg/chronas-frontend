@@ -912,7 +912,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       // Update hover info state
       setHoverInfo({
         lngLat: [event.lngLat.lng, event.lngLat.lat],
-        feature: properties as Record<string, unknown>,
+        feature: properties,
         provinceId: provinceId,
       });
       

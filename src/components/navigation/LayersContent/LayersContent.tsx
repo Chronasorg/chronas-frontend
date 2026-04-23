@@ -269,7 +269,7 @@ export const LayersContent: React.FC<LayersContentProps> = ({ className, testId 
   const handleLabelChange = useCallback((d: AreaColorDimension) => { setActiveLabel(d); }, [setActiveLabel]);
   const handleLockChange = useCallback((l: boolean) => { setColorLabelLocked(l); }, [setColorLabelLocked]);
   const handleMarkerFilterChange = useCallback((type: string, enabled: boolean) => {
-    setMarkerFilter(type as 'battle' | 'city' | 'capital' | 'person' | 'event' | 'other', enabled);
+    setMarkerFilter(type, enabled);
   }, [setMarkerFilter]);
 
   return (

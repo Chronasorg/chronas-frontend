@@ -41,11 +41,13 @@ export function LoginDialog({ isOpen, onClose }: LoginDialogProps) {
   // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setEmail('');
       setPassword('');
       setUsername('');
       setError(null);
       setMode('login');
+      /* eslint-enable react-hooks/set-state-in-effect */
       // Focus first input after render
       setTimeout(() => firstInputRef.current?.focus(), 100);
     }

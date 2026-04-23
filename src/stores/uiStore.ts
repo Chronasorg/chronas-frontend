@@ -260,9 +260,9 @@ export const useUIStore = create<UIStore>()(
       migrate: (persistedState: unknown, version: number) => {
         if (version === 0) {
           // Migration from version 0 to 1 (if needed in future)
-          return persistedState as UIState;
+          return persistedState;
         }
-        return persistedState as UIState;
+        return persistedState;
       },
       // Handle storage errors gracefully
       onRehydrateStorage: () => (state, error) => {

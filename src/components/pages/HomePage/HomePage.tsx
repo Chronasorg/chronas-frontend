@@ -43,7 +43,7 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     if (selectedYear !== prevYearRef.current) {
       prevYearRef.current = selectedYear;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- showing notification when external store year changes; this syncs animation state with Zustand store
+       
       setIsYearNotificationVisible(true);
     }
   }, [selectedYear]);

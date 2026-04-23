@@ -1009,7 +1009,7 @@ describe('Property 18: Entity Outline Calculation', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -1077,7 +1077,7 @@ describe('Property 18: Entity Outline Calculation', () => {
           };
 
           act(() => {
-            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
             useMapStore.getState().setAreaData(1000, areaData);
           });
 
@@ -1143,7 +1143,7 @@ describe('Property 18: Entity Outline Calculation', () => {
         };
 
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -1192,7 +1192,7 @@ describe('Property 18: Entity Outline Calculation', () => {
         };
 
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -1279,7 +1279,7 @@ describe('Property 19: Entity Outline Viewport Fit', () => {
     };
 
     act(() => {
-      useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+      useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
       useMapStore.getState().setAreaData(1000, areaData);
       useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
     });
@@ -1851,7 +1851,7 @@ describe('Property 5: Metadata Structure Validation', () => {
    */
   const dimensionMetadataArb: fc.Arbitrary<Record<string, { name: string; color: string }>> = fc
     .array(fc.tuple(entityIdArb, metadataEntryArb), { minLength: 1, maxLength: 10 })
-    .map((entries) => Object.fromEntries(entries) as Record<string, { name: string; color: string }>);
+    .map((entries) => Object.fromEntries(entries));
 
   /**
    * Arbitrary for generating complete EntityMetadata.
@@ -2905,9 +2905,9 @@ describe('Property 12: Label Positioning by Dimension', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
-          useMapStore.getState().setMetadata(metadata as unknown as EntityMetadata);
+          useMapStore.getState().setMetadata(metadata);
         });
 
         // Calculate labels
@@ -2960,9 +2960,9 @@ describe('Property 12: Label Positioning by Dimension', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
-          useMapStore.getState().setMetadata(metadata as unknown as EntityMetadata);
+          useMapStore.getState().setMetadata(metadata);
         });
 
         // Calculate labels
@@ -3018,9 +3018,9 @@ describe('Property 12: Label Positioning by Dimension', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
-          useMapStore.getState().setMetadata(metadata as unknown as EntityMetadata);
+          useMapStore.getState().setMetadata(metadata);
         });
 
         // Calculate labels
@@ -3075,9 +3075,9 @@ describe('Property 12: Label Positioning by Dimension', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
-          useMapStore.getState().setMetadata(metadata as unknown as EntityMetadata);
+          useMapStore.getState().setMetadata(metadata);
         });
 
         // Calculate labels
@@ -3125,9 +3125,9 @@ describe('Property 12: Label Positioning by Dimension', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
-          useMapStore.getState().setMetadata(metadata as unknown as EntityMetadata);
+          useMapStore.getState().setMetadata(metadata);
         });
 
         // Calculate labels
@@ -3192,7 +3192,7 @@ describe('Property 12: Label Positioning by Dimension', () => {
 
           // Set up the store
           act(() => {
-            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
             useMapStore.getState().setAreaData(1000, areaData);
             useMapStore.getState().setMetadata(metadata);
           });
@@ -3455,7 +3455,7 @@ describe('Property 13: Entity Outline Calculation', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -3501,7 +3501,7 @@ describe('Property 13: Entity Outline Calculation', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -3565,7 +3565,7 @@ describe('Property 13: Entity Outline Calculation', () => {
 
         // Set up the store
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -3626,7 +3626,7 @@ describe('Property 13: Entity Outline Calculation', () => {
           };
 
           act(() => {
-            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
             useMapStore.getState().setAreaData(1000, areaData);
           });
 
@@ -3675,7 +3675,7 @@ describe('Property 13: Entity Outline Calculation', () => {
         };
 
         act(() => {
-          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+          useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
           useMapStore.getState().setAreaData(1000, areaData);
         });
 
@@ -3794,7 +3794,7 @@ describe('Property 14: Entity Outline Styling', () => {
           // Set up the store
           act(() => {
             useMapStore.getState().setMetadata(metadata);
-            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
             useMapStore.getState().setAreaData(1000, areaData);
           });
 
@@ -3863,7 +3863,7 @@ describe('Property 14: Entity Outline Styling', () => {
           // Set up the store
           act(() => {
             useMapStore.getState().setMetadata(metadata);
-            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
             useMapStore.getState().setAreaData(1000, areaData);
           });
 
@@ -3966,7 +3966,7 @@ describe('Property 14: Entity Outline Styling', () => {
           // Set up the store
           act(() => {
             useMapStore.getState().setMetadata(metadata);
-            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON as FeatureCollection<Polygon | MultiPolygon>);
+            useMapStore.getState().setProvincesGeoJSON(provincesGeoJSON);
             useMapStore.getState().setAreaData(1000, areaData);
           });
 

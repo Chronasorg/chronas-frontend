@@ -81,9 +81,9 @@ describe('uiStore Property Tests', () => {
         // Remove wikiUrl if undefined to match optional property type
         if (content.wikiUrl === undefined) {
           const { wikiUrl: _, ...rest } = content;
-          return rest as DrawerContent;
+          return rest;
         }
-        return content as DrawerContent;
+        return content;
       });
 
     /**
@@ -105,9 +105,9 @@ describe('uiStore Property Tests', () => {
             // Remove wiki if undefined to match optional property type
             if (m.wiki === undefined) {
               const { wiki: _, ...rest } = m;
-              return rest as Marker;
+              return rest;
             }
-            return m as Marker;
+            return m;
           }),
       })
       .map((content) => content as DrawerContent);

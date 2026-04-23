@@ -37,6 +37,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   // Sync with controlled value
   React.useEffect(() => {
     if (value !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedValue(value);
     }
   }, [value]);

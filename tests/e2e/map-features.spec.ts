@@ -192,7 +192,7 @@ test.describe('API Response Verification', () => {
     
     if (metadataResponse) {
       console.log('   ✅ Received metadata response');
-      const keys = Object.keys(metadataResponse as object);
+      const keys = Object.keys(metadataResponse);
       console.log(`   Metadata keys: ${keys.slice(0, 5).join(', ')}${keys.length > 5 ? '...' : ''}`);
     } else {
       console.log('   ⚠️ No metadata response captured');
@@ -222,7 +222,7 @@ test.describe('API Response Verification', () => {
     
     if (areaResponse) {
       console.log('   ✅ Received area data response');
-      const keys = Object.keys(areaResponse as object);
+      const keys = Object.keys(areaResponse);
       console.log(`   Province count: ${String(keys.length)}`);
       if (keys.length > 0) {
         console.log(`   Sample provinces: ${keys.slice(0, 5).join(', ')}`);

@@ -1,7 +1,15 @@
 # Feature Gap Analysis: Production Chronas vs New Frontend
 
-**Last Updated:** February 6, 2026  
-**Audit Status:** Complete
+**Last Updated:** February 6, 2026 (partial refresh 2026-04-23)
+**Audit Status:** Stale — many "Not wired" items below are now wired; see note below.
+
+> **⚠️ Staleness note (2026-04-23):** Since this doc was last audited, several items originally listed under "PARTIALLY IMPLEMENTED" have been wired to the map:
+> - Basemap selection → applied via `mapStyle` in `MapView.tsx`
+> - Population opacity → applied via Mapbox paint expression in `MapView.tsx`
+> - Cluster markers → passed to source via `cluster` prop in `MapView.tsx`
+> - Show provinces → applied via layer visibility expression
+>
+> Remaining gaps (marker-limit → API wiring, epic items flow to `VisTimelineWrapper`, migration layer, custom marker icons via icon atlas) still apply. A full re-audit is needed before this doc can be trusted end-to-end.
 
 This document provides a comprehensive comparison between the production Chronas frontend (`chronas/`) and the new React 19 implementation (`chronas-frontend/`).
 

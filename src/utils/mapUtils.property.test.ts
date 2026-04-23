@@ -211,7 +211,7 @@ describe('mapUtils - Property Tests', () => {
           fc.oneof(
             fc.constant(null as string | null | undefined),
             fc.constant(undefined as string | null | undefined),
-            fc.constant('' as string | null | undefined),
+            fc.constant(''),
             fc.string({ unit: fc.constantFrom(' ', '\t', '\n') }), // whitespace only
             fc.string().filter((s) => s.split(',').length < 3) // insufficient parts
           ),

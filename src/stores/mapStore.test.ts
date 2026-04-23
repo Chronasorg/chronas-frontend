@@ -1357,7 +1357,7 @@ describe('entity outline', () => {
   describe('setProvincesGeoJSON', () => {
     it('should set provinces GeoJSON', () => {
       act(() => {
-        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon>);
+        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON);
       });
 
       const state = useMapStore.getState();
@@ -1421,7 +1421,7 @@ describe('entity outline', () => {
   describe('calculateEntityOutline', () => {
     beforeEach(() => {
       act(() => {
-        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon>);
+        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON);
         useMapStore.getState().setAreaData(1000, sampleAreaDataForOutline);
         useMapStore.getState().setMetadata(sampleMetadata);
       });
@@ -1543,7 +1543,7 @@ describe('entity outline', () => {
     it('should clear entity outline and color', () => {
       // First set an entity outline
       act(() => {
-        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon>);
+        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON);
         useMapStore.getState().setAreaData(1000, sampleAreaDataForOutline);
         useMapStore.getState().setMetadata(sampleMetadata);
         useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');
@@ -1565,7 +1565,7 @@ describe('entity outline', () => {
   describe('fitToEntityOutline', () => {
     beforeEach(() => {
       act(() => {
-        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon>);
+        useMapStore.getState().setProvincesGeoJSON(sampleProvincesGeoJSON);
         useMapStore.getState().setAreaData(1000, sampleAreaDataForOutline);
         useMapStore.getState().setMetadata(sampleMetadata);
         useMapStore.getState().calculateEntityOutline('ruler1', 'ruler');

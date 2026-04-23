@@ -1680,7 +1680,7 @@ describe('MapView Property Tests', () => {
 
     it('should show only ruler-fill layer when activeColor is ruler', () => {
       fc.assert(
-        fc.property(fc.constant('ruler' as AreaColorDimension), (dimension) => {
+        fc.property(fc.constant('ruler'), (dimension) => {
           // Reset store
           act(() => {
             useMapStore.setState(mapInitialState);

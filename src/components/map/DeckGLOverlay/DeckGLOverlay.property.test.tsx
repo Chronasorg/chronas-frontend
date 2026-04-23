@@ -459,7 +459,7 @@ describe('MarkerSpatialIndex Properties', () => {
         (markers) => {
           const index = new MarkerSpatialIndex(50);
            
-          index.load(markers as MarkerData[]);
+          index.load(markers);
 
           // Search the entire space
           const results = index.search(0, 0, 1000, 1000);

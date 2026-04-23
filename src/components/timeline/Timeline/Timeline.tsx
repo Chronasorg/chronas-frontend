@@ -439,6 +439,7 @@ export const Timeline: React.FC<TimelineProps> = ({
       container.style.zIndex = '350';
       document.body.appendChild(container);
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPortalContainer(container);
 
     return () => {

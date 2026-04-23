@@ -399,6 +399,7 @@ export function calculateClusters(
   // Reset zoom levels for all markers
   const processedMarkers = markers.map((m) => ({
     ...m,
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     zoomLevels: {} as Record<number, ZoomLevelData | null>,
   }));
 

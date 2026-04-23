@@ -85,7 +85,7 @@ function buildTimelineItems(
       if (key === 'capital') {
         itemTitle = dimKey;
       } else if (metadata?.[key]) {
-        const metaEntry = (metadata[key] as Record<string, { name: string; color: string }>)[dimKey];
+        const metaEntry = (metadata[key])[dimKey];
         if (metaEntry) {
           itemTitle = metaEntry.name || dimKey;
           bgColor = metaEntry.color || '';

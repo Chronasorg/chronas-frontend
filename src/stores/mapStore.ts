@@ -1253,7 +1253,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
       }
 
       // Cast to AreaData (same structure as MapAreaData)
-      const areaData = data as AreaData;
+      const areaData = data;
 
       // Cache the response - Requirement 12.2
       const duration = performance.now() - startTime;
@@ -2157,7 +2157,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
         const geom = feature.geometry;
         let coords: number[][][] = [];
         if (geom.type === 'Polygon') {
-          coords = geom.coordinates as number[][][];
+          coords = geom.coordinates;
         } else {
           for (const poly of geom.coordinates) {
             coords.push(...(poly as number[][][]));

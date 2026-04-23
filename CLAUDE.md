@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-**Stack:** React 19, TypeScript 5.7 (strict), Vite 6, Zustand 5, React Router 6 (HashRouter)
+**Stack:** React 19, TypeScript 6 (strict), Vite 8, Zustand 5, React Router 7 (HashRouter)
 
 **What the app does:** Chronas is a historical map application. Users explore an interactive map (Deck.gl + Mapbox GL) with a timeline (vis-timeline) to navigate through historical periods. Areas and markers on the map link to content displayed in a right drawer panel.
 
@@ -69,7 +69,7 @@ i18next via react-i18next. Setup in `src/i18n/`. Locale preference managed by ui
 - **Unit/integration:** Vitest + React Testing Library. Tests live alongside source as `*.test.ts` / `*.spec.tsx`.
 - **Property-based:** fast-check library, files named `*.property.test.ts`.
 - **E2E:** Playwright (Chromium only), tests in `tests/e2e/`.
-  - **Comprehensive UI suite:** `tests/e2e/comprehensive-ui.spec.ts` — 54 tests covering navigation sidebar, layers panel (area dimensions, marker filters, epic filters, advanced section), settings panel, right drawer, timeline controls, announcement banner, keyboard accessibility, and section collapse/expand.
+  - **Comprehensive UI suite:** `tests/e2e/comprehensive-ui.spec.ts` — 39 tests covering navigation sidebar, layers panel (area dimensions, marker filters, epic filters, advanced section), settings panel, right drawer, timeline controls, announcement banner, keyboard accessibility, and section collapse/expand.
   - **Other E2E suites:** `navigation.spec.ts`, `layer-controls.spec.ts`, `map-interactions.spec.ts`, `marker-features.spec.ts`, `timeline-interactions.spec.ts`, etc.
 - **Setup file:** `tests/setup.ts` — mocks localStorage, atob/btoa, and environment.
 - **Mocks:** `tests/__mocks__/` — react-map-gl is mocked in unit tests.
