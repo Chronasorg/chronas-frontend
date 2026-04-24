@@ -10,6 +10,7 @@
 import { create } from 'zustand';
 import { apiClient } from '../api/client';
 import { EPICS } from '../api/endpoints';
+import { updateQueryStringParameter } from '../utils/mapUtils';
 
 /**
  * Epic linked content response from API
@@ -68,6 +69,12 @@ export const defaultEpicFilters: Record<EpicType, boolean> = {
 };
 
 /**
+ * Playback direction for autoplay.
+ * 'forward' advances year by +stepSize; 'reverse' decreases by stepSize.
+ */
+export type AutoplayDirection = 'forward' | 'reverse';
+
+/**
  * Autoplay configuration interface
  */
 export interface AutoplayConfig {
@@ -81,6 +88,8 @@ export interface AutoplayConfig {
   delay: number;
   /** Whether to repeat when reaching end year */
   repeat: boolean;
+  /** Playback direction: 'forward' (default) or 'reverse' */
+  direction: AutoplayDirection;
 }
 
 /**
@@ -229,6 +238,7 @@ export const defaultAutoplayConfig: AutoplayConfig = {
   stepSize: 25,
   delay: 1000, // 1 second in milliseconds
   repeat: true,
+  direction: 'forward',
 };
 
 /**
@@ -517,6 +527,34 @@ export function transformApiResponseToEpicItem(apiItem: EpicApiResponse): EpicIt
 let autoplayIntervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
+ * Syncs epic filter state to URL using opt-in encoding.
+ * Default is all-disabled, so we emit the list of enabled keys. Absence of the param
+ * means "none enabled" (default state).
+ */
+function syncEpicFiltersToURL(filters: Record<EpicType, boolean>): void {
+  const on = EPIC_TYPES.filter((k) => filters[k]);
+  updateQueryStringParameter('epics', on.length > 0 ? on.join(',') : null);
+}
+
+/**
+ * Applies a comma-separated list of enabled epic filter keys from URL to a filters object.
+ * Keys not listed default to false.
+ */
+export function applyEpicsFromURL(
+  epicsParam: string | undefined
+): Record<EpicType, boolean> {
+  const result: Record<EpicType, boolean> = { ...defaultEpicFilters };
+  if (!epicsParam) return result;
+  const enabled = epicsParam.split(',').map((s) => s.trim()).filter(Boolean);
+  for (const key of enabled) {
+    if (EPIC_TYPES.includes(key as EpicType)) {
+      result[key as EpicType] = true;
+    }
+  }
+  return result;
+}
+
+/**
  * Zustand timeline store
  *
  * Manages all timeline-related state including year selection,
@@ -591,11 +629,18 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     }
 
     const { autoplayConfig } = get();
+    const isReverse = autoplayConfig.direction === 'reverse';
+
+    // When reversed, startYear is treated as "higher bound" (where we begin)
+    // and endYear as "lower bound" (where we stop/loop).
+    const beginYear = isReverse
+      ? Math.max(autoplayConfig.startYear, autoplayConfig.endYear)
+      : autoplayConfig.startYear;
 
     // Set initial year to start year
     set({
       isAutoplayActive: true,
-      selectedYear: clampYear(autoplayConfig.startYear),
+      selectedYear: clampYear(beginYear),
       isAutoplayMenuOpen: false, // Close menu when starting
     });
 
@@ -613,14 +658,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         return;
       }
 
-      const nextYear = selectedYear + config.stepSize;
+      const reverse = config.direction === 'reverse';
+      const step = reverse ? -Math.abs(config.stepSize) : Math.abs(config.stepSize);
+      const nextYear = selectedYear + step;
 
-      if (nextYear > config.endYear) {
+      // Determine the finish boundary and the loop-restart year
+      const lo = Math.min(config.startYear, config.endYear);
+      const hi = Math.max(config.startYear, config.endYear);
+      const done = reverse ? nextYear < lo : nextYear > hi;
+      const restartYear = reverse ? hi : lo;
+
+      if (done) {
         if (config.repeat) {
-          // Restart from beginning
-          set({ selectedYear: clampYear(config.startYear) });
+          set({ selectedYear: clampYear(restartYear) });
         } else {
-          // Stop autoplay
           if (autoplayIntervalId !== null) {
             clearInterval(autoplayIntervalId);
             autoplayIntervalId = null;
@@ -628,7 +679,6 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
           set({ isAutoplayActive: false });
         }
       } else {
-        // Advance to next year
         set({ selectedYear: clampYear(nextYear) });
       }
     }, autoplayConfig.delay);
@@ -740,6 +790,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         [type]: enabled,
       },
     }));
+    syncEpicFiltersToURL(get().epicFilters);
   },
 
   /**
@@ -759,6 +810,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         other: enabled,
       },
     });
+    syncEpicFiltersToURL(get().epicFilters);
   },
 
   /**

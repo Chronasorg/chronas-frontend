@@ -33,7 +33,7 @@ import {
 /**
  * Action types for navigation items that don't navigate to a route.
  */
-export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help' | 'info';
+export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help' | 'info' | 'play';
 
 /**
  * Navigation item configuration interface.
@@ -125,9 +125,8 @@ export const NAV_ITEMS: NavItemConfig[] = [
     id: 'play',
     icon: PlayIcon(),
     label: 'Play',
-    to: '/play',
+    action: 'play',
     section: 'bottom',
-    disabled: true, // Deferred: Autoplay page not yet implemented
   },
   {
     id: 'help',

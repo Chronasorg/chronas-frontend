@@ -22,7 +22,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ProvinceDrawerContent } from './ProvinceDrawerContent';
 import { getEntityMetadata, getReligionGeneralMetadata } from './ProvinceDrawerContent.utils';
 import type { EntityMetadata, ProvinceData } from '@/api/types';
@@ -487,7 +487,7 @@ describe('ProvinceDrawerContent', () => {
   });
 
   describe('ArticleIframe Embedding (Requirement 2.6)', () => {
-    it('should render ArticleIframe component', () => {
+    it('should render ArticleIframe on Summary tab', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Italia"
@@ -501,7 +501,7 @@ describe('ProvinceDrawerContent', () => {
       expect(iframe).toBeInTheDocument();
     });
 
-    it('should pass wikiUrl to ArticleIframe', () => {
+    it('should pass wikiUrl to ArticleIframe on Summary tab', () => {
       const wikiUrl = 'https://en.wikipedia.org/wiki/Italia';
       render(
         <ProvinceDrawerContent
@@ -516,7 +516,7 @@ describe('ProvinceDrawerContent', () => {
       expect(iframe).toHaveAttribute('data-url', wikiUrl);
     });
 
-    it('should pass correct title to ArticleIframe', () => {
+    it('should pass correct title to ArticleIframe on Summary tab', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Italia"
@@ -530,7 +530,7 @@ describe('ProvinceDrawerContent', () => {
       expect(iframe).toHaveAttribute('data-title', 'Wikipedia article for Italia');
     });
 
-    it('should render ArticleIframe without wikiUrl', () => {
+    it('should render ArticleIframe on Summary tab without wikiUrl', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Italia"
@@ -544,7 +544,7 @@ describe('ProvinceDrawerContent', () => {
       expect(iframe).not.toHaveAttribute('data-url');
     });
 
-    it('should have article section with aria-label', () => {
+    it('should have article section with aria-label on Summary tab', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Italia"
@@ -555,6 +555,49 @@ describe('ProvinceDrawerContent', () => {
 
       const articleSection = screen.getByTestId('article-section');
       expect(articleSection).toHaveAttribute('aria-label', 'Wikipedia article');
+    });
+  });
+
+  describe('Tabbed Layout (Issue #16)', () => {
+    it('renders Summary tab by default with entity section AND wiki iframe', () => {
+      render(
+        <ProvinceDrawerContent
+          provinceId="Italia"
+          provinceData={SAMPLE_PROVINCE_DATA}
+          metadata={SAMPLE_METADATA}
+          wikiUrl="https://en.wikipedia.org/wiki/Italia"
+        />
+      );
+      expect(screen.getByTestId('entity-section')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-article-iframe')).toBeInTheDocument();
+    });
+
+    it('renders 4 tab buttons (Summary + Ruler/Culture/Religion)', () => {
+      render(
+        <ProvinceDrawerContent
+          provinceId="Italia"
+          provinceData={SAMPLE_PROVINCE_DATA}
+          metadata={SAMPLE_METADATA}
+        />
+      );
+      expect(screen.getByTestId('province-tab-summary')).toBeInTheDocument();
+      expect(screen.getByTestId('province-tab-ruler')).toBeInTheDocument();
+      expect(screen.getByTestId('province-tab-culture')).toBeInTheDocument();
+      expect(screen.getByTestId('province-tab-religion')).toBeInTheDocument();
+      expect(screen.queryByTestId('province-tab-wikipedia')).not.toBeInTheDocument();
+    });
+
+    it('switches to Ruler tab and shows entity iframe for ruler wiki', () => {
+      render(
+        <ProvinceDrawerContent
+          provinceId="Italia"
+          provinceData={SAMPLE_PROVINCE_DATA}
+          metadata={SAMPLE_METADATA}
+        />
+      );
+      fireEvent.click(screen.getByTestId('province-tab-ruler'));
+      const iframe = screen.getByTestId('mock-article-iframe');
+      expect(iframe).toHaveAttribute('data-url', 'https://en.wikipedia.org/wiki/ROM');
     });
   });
 
@@ -672,7 +715,7 @@ describe('ProvinceDrawerContent', () => {
   });
 
   describe('Component Structure', () => {
-    it('should render header, entity section, and article section', () => {
+    it('should render tabs, entity section, and article section on the Summary tab', () => {
       render(
         <ProvinceDrawerContent
           provinceId="Italia"
@@ -682,7 +725,9 @@ describe('ProvinceDrawerContent', () => {
       );
 
       expect(screen.getByTestId('province-drawer-content')).toBeInTheDocument();
+      expect(screen.getByTestId('province-tabs')).toBeInTheDocument();
       expect(screen.getByTestId('entity-section')).toBeInTheDocument();
+      // Wikipedia iframe is always rendered on the Summary tab (the default)
       expect(screen.getByTestId('article-section')).toBeInTheDocument();
     });
 

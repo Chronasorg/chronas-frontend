@@ -17,6 +17,7 @@ import { computeAdjacencyGraph, findConnectedComponents } from '../utils/geoLabe
 import type { AdjacencyGraph } from '../utils/geoLabelUtils';
 import { AREAS, METADATA, MARKERS } from '../api/endpoints';
 import type { MapAreaData, Marker, MarkerFilterState, MarkerType } from '../api/types';
+import { updateQueryStringParameter } from '../utils/mapUtils';
 
 /**
  * Area data for a single province
@@ -726,6 +727,51 @@ export function getMarkerFilterCategory(type: string): keyof MarkerFilterState {
 }
 
 /**
+ * Marker filter keys that are part of the primary category set (shown in UI as toggleable).
+ * Used to build a compact URL representation of disabled filters (opt-out).
+ */
+const PRIMARY_MARKER_FILTER_KEYS: readonly (keyof MarkerFilterState)[] = [
+  'battle',
+  'city',
+  'capital',
+  'person',
+  'event',
+  'other',
+] as const;
+
+/**
+ * Syncs marker filters to URL using opt-out encoding: only disabled filters are listed.
+ * This keeps URLs compact when all markers are on (the default).
+ */
+function syncMarkerFiltersToURL(filters: MarkerFilterState): void {
+  const off = PRIMARY_MARKER_FILTER_KEYS.filter((k) => filters[k] === false);
+  updateQueryStringParameter('markersOff', off.length > 0 ? off.join(',') : null);
+}
+
+/**
+ * Applies a comma-separated list of disabled marker filter keys from URL onto a filter state.
+ * Returns a new filter state with the named keys set to false; all others remain true (default).
+ */
+export function applyMarkersOffFromURL(
+  current: MarkerFilterState,
+  markersOff: string | undefined
+): MarkerFilterState {
+  const next: MarkerFilterState = { ...current };
+  for (const key of PRIMARY_MARKER_FILTER_KEYS) {
+    next[key] = true;
+  }
+  if (!markersOff) return next;
+  const disabled = markersOff.split(',').map((s) => s.trim()).filter(Boolean);
+  const primarySet = new Set<string>(PRIMARY_MARKER_FILTER_KEYS as readonly string[]);
+  for (const key of disabled) {
+    if (primarySet.has(key)) {
+      next[key] = false;
+    }
+  }
+  return next;
+}
+
+/**
  * Performance threshold for cached year switches in milliseconds.
  * Requirement 11.5: WHEN switching between cached years, THE MapView SHALL update within 100ms.
  */
@@ -1156,6 +1202,9 @@ export const useMapStore = create<MapStore>((set, get) => ({
       activeColor: dimension,
       layerVisibility: newLayerVisibility,
     });
+
+    // Sync to URL: only encode when non-default so URLs stay short
+    updateQueryStringParameter('color', dimension === 'ruler' ? null : dimension);
   },
 
   /**
@@ -2072,6 +2121,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
         [type]: enabled,
       },
     }));
+    syncMarkerFiltersToURL(get().markerFilters);
   },
 
   /**

@@ -2,10 +2,10 @@ import { useEffect, useRef } from 'react';
 import { HashRouter } from 'react-router';
 import AppRoutes from './routes';
 import { useAuthStore } from './stores';
-import { useMapStore } from './stores/mapStore';
-import { useTimelineStore } from './stores/timelineStore';
+import { applyMarkersOffFromURL, useMapStore, isValidColorDimension } from './stores/mapStore';
+import { applyEpicsFromURL, useTimelineStore } from './stores/timelineStore';
 import { useUIStore } from './stores/uiStore';
-import { getYearFromURL } from './utils/mapUtils';
+import { getPositionFromURL, getYearFromURL } from './utils/mapUtils';
 import { parseURLState } from './utils/urlStateUtils';
 
 /**
@@ -55,6 +55,7 @@ function App() {
   const currentAreaData = useMapStore((state) => state.currentAreaData);
   const activeColor = useMapStore((state) => state.activeColor);
   const getEntityWiki = useMapStore((state) => state.getEntityWiki);
+  const setViewport = useMapStore((state) => state.setViewport);
   const selectedYear = useTimelineStore((state) => state.selectedYear);
   const setYear = useTimelineStore((state) => state.setYear);
   const loadEpicItems = useTimelineStore((state) => state.loadEpicItems);
@@ -80,11 +81,33 @@ function App() {
     void loadMetadata(locale);
     // Load epic items for timeline display
     void loadEpicItems();
-    
+
     // Note: Year is now initialized synchronously from URL in timelineStore's initial state
     // This prevents race conditions where MapView loads data for wrong year
     // We no longer need to call setYear here as it's already set
-    
+
+    // Restore additional deep-link state from URL (Issue #21):
+    // - pos=lat,lng,zoom (map viewport)
+    // - color=ruler|culture|religion|religionGeneral|population
+    // - epics=war,empire,... (enabled epic categories)
+    // - markersOff=battle,city,... (disabled marker filter keys)
+    const urlStateFull = parseURLState();
+    const posFromURL = getPositionFromURL();
+    if (posFromURL.latitude !== undefined || posFromURL.longitude !== undefined || posFromURL.zoom !== undefined) {
+      setViewport(posFromURL);
+    }
+    if (urlStateFull.color && isValidColorDimension(urlStateFull.color)) {
+      useMapStore.getState().setActiveColor(urlStateFull.color);
+    }
+    if (urlStateFull.epics !== undefined) {
+      useTimelineStore.setState({ epicFilters: applyEpicsFromURL(urlStateFull.epics) });
+    }
+    if (urlStateFull.markersOff !== undefined) {
+      useMapStore.setState((state) => ({
+        markerFilters: applyMarkersOffFromURL(state.markerFilters, urlStateFull.markersOff),
+      }));
+    }
+
     // Restore drawer state from URL if present
     // Requirement 9.4: THE application SHALL restore drawer state from URL on page load
     const urlState = parseURLState();
@@ -168,7 +191,7 @@ function App() {
     // to avoid re-running the effect when they change. The handleURLStateChange callback
     // will use the latest values when called.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadFromStorage, loadMetadata, loadEpicItems, setYear, openRightDrawer, closeRightDrawer]);
+  }, [loadFromStorage, loadMetadata, loadEpicItems, setYear, setViewport, openRightDrawer, closeRightDrawer]);
 
   return (
     <HashRouter>

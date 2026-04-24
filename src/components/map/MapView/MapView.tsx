@@ -20,7 +20,7 @@ import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { getThemeConfig, AREA_LABEL_CONFIG, getAreaLabelFonts, LOCAL_FONT_NAMES } from '../../../config/mapTheme';
-import { updateYearInURL } from '../../../utils/mapUtils';
+import { updatePositionInURL, updateYearInURL } from '../../../utils/mapUtils';
 import { updateURLState } from '../../../utils/urlStateUtils';
 import type { Marker } from '../../../api/types';
 import { ProvinceTooltip } from '../ProvinceTooltip/ProvinceTooltip';
@@ -793,12 +793,17 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   }, [labelNameMode, isLoaded, basemap]);
 
   /**
-   * Handles flyTo animation completion.
+   * Handles flyTo animation completion and syncs viewport position to URL.
    */
-  const handleMoveEnd = useCallback(() => {
+  const handleMoveEnd = useCallback((evt: ViewStateChangeEvent) => {
     if (flyToTarget) {
       clearFlyTo();
     }
+    updatePositionInURL({
+      latitude: evt.viewState.latitude,
+      longitude: evt.viewState.longitude,
+      zoom: evt.viewState.zoom,
+    });
   }, [flyToTarget, clearFlyTo]);
 
   /**

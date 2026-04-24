@@ -1,8 +1,10 @@
 import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore, type Theme } from '@/stores/uiStore';
 import { useMapStore, type LabelNameMode } from '@/stores/mapStore';
 import { SUPPORTED_LANGUAGES } from '@/i18n/i18n';
+import { getShareableURL } from '@/utils/urlStateUtils';
 import styles from './SettingsContent.module.css';
 
 interface SettingsContentProps {
@@ -26,6 +28,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
   const setLocale = useUIStore((s) => s.setLocale);
   const labelNameMode = useMapStore((s) => s.labelNameMode);
   const setLabelNameMode = useMapStore((s) => s.setLabelNameMode);
+  const isFullscreenState = useUIStore((s) => s.isFullscreen);
+  const setFullscreen = useUIStore((s) => s.setFullscreen);
+  const [copied, setCopied] = useState(false);
+
+  // Keep store state in sync with browser fullscreen changes (user pressing Esc, etc.)
+  useEffect(() => {
+    const handleChange = () => {
+      setFullscreen(document.fullscreenElement !== null);
+    };
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
+  }, [setFullscreen]);
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
@@ -34,6 +48,29 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLocale(e.target.value);
   };
+
+  const handleFullscreenToggle = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn('Fullscreen toggle failed:', err);
+    }
+  }, []);
+
+  const handleCopyLink = useCallback(async () => {
+    const url = getShareableURL();
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.warn('Clipboard write failed:', err);
+    }
+  }, []);
 
   return (
     <div className={styles['container']} data-testid="settings-content">
@@ -88,6 +125,41 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Fullscreen toggle — Issue #19 */}
+      <div className={styles['section']}>
+        <div className={styles['sectionLabel']}>{t('settings.fullscreen', 'Fullscreen')}</div>
+        <div className={styles['actionButtons']}>
+          <button
+            type="button"
+            className={`${styles['actionBtn'] ?? ''} ${isFullscreenState ? (styles['actionBtnActive'] ?? '') : ''}`}
+            onClick={() => { void handleFullscreenToggle(); }}
+            data-testid="fullscreen-toggle"
+            aria-pressed={isFullscreenState}
+          >
+            {isFullscreenState
+              ? t('settings.exitFullscreen', 'Exit Fullscreen')
+              : t('settings.enterFullscreen', 'Enter Fullscreen')}
+          </button>
+        </div>
+      </div>
+
+      {/* Share current view — Issue #21 */}
+      <div className={styles['section']}>
+        <div className={styles['sectionLabel']}>{t('settings.share', 'Share this view')}</div>
+        <div className={styles['actionButtons']}>
+          <button
+            type="button"
+            className={styles['actionBtn'] ?? ''}
+            onClick={() => { void handleCopyLink(); }}
+            data-testid="share-copy-link"
+          >
+            {copied
+              ? t('settings.linkCopied', 'Link copied!')
+              : t('settings.copyLink', 'Copy link')}
+          </button>
+        </div>
       </div>
 
     </div>

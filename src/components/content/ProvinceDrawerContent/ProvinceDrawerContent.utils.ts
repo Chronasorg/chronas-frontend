@@ -44,7 +44,17 @@ export function getEntityMetadata(
   return {
     name: entry.name || FALLBACK_NAME,
     color: entry.color || FALLBACK_COLOR,
+    ...(entry.wiki ? { wiki: entry.wiki } : {}),
   };
+}
+
+/**
+ * Builds a Wikipedia article URL from a metadata wiki field or entity name.
+ * Preserves behaviour elsewhere: spaces → underscores, URI-encoded.
+ */
+export function buildEntityWikiUrl(entry: MetadataEntry, fallbackId: string): string {
+  const article = entry.wiki && entry.wiki.length > 0 ? entry.wiki : fallbackId;
+  return `https://en.wikipedia.org/wiki/${encodeURIComponent(article.replace(/ /g, '_'))}`;
 }
 
 /**

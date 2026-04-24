@@ -33,6 +33,7 @@ describe('AutoplayMenu Property Tests', () => {
     stepSize: fc.integer({ min: 1, max: 500 }),
     delay: fc.integer({ min: 100, max: 60000 }), // delay in milliseconds
     repeat: fc.boolean(),
+    direction: fc.constantFrom<'forward' | 'reverse'>('forward', 'reverse'),
   });
 
   /**

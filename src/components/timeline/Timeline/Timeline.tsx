@@ -97,6 +97,7 @@ export const Timeline: React.FC<TimelineProps> = ({
     getFilteredEpicItems,
     epicItems, // Subscribe to epicItems to trigger re-render when loaded
     epicFilters, // Subscribe to epicFilters to trigger re-render when filters change
+    isAutoplayMenuOpen: storeAutoplayMenuOpen,
   } = useTimelineStore();
 
   // Get right drawer state to shift timeline away from it
@@ -120,7 +121,15 @@ export const Timeline: React.FC<TimelineProps> = ({
 
   // Local state for dialogs/menus
   const [isYearDialogOpen, setIsYearDialogOpen] = useState(false);
-  const [isAutoplayMenuOpen, setIsAutoplayMenuOpen] = useState(false);
+  const [isLocalAutoplayMenuOpen, setIsLocalAutoplayMenuOpen] = useState(false);
+  // Show the menu if either the local (timeline-button) state or the store (sidebar) state is open
+  const isAutoplayMenuOpen = isLocalAutoplayMenuOpen || storeAutoplayMenuOpen;
+  const closeAutoplayMenu = useCallback(() => {
+    setIsLocalAutoplayMenuOpen(false);
+    if (useTimelineStore.getState().isAutoplayMenuOpen) {
+      useTimelineStore.setState({ isAutoplayMenuOpen: false });
+    }
+  }, []);
   const [isEpicSearchOpen, setIsEpicSearchOpen] = useState(false);
   const [isDefaultView, setIsDefaultView] = useState(true);
 
@@ -359,8 +368,8 @@ export const Timeline: React.FC<TimelineProps> = ({
       // If autoplay is running, stop it directly
       stopAutoplay();
     } else {
-      // Otherwise toggle the autoplay menu
-      setIsAutoplayMenuOpen((prev) => !prev);
+      // Otherwise toggle the autoplay menu (local, from timeline button)
+      setIsLocalAutoplayMenuOpen((prev) => !prev);
     }
   }, [isAutoplayActive, stopAutoplay]);
 
@@ -384,8 +393,8 @@ export const Timeline: React.FC<TimelineProps> = ({
   }, []);
 
   const handleAutoplayMenuClose = useCallback(() => {
-    setIsAutoplayMenuOpen(false);
-  }, []);
+    closeAutoplayMenu();
+  }, [closeAutoplayMenu]);
 
   const handleEpicSearchClose = useCallback(() => {
     setIsEpicSearchOpen(false);
@@ -411,8 +420,8 @@ export const Timeline: React.FC<TimelineProps> = ({
 
   const handleAutoplayStart = useCallback(() => {
     startAutoplay();
-    setIsAutoplayMenuOpen(false);
-  }, [startAutoplay]);
+    closeAutoplayMenu();
+  }, [startAutoplay, closeAutoplayMenu]);
 
   const handleCenturyJump = useCallback((year: number) => {
     setYear(year);

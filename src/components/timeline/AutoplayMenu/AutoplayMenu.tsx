@@ -10,7 +10,7 @@
 
 import type React from 'react';
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { AutoplayConfig } from '../../../stores/timelineStore';
+import type { AutoplayConfig, AutoplayDirection } from '../../../stores/timelineStore';
 import { MIN_YEAR, MAX_YEAR } from '../../../stores/timelineStore';
 import styles from './AutoplayMenu.module.css';
 
@@ -127,6 +127,7 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
   const [stepSizeInput, setStepSizeInput] = useState(config.stepSize.toString());
   const [delayInput, setDelayInput] = useState((config.delay / 1000).toString());
   const [repeat, setRepeat] = useState(config.repeat);
+  const [direction, setDirection] = useState<AutoplayDirection>(config.direction);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const startYearRef = useRef<HTMLInputElement>(null);
@@ -139,6 +140,7 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
     setStepSizeInput(config.stepSize.toString());
     setDelayInput((config.delay / 1000).toString());
     setRepeat(config.repeat);
+    setDirection(config.direction);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [config]);
 
@@ -260,6 +262,25 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
     const checked = event.target.checked;
     setRepeat(checked);
     onConfigChange({ repeat: checked });
+  }, [onConfigChange]);
+
+  /**
+   * Handles direction toggle (forward ↔ reverse). Issue #20.
+   */
+  const handleDirectionChange = useCallback((next: AutoplayDirection) => {
+    setDirection(next);
+    onConfigChange({ direction: next });
+  }, [onConfigChange]);
+
+  /**
+   * Handles speed preset selection (0.5x, 1x, 2x, 5x). Issue #20.
+   * Base delay is 1000ms for 1x. Formula: delay = 1000 / multiplier.
+   */
+  const handleSpeedPreset = useCallback((multiplier: number) => {
+    const newDelayMs = Math.max(MIN_DELAY_SECONDS * 1000, Math.round(1000 / multiplier));
+    const newDelaySec = newDelayMs / 1000;
+    setDelayInput(newDelaySec.toString());
+    onConfigChange({ delay: newDelayMs });
   }, [onConfigChange]);
 
   /**
@@ -387,6 +408,68 @@ export const AutoplayMenu: React.FC<AutoplayMenuProps> = ({
               step="0.1"
               data-testid="autoplay-delay"
             />
+          </div>
+        </div>
+
+        {/* Direction toggle — Issue #20 */}
+        <div className={styles['inputRow']}>
+          <div className={styles['inputGroup']} style={{ width: '100%' }}>
+            <label className={styles['label']}>Direction</label>
+            <div
+              role="group"
+              aria-label="Playback direction"
+              className={styles['segmentedControl']}
+              data-testid="autoplay-direction"
+            >
+              <button
+                type="button"
+                className={`${styles['segment'] ?? ''} ${direction === 'forward' ? (styles['segmentActive'] ?? '') : ''}`}
+                onClick={() => handleDirectionChange('forward')}
+                aria-pressed={direction === 'forward'}
+                data-testid="autoplay-direction-forward"
+              >
+                ▶ Forward
+              </button>
+              <button
+                type="button"
+                className={`${styles['segment'] ?? ''} ${direction === 'reverse' ? (styles['segmentActive'] ?? '') : ''}`}
+                onClick={() => handleDirectionChange('reverse')}
+                aria-pressed={direction === 'reverse'}
+                data-testid="autoplay-direction-reverse"
+              >
+                ◀ Reverse
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Speed presets — Issue #20 */}
+        <div className={styles['inputRow']}>
+          <div className={styles['inputGroup']} style={{ width: '100%' }}>
+            <label className={styles['label']}>Speed</label>
+            <div
+              role="group"
+              aria-label="Playback speed"
+              className={styles['segmentedControl']}
+              data-testid="autoplay-speed-presets"
+            >
+              {[0.5, 1, 1.25, 1.5].map((mult) => {
+                const currentMult = 1000 / Math.max(1, config.delay);
+                const isActive = Math.abs(currentMult - mult) < 0.01;
+                return (
+                  <button
+                    key={mult}
+                    type="button"
+                    className={`${styles['segment'] ?? ''} ${isActive ? (styles['segmentActive'] ?? '') : ''}`}
+                    onClick={() => handleSpeedPreset(mult)}
+                    aria-pressed={isActive}
+                    data-testid={`autoplay-speed-${String(mult).replace('.', '_')}x`}
+                  >
+                    {mult}×
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

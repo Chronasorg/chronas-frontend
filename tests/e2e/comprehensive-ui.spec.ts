@@ -58,14 +58,15 @@ test.describe('Navigation Sidebar', () => {
   });
 
   test('renders all enabled nav items', async ({ page }) => {
-    for (const id of ['layers', 'settings', 'help', 'logout']) {
+    // Issue #20: 'play' is now enabled and opens the autoplay menu.
+    for (const id of ['layers', 'settings', 'play', 'help', 'logout']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeEnabled();
     }
   });
 
   test('renders disabled nav items', async ({ page }) => {
-    for (const id of ['discover', 'random', 'pro', 'collections', 'play']) {
+    for (const id of ['discover', 'random', 'pro', 'collections']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeDisabled();
     }

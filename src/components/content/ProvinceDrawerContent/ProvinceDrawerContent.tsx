@@ -1,25 +1,29 @@
 /**
  * ProvinceDrawerContent Component
  *
- * Displays detailed province information in the right drawer panel.
- * Shows province name as header, entity details with color chips,
- * and embeds a Wikipedia article iframe.
+ * Displays detailed province information in the right drawer with
+ * tabbed navigation (Issue #16):
+ *   Summary | Ruler | Culture | Religion | Wikipedia
  *
- * Requirements: 2.4, 2.5, 2.6
+ * - Summary: structured Chronas metadata (ruler, culture, religion, religionGeneral, population)
+ * - Ruler / Culture / Religion: shows the entity's color + name as a header, then embeds that
+ *   entity's Wikipedia article (so users can read about the empire itself, not just the province)
+ * - Wikipedia: the province's own Wikipedia article
  */
 
 import type React from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './ProvinceDrawerContent.module.css';
 import { formatPopulation } from '@/utils/formatUtils';
 import { ArticleIframe } from '@/components/content/ArticleIframe/ArticleIframe';
-// ProvinceTimeline temporarily removed — province ID mismatch needs resolution first
-// import { ProvinceTimeline } from '@/components/content/ProvinceTimeline';
 import type { EntityMetadata, MetadataEntry, ProvinceData } from '@/api/types';
-import { getEntityMetadata, getReligionGeneralMetadata } from './ProvinceDrawerContent.utils';
+import {
+  buildEntityWikiUrl,
+  getEntityMetadata,
+  getReligionGeneralMetadata,
+} from './ProvinceDrawerContent.utils';
 
-/**
- * ProvinceDrawerContent component props
- */
 export interface ProvinceDrawerContentProps {
   /** Province ID (name) */
   provinceId: string;
@@ -31,184 +35,181 @@ export interface ProvinceDrawerContentProps {
   wikiUrl?: string;
 }
 
-/**
- * Entity row configuration for rendering
- */
-interface EntityRowConfig {
-  /** Index in provinceData tuple */
+type TabId = 'summary' | 'ruler' | 'culture' | 'religion';
+
+interface EntityTabConfig {
+  id: Extract<TabId, 'ruler' | 'culture' | 'religion'>;
   dataIndex: number;
-  /** Metadata key for looking up entity info */
   metadataKey: keyof EntityMetadata;
-  /** Display label for the entity type */
-  label: string;
-  /** Avatar icon for the entity type */
+  labelKey: string;
+  labelFallback: string;
   icon: string;
 }
 
-/**
- * Entity row configurations for the drawer content
- * Defines the order and properties of each entity row
- */
-const ENTITY_ROWS: EntityRowConfig[] = [
-  {
-    dataIndex: 0,
-    metadataKey: 'ruler',
-    label: 'Ruler',
-    icon: '👑',
-  },
-  {
-    dataIndex: 1,
-    metadataKey: 'culture',
-    label: 'Culture',
-    icon: '🎭',
-  },
-  {
-    dataIndex: 2,
-    metadataKey: 'religion',
-    label: 'Religion',
-    icon: '⛪',
-  },
+const ENTITY_TABS: EntityTabConfig[] = [
+  { id: 'ruler', dataIndex: 0, metadataKey: 'ruler', labelKey: 'map.ruler', labelFallback: 'Ruler', icon: '👑' },
+  { id: 'culture', dataIndex: 1, metadataKey: 'culture', labelKey: 'map.culture', labelFallback: 'Culture', icon: '🎭' },
+  { id: 'religion', dataIndex: 2, metadataKey: 'religion', labelKey: 'map.religion', labelFallback: 'Religion', icon: '⛪' },
 ];
 
-/**
- * EntityRow Component
- *
- * Renders a single entity row with color chip, label, name, and icon
- */
 interface EntityRowProps {
-  /** Display label for the entity type */
   label: string;
-  /** Entity metadata entry */
   entry: MetadataEntry;
-  /** Avatar icon for the entity type */
   icon: string;
 }
 
-const EntityRow: React.FC<EntityRowProps> = ({ label, entry, icon }) => {
-  return (
-    <div className={styles['entityRow']} data-testid="entity-row">
-      <div
-        className={styles['colorChip']}
-        style={{ backgroundColor: entry.color }}
-        data-testid="color-chip"
-        aria-hidden="true"
-      />
-      <span className={styles['entityLabel']} data-testid="entity-label">
-        {label}:
-      </span>
-      <span className={styles['entityName']} data-testid="entity-name">
-        {entry.name}
-      </span>
-      <span className={styles['entityIcon']} data-testid="entity-icon" aria-hidden="true">
-        {icon}
-      </span>
-    </div>
-  );
-};
+const EntityRow: React.FC<EntityRowProps> = ({ label, entry, icon }) => (
+  <div className={styles['entityRow']} data-testid="entity-row">
+    <div
+      className={styles['colorChip']}
+      style={{ backgroundColor: entry.color }}
+      data-testid="color-chip"
+      aria-hidden="true"
+    />
+    <span className={styles['entityLabel']} data-testid="entity-label">
+      {label}:
+    </span>
+    <span className={styles['entityName']} data-testid="entity-name">
+      {entry.name}
+    </span>
+    <span className={styles['entityIcon']} data-testid="entity-icon" aria-hidden="true">
+      {icon}
+    </span>
+  </div>
+);
 
-/**
- * ProvinceDrawerContent Component
- *
- * Displays detailed province information in the right drawer panel.
- *
- * Visual structure:
- * ```
- * ┌──────────────────────────────────────────┐
- * │ Italia                                   │  ← Province name header
- * ├──────────────────────────────────────────┤
- * │ [■] Ruler: Roman Empire             👑  │  ← Ruler row with color chip
- * │ [■] Culture: Latin                  🎭  │  ← Culture row with color chip
- * │ [■] Religion: Roman Paganism        ⛪  │  ← Religion row with color chip
- * │ [■] Religion Gen.: Paganism         ☯️  │  ← Religion General row
- * │ Population: 1.2M                        │  ← Population display
- * ├──────────────────────────────────────────┤
- * │                                          │
- * │      Wikipedia Iframe                    │
- * │      (scrollable area)                   │
- * │                                          │
- * └──────────────────────────────────────────┘
- * ```
- *
- * Requirements:
- * - 2.4: Province drawer displays province name as header
- * - 2.5: Province drawer displays entity details (ruler, culture, religion) with color chips
- * - 2.6: Province drawer embeds Wikipedia article iframe
- *
- * @param props - ProvinceDrawerContent component props
- * @returns ProvinceDrawerContent React component
- */
 export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
   provinceId,
   provinceData,
   metadata,
   wikiUrl,
 }) => {
-  // Extract data from provinceData tuple
-  // ProvinceData = [ruler, culture, religion, capital, population]
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<TabId>('summary');
+
   const [, , religionId, , population] = provinceData;
-
-  // Format population for display
   const formattedPopulation = formatPopulation(population);
-
-  // Get religionGeneral metadata (derived from religion's parent)
   const religionGeneralEntry = getReligionGeneralMetadata(religionId, metadata);
+
+  // Precompute entity entries + their wiki urls so the tab panels render cleanly
+  const entityEntries = useMemo(() => {
+    return ENTITY_TABS.map((cfg) => {
+      const entityId = provinceData[cfg.dataIndex] as string;
+      const entry = getEntityMetadata(entityId, cfg.metadataKey, metadata);
+      return { cfg, entityId, entry, wiki: buildEntityWikiUrl(entry, entityId) };
+    });
+  }, [provinceData, metadata]);
+
+  const tabLabel = (id: TabId): string => {
+    switch (id) {
+      case 'summary':
+        return t('drawer.tabs.summary', 'Summary');
+      case 'ruler':
+        return t('map.ruler', 'Ruler');
+      case 'culture':
+        return t('map.culture', 'Culture');
+      case 'religion':
+        return t('map.religion', 'Religion');
+    }
+  };
+
+  const TAB_ORDER: TabId[] = ['summary', 'ruler', 'culture', 'religion'];
+
+  const renderTabPanel = (): React.ReactNode => {
+    if (activeTab === 'summary') {
+      return (
+        <>
+          <section
+            className={styles['entitySection']}
+            data-testid="entity-section"
+            aria-label="Province entity details"
+          >
+            {entityEntries.map(({ cfg, entry }) => (
+              <EntityRow
+                key={cfg.metadataKey}
+                label={t(cfg.labelKey, cfg.labelFallback)}
+                entry={entry}
+                icon={cfg.icon}
+              />
+            ))}
+            <EntityRow
+              label={t('map.religionGeneral', 'Religion Gen.')}
+              entry={religionGeneralEntry}
+              icon="☯️"
+            />
+            <div className={styles['populationRow']} data-testid="population-row">
+              <span className={styles['populationLabel']}>
+                {t('map.population', 'Population')}:
+              </span>
+              <span className={styles['populationValue']} data-testid="population-value">
+                {formattedPopulation}
+              </span>
+            </div>
+          </section>
+          <section
+            className={styles['articleSection']}
+            data-testid="article-section"
+            aria-label="Wikipedia article"
+          >
+            <ArticleIframe url={wikiUrl} title={`Wikipedia article for ${provinceId}`} />
+          </section>
+        </>
+      );
+    }
+
+    // Entity tab (ruler/culture/religion): header row + iframe of the entity's wiki
+    const found = entityEntries.find((e) => e.cfg.id === activeTab);
+    if (!found) return null;
+    const { entry, entityId, wiki, cfg } = found;
+    return (
+      <>
+        <section className={styles['entitySection']} aria-label={`${tabLabel(activeTab)} details`}>
+          <EntityRow label={t(cfg.labelKey, cfg.labelFallback)} entry={entry} icon={cfg.icon} />
+        </section>
+        <section
+          className={styles['articleSection']}
+          data-testid="article-section"
+          aria-label={`Wikipedia article for ${entry.name}`}
+        >
+          <ArticleIframe url={wiki} title={`Wikipedia article for ${entry.name || entityId}`} />
+        </section>
+      </>
+    );
+  };
 
   return (
     <div className={styles['container']} data-testid="province-drawer-content">
-      {/* Entity details section - Requirement 2.5 */}
-      <section
-        className={styles['entitySection']}
-        data-testid="entity-section"
-        aria-label="Province entity details"
+      <div
+        role="tablist"
+        aria-label="Province information tabs"
+        className={styles['tabList']}
+        data-testid="province-tabs"
       >
-        {/* Render standard entity rows (ruler, culture, religion) */}
-        {ENTITY_ROWS.map((config) => {
-          const entityId = provinceData[config.dataIndex] as string;
-          const entry = getEntityMetadata(entityId, config.metadataKey, metadata);
+        {TAB_ORDER.map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === id}
+            aria-controls={`tab-panel-${id}`}
+            id={`tab-${id}`}
+            className={`${styles['tabButton'] ?? ''} ${activeTab === id ? (styles['tabButtonActive'] ?? '') : ''}`}
+            onClick={() => setActiveTab(id)}
+            data-testid={`province-tab-${id}`}
+          >
+            {tabLabel(id)}
+          </button>
+        ))}
+      </div>
 
-          return (
-            <EntityRow
-              key={config.metadataKey}
-              label={config.label}
-              entry={entry}
-              icon={config.icon}
-            />
-          );
-        })}
-
-        {/* Religion General row (derived from religion's parent) */}
-        <EntityRow
-          label="Religion Gen."
-          entry={religionGeneralEntry}
-          icon="☯️"
-        />
-
-        {/* Population display */}
-        <div className={styles['populationRow']} data-testid="population-row">
-          <span className={styles['populationLabel']}>Population:</span>
-          <span className={styles['populationValue']} data-testid="population-value">
-            {formattedPopulation}
-          </span>
-        </div>
-      </section>
-
-      {/* Province Timeline — temporarily removed pending province ID mismatch fix
-       * TODO: Re-enable when mapStore.selectProvince returns correct province keys
-       * Component: ProvinceTimeline (src/components/content/ProvinceTimeline/)
-       * Stories: US-3.4, US-3.5
-       */}
-
-      {/* Wikipedia iframe section - Requirement 2.6 */}
-      <section
-        className={styles['articleSection']}
-        data-testid="article-section"
-        aria-label="Wikipedia article"
+      <div
+        role="tabpanel"
+        id={`tab-panel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+        className={styles['tabPanel']}
       >
-        <ArticleIframe
-          url={wikiUrl}
-          title={`Wikipedia article for ${provinceId}`}
-        />
-      </section>
+        {renderTabPanel()}
+      </div>
     </div>
   );
 };

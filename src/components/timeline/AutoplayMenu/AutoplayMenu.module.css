@@ -192,6 +192,50 @@
   appearance: textfield;
 }
 
+/* Segmented control used for Direction and Speed (Issue #20) */
+.segmentedControl {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.segment {
+  flex: 1 1 auto;
+  padding: 7px 6px;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.segment:last-child {
+  border-right: none;
+}
+
+.segment:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.segmentActive {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 1);
+}
+
+.segment:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: -2px;
+}
+
 /* Checkbox group (Requirement 9.6) */
 .checkboxGroup {
   margin-top: 2px;

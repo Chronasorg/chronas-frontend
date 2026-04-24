@@ -98,6 +98,11 @@
     "language": "Language",
     "fullscreen": "Fullscreen",
     "toggle": "Toggle",
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
+    "share": "Share this view",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied!",
     "fontType": "Font",
     "markerType": "Marker Type",
     "themes": {
@@ -125,7 +130,10 @@
   "drawer": {
     "noContent": "No content selected",
     "closePanel": "Close panel",
-    "provinceDataNotAvailable": "Province data not available for this selection."
+    "provinceDataNotAvailable": "Province data not available for this selection.",
+    "tabs": {
+      "summary": "Summary"
+    }
   },
   "common": {
     "loading": "Loading...",

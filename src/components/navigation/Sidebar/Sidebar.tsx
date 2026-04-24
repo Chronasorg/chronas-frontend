@@ -18,6 +18,7 @@ import { useUIStore } from '../../../stores/uiStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useMapStore } from '../../../stores/mapStore';
+import { useTimelineStore } from '../../../stores/timelineStore';
 import styles from './Sidebar.module.css';
 
 export interface SidebarProps {
@@ -87,6 +88,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   });
                 }
               }
+            }
+            break;
+          }
+          case 'play': {
+            // Issue #20: sidebar Play opens the autoplay menu (or stops autoplay if active)
+            const ts = useTimelineStore.getState();
+            if (ts.isAutoplayActive) {
+              ts.stopAutoplay();
+            } else {
+              ts.toggleAutoplayMenu();
             }
             break;
           }

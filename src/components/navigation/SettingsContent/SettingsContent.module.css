@@ -81,3 +81,40 @@
   outline: 2px solid rgb(63, 81, 181);
   outline-offset: -1px;
 }
+
+.actionButtons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgb(217, 217, 217);
+  border-radius: 4px;
+  background: rgb(255, 255, 255);
+  color: rgb(73, 73, 73);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.actionBtn:hover {
+  background: rgb(242, 242, 242);
+  border-color: rgb(180, 180, 180);
+}
+
+.actionBtnActive {
+  background: rgb(63, 81, 181);
+  border-color: rgb(63, 81, 181);
+  color: rgb(255, 255, 255);
+}
+
+.actionBtnActive:hover {
+  background: rgb(48, 63, 159);
+  border-color: rgb(48, 63, 159);
+  color: rgb(255, 255, 255);
+}

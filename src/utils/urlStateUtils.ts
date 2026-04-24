@@ -19,6 +19,14 @@ export interface URLState {
   value?: string;
   /** Marker limit setting */
   limit?: number;
+  /** Map position as "lat,lng,zoom" */
+  pos?: string;
+  /** Active area color dimension (ruler|culture|religion|religionGeneral|population) */
+  color?: string;
+  /** Comma-separated list of enabled epic filter keys (war,empire,religion,culture,person,other) */
+  epics?: string;
+  /** Comma-separated list of marker filter keys that are OFF (opt-out, keeps URL short) */
+  markersOff?: string;
 }
 
 /**
@@ -36,16 +44,21 @@ export interface URLState {
  * parseURLState() // { year: 1000, type: 'area', value: 'Athens' }
  */
 export function parseURLState(): URLState {
-  // Get the hash portion (everything after #)
+  // Prefer HashRouter query params (`/#/?year=1000`), fall back to the regular
+  // `window.location.search`. This mirrors getQueryStringParameter in mapUtils.ts
+  // which writes into whichever shape the current URL uses.
   const hash = window.location.hash;
-
-  // Extract query string from hash (after ?)
-  const queryIndex = hash.indexOf('?');
-  if (queryIndex === -1) {
+  const hashQueryIndex = hash.indexOf('?');
+  let queryString: string;
+  if (hashQueryIndex !== -1) {
+    queryString = hash.slice(hashQueryIndex + 1);
+  } else if (window.location.search) {
+    const search = window.location.search;
+    queryString = search.startsWith('?') ? search.slice(1) : search;
+  } else {
     return {};
   }
 
-  const queryString = hash.slice(queryIndex + 1);
   const params = new URLSearchParams(queryString);
 
   const state: URLState = {};
@@ -78,6 +91,30 @@ export function parseURLState(): URLState {
     if (!isNaN(limit) && limit >= 0) {
       state.limit = limit;
     }
+  }
+
+  // Parse pos (lat,lng,zoom)
+  const posParam = params.get('pos');
+  if (posParam !== null && posParam !== '') {
+    state.pos = posParam;
+  }
+
+  // Parse color dimension
+  const colorParam = params.get('color');
+  if (colorParam !== null && colorParam !== '') {
+    state.color = colorParam;
+  }
+
+  // Parse epics (enabled filter keys, comma-separated)
+  const epicsParam = params.get('epics');
+  if (epicsParam !== null) {
+    state.epics = epicsParam;
+  }
+
+  // Parse markersOff (disabled marker filter keys, comma-separated)
+  const markersOffParam = params.get('markersOff');
+  if (markersOffParam !== null) {
+    state.markersOff = markersOffParam;
   }
 
   return state;
@@ -178,4 +215,14 @@ export function clearURLParams(keys: (keyof URLState)[]): void {
 export function hasDrawerParams(): boolean {
   const state = parseURLState();
   return state.type !== undefined && state.value !== undefined;
+}
+
+/**
+ * Returns the current full shareable URL (includes hash + all state params).
+ */
+export function getShareableURL(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  return window.location.href;
 }
