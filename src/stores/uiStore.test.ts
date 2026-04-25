@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import i18n from '@/i18n/i18n';
-import { useUIStore, UI_STORAGE_KEY, isValidTheme, isValidLocale, defaultState, applyThemeToDocument, type Theme } from './uiStore';
+import { useUIStore, UI_STORAGE_KEY, isValidTheme, isValidLocale, isValidDetailLevel, defaultState, applyThemeToDocument, type Theme } from './uiStore';
 
 describe('uiStore', () => {
   beforeEach(() => {
@@ -360,6 +360,53 @@ describe('uiStore', () => {
         expect(isValidLocale(123)).toBe(false);
         expect(isValidLocale({})).toBe(false);
       });
+    });
+  });
+
+  describe('setDetailLevel', () => {
+    it('starts as null by default', () => {
+      expect(useUIStore.getState().detailLevel).toBeNull();
+    });
+
+    it('sets each valid detail level', () => {
+      const { setDetailLevel } = useUIStore.getState();
+      setDetailLevel('low');
+      expect(useUIStore.getState().detailLevel).toBe('low');
+      setDetailLevel('medium');
+      expect(useUIStore.getState().detailLevel).toBe('medium');
+      setDetailLevel('high');
+      expect(useUIStore.getState().detailLevel).toBe('high');
+    });
+
+    it('ignores invalid values', () => {
+      const { setDetailLevel } = useUIStore.getState();
+      setDetailLevel('medium');
+      setDetailLevel('bogus' as unknown as 'low');
+      expect(useUIStore.getState().detailLevel).toBe('medium');
+    });
+
+    it('is included in persisted state', () => {
+      const options = useUIStore.persist.getOptions();
+      const partialize = options.partialize;
+      if (partialize) {
+        const persisted = partialize(useUIStore.getState()) as Record<string, unknown>;
+        expect(persisted).toHaveProperty('detailLevel');
+      }
+    });
+  });
+
+  describe('isValidDetailLevel', () => {
+    it('returns true for valid levels', () => {
+      expect(isValidDetailLevel('low')).toBe(true);
+      expect(isValidDetailLevel('medium')).toBe(true);
+      expect(isValidDetailLevel('high')).toBe(true);
+    });
+
+    it('returns false for invalid values', () => {
+      expect(isValidDetailLevel('ultra')).toBe(false);
+      expect(isValidDetailLevel(null)).toBe(false);
+      expect(isValidDetailLevel(undefined)).toBe(false);
+      expect(isValidDetailLevel(1)).toBe(false);
     });
   });
 

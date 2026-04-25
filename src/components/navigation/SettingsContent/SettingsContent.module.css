@@ -118,3 +118,10 @@
   border-color: rgb(48, 63, 159);
   color: rgb(255, 255, 255);
 }
+
+.caption {
+  padding: 0 16px 10px;
+  color: rgba(106, 106, 106, 0.72);
+  font-size: 12px;
+  line-height: 1.4;
+}

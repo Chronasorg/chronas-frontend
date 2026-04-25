@@ -109,6 +109,17 @@
       "light": "Light",
       "dark": "Dark",
       "luther": "Luther"
+    },
+    "detailLevel": "Detail Level",
+    "detailLevels": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "detailLevelCaptions": {
+      "low": "Borders and labels only — best for older or mobile devices.",
+      "medium": "Up to 2,000 clustered markers — recommended default.",
+      "high": "All markers visible, no clustering — needs a faster computer."
     }
   },
   "timeline": {

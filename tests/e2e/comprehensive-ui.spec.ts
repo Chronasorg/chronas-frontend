@@ -335,6 +335,22 @@ test.describe('Settings Panel', () => {
     const value = await langSelect.inputValue();
     expect(value).toBeTruthy();
   });
+
+  test('detail level buttons are visible (Low, Medium, High)', async ({ page }) => {
+    await expect(page.getByTestId('detail-level-btn-low')).toBeVisible();
+    await expect(page.getByTestId('detail-level-btn-medium')).toBeVisible();
+    await expect(page.getByTestId('detail-level-btn-high')).toBeVisible();
+  });
+
+  test('clicking Low detail level activates and persists across reloads', async ({ page }) => {
+    await page.getByTestId('detail-level-btn-low').click();
+    await expect(page.getByTestId('detail-level-btn-low')).toHaveAttribute('aria-pressed', 'true');
+
+    await page.reload();
+    await waitForMap(page);
+    await openSettings(page);
+    await expect(page.getByTestId('detail-level-btn-low')).toHaveAttribute('aria-pressed', 'true');
+  });
 });
 
 // ---------------------------------------------------------------------------

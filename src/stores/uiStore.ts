@@ -42,6 +42,12 @@ const UI_STORAGE_KEY = 'chs_ui_preferences';
 export type Theme = 'light' | 'dark' | 'luther';
 
 /**
+ * Rendering detail level preset — scales rendering for different hardware (Issue #8, Feature 3).
+ * `undefined` means "not yet chosen" — auto-detection runs on first load.
+ */
+export type DetailLevel = 'low' | 'medium' | 'high';
+
+/**
  * UI state interface
  */
 export interface UIState {
@@ -59,6 +65,8 @@ export interface UIState {
   loginDialogOpen: boolean;
   /** Whether the info dialog (Welcome/How To/Contact) is open */
   infoDialogOpen: boolean;
+  /** Rendering detail level — null until first chosen/auto-detected (Issue #8) */
+  detailLevel: DetailLevel | null;
 }
 
 /**
@@ -85,6 +93,8 @@ export interface UIActions {
   openInfoDialog: () => void;
   /** Closes the info dialog */
   closeInfoDialog: () => void;
+  /** Sets the rendering detail level preset (Issue #8) */
+  setDetailLevel: (level: DetailLevel) => void;
 }
 
 /**
@@ -105,7 +115,12 @@ const defaultState: UIState = {
   bannerVisible: true,
   loginDialogOpen: false,
   infoDialogOpen: false,
+  detailLevel: null,
 };
+
+export function isValidDetailLevel(level: unknown): level is DetailLevel {
+  return level === 'low' || level === 'medium' || level === 'high';
+}
 
 /**
  * Validates a theme value
@@ -244,6 +259,14 @@ export const useUIStore = create<UIStore>()(
       closeInfoDialog: () => {
         set({ infoDialogOpen: false });
       },
+
+      setDetailLevel: (level: DetailLevel) => {
+        if (!isValidDetailLevel(level)) {
+          console.warn(`Invalid detail level: ${String(level)}, ignoring`);
+          return;
+        }
+        set({ detailLevel: level });
+      },
     }),
     {
       name: UI_STORAGE_KEY,
@@ -254,13 +277,12 @@ export const useUIStore = create<UIStore>()(
         locale: state.locale,
         sidebarOpen: state.sidebarOpen,
         isFullscreen: state.isFullscreen,
+        detailLevel: state.detailLevel,
       }),
-      // Handle migration from older storage formats if needed
-      version: 1,
+      version: 2,
       migrate: (persistedState: unknown, version: number) => {
-        if (version === 0) {
-          // Migration from version 0 to 1 (if needed in future)
-          return persistedState;
+        if (version < 2 && persistedState && typeof persistedState === 'object') {
+          return { ...persistedState, detailLevel: null };
         }
         return persistedState;
       },
@@ -275,6 +297,9 @@ export const useUIStore = create<UIStore>()(
           }
           if (!isValidLocale(state.locale)) {
             state.locale = defaultState.locale;
+          }
+          if (state.detailLevel !== null && !isValidDetailLevel(state.detailLevel)) {
+            state.detailLevel = null;
           }
           // Apply the theme to the document element on rehydration
           applyThemeToDocument(state.theme);

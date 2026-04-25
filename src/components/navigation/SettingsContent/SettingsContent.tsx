@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUIStore, type Theme } from '@/stores/uiStore';
+import { useUIStore, type DetailLevel, type Theme } from '@/stores/uiStore';
 import { useMapStore, type LabelNameMode } from '@/stores/mapStore';
 import { SUPPORTED_LANGUAGES } from '@/i18n/i18n';
 import { getShareableURL } from '@/utils/urlStateUtils';
@@ -20,6 +20,8 @@ const LABEL_NAME_MODE_OPTIONS: LabelNameModeOption[] = [
   { value: 'both', label: 'Both' },
 ];
 
+const DETAIL_LEVEL_VALUES: DetailLevel[] = ['low', 'medium', 'high'];
+
 export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onClose }) => {
   const { t } = useTranslation();
   const theme = useUIStore((s) => s.theme);
@@ -30,6 +32,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
   const setLabelNameMode = useMapStore((s) => s.setLabelNameMode);
   const isFullscreenState = useUIStore((s) => s.isFullscreen);
   const setFullscreen = useUIStore((s) => s.setFullscreen);
+  const detailLevel = useUIStore((s) => s.detailLevel);
+  const setDetailLevel = useUIStore((s) => s.setDetailLevel);
   const [copied, setCopied] = useState(false);
 
   // Keep store state in sync with browser fullscreen changes (user pressing Esc, etc.)
@@ -125,6 +129,35 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Detail level / performance preset — Issue #8 */}
+      <div className={styles['section']}>
+        <div className={styles['sectionLabel']}>{t('settings.detailLevel', 'Detail Level')}</div>
+        <div className={styles['themeButtons']}>
+          {DETAIL_LEVEL_VALUES.map((v) => (
+            <button
+              key={v}
+              type="button"
+              className={`${styles['themeBtn'] ?? ''} ${detailLevel === v ? (styles['themeBtnActive'] ?? '') : ''}`}
+              onClick={() => setDetailLevel(v)}
+              data-testid={`detail-level-btn-${v}`}
+              aria-pressed={detailLevel === v}
+            >
+              {t(`settings.detailLevels.${v}`, v.charAt(0).toUpperCase() + v.slice(1))}
+            </button>
+          ))}
+        </div>
+        <div className={styles['caption']}>
+          {t(
+            `settings.detailLevelCaptions.${detailLevel ?? 'medium'}`,
+            detailLevel === 'low'
+              ? 'Borders and labels only — best for older or mobile devices.'
+              : detailLevel === 'high'
+                ? 'All markers visible, no clustering — needs a faster computer.'
+                : 'Up to 2,000 clustered markers — recommended default.'
+          )}
+        </div>
       </div>
 
       {/* Fullscreen toggle — Issue #19 */}

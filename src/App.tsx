@@ -7,6 +7,7 @@ import { applyEpicsFromURL, useTimelineStore } from './stores/timelineStore';
 import { useUIStore } from './stores/uiStore';
 import { getPositionFromURL, getYearFromURL } from './utils/mapUtils';
 import { parseURLState } from './utils/urlStateUtils';
+import { DETAIL_LEVEL_PRESETS } from './utils/detailLevelUtils';
 
 /**
  * Builds a wiki URL for a province based on metadata.
@@ -71,6 +72,21 @@ function App() {
       void loadMetadata(locale);
     }
   }, [locale, loadMetadata]);
+
+  // Detail-level preset (Issue #8 Feature 3): initial application happens in
+  // main.tsx before React mounts; here we just react to runtime changes so
+  // switching Low/Medium/High immediately re-fetches markers at the new limit.
+  useEffect(() => {
+    const unsubscribe = useUIStore.subscribe((state, prev) => {
+      if (state.detailLevel === prev.detailLevel || state.detailLevel === null) return;
+      const preset = DETAIL_LEVEL_PRESETS[state.detailLevel];
+      const map = useMapStore.getState();
+      map.setMarkerLimit(preset.markerLimit);
+      map.setClusterMarkers(preset.clusterMarkers);
+      void map.loadMarkers(useTimelineStore.getState().selectedYear);
+    });
+    return unsubscribe;
+  }, []);
 
   // Initialize stores on mount
   // Requirement 2.1: WHEN the application initializes, THE Map_Store SHALL fetch metadata
