@@ -18,6 +18,8 @@ import {
   transformApiResponseToEpicItem,
   toWikipediaUrl,
   parseYearFromQueryString,
+  fetchEpicCoordinates,
+  clearEpicCoordinatesCache,
   MIN_YEAR,
   MAX_YEAR,
   DEFAULT_YEAR,
@@ -1551,5 +1553,74 @@ describe('parseYearFromQueryString', () => {
   it('should handle decimal years by parsing as integer', () => {
     expect(parseYearFromQueryString('?year=683.5')).toBe(683);
     expect(parseYearFromQueryString('?year=1000.9')).toBe(1000);
+  });
+});
+
+describe('fetchEpicCoordinates cache (FE-WIN #4)', () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+    clearEpicCoordinatesCache();
+  });
+
+  const mockResponse = (...coords: [number, number][]) => ({
+    map: coords.map((coo) => ({
+      type: 'Feature' as const,
+      properties: {},
+      geometry: { type: 'Point' as const, coordinates: coo },
+    })),
+  });
+
+  it('hits the API the first time and caches for the second call', async () => {
+    mockGet.mockResolvedValueOnce(mockResponse([10, 20], [30, 40]));
+
+    const first = await fetchEpicCoordinates('e_foo');
+    const second = await fetchEpicCoordinates('e_foo');
+
+    expect(first).toEqual([[10, 20], [30, 40]]);
+    expect(second).toEqual(first);
+    expect(mockGet).toHaveBeenCalledTimes(1);
+  });
+
+  it('caches empty results too, so repeat clicks on a blank epic do not re-fetch', async () => {
+    mockGet.mockResolvedValueOnce({ map: [] });
+
+    await fetchEpicCoordinates('e_empty');
+    await fetchEpicCoordinates('e_empty');
+
+    expect(mockGet).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not cache network errors — next call retries', async () => {
+    mockGet.mockRejectedValueOnce(new Error('boom'));
+    mockGet.mockResolvedValueOnce(mockResponse([1, 2]));
+
+    const firstAttempt = await fetchEpicCoordinates('e_flaky');
+    const secondAttempt = await fetchEpicCoordinates('e_flaky');
+
+    expect(firstAttempt).toEqual([]);
+    expect(secondAttempt).toEqual([[1, 2]]);
+    expect(mockGet).toHaveBeenCalledTimes(2);
+  });
+
+  it('issues distinct requests per epicId', async () => {
+    mockGet.mockResolvedValueOnce(mockResponse([1, 1]));
+    mockGet.mockResolvedValueOnce(mockResponse([2, 2]));
+
+    const a = await fetchEpicCoordinates('e_a');
+    const b = await fetchEpicCoordinates('e_b');
+
+    expect(a).toEqual([[1, 1]]);
+    expect(b).toEqual([[2, 2]]);
+    expect(mockGet).toHaveBeenCalledTimes(2);
+  });
+
+  it('clearEpicCoordinatesCache forces a refetch', async () => {
+    mockGet.mockResolvedValue(mockResponse([7, 8]));
+
+    await fetchEpicCoordinates('e_clr');
+    clearEpicCoordinatesCache();
+    await fetchEpicCoordinates('e_clr');
+
+    expect(mockGet).toHaveBeenCalledTimes(2);
   });
 });
