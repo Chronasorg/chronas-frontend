@@ -152,10 +152,10 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose: _onCl
           {t(
             `settings.detailLevelCaptions.${detailLevel ?? 'medium'}`,
             detailLevel === 'low'
-              ? 'Borders and labels only — best for older or mobile devices.'
+              ? 'Up to 2,000 markers — lighter on older or mobile devices.'
               : detailLevel === 'high'
-                ? 'All markers visible, no clustering — needs a faster computer.'
-                : 'Up to 2,000 clustered markers — recommended default.'
+                ? 'Up to 10,000 markers — needs a faster computer.'
+                : 'Up to 5,000 markers — recommended default.'
           )}
         </div>
       </div>

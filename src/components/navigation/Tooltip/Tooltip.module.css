@@ -1,7 +1,5 @@
 /**
- * Tooltip Component Styles
- *
- * Requirements: 3.5, 3.6, 8.1
+ * Tooltip — small-caps editorial label
  */
 
 .tooltip-wrapper {
@@ -11,32 +9,50 @@
 
 .tooltip {
   position: absolute;
-  z-index: 1000;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 500;
+  z-index: 10100;
+  padding: 6px 11px 5px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   white-space: nowrap;
-  color: var(--chronas-fore-1);
-  background-color: var(--chronas-back-2);
+  color: #fdfcf8;
+  background-color: #1f1d18;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 4px 16px -4px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(173, 135, 27, 0.25) inset;
   pointer-events: none;
   opacity: 0;
-  animation: tooltipFadeIn 0.15s ease-out forwards;
+  animation: tooltipFadeIn 0.14s ease-out forwards;
+}
+
+/* Little gold tick pointing at the icon */
+.tooltip::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background-color: #1f1d18;
+  box-shadow: -1px 1px 0 rgba(173, 135, 27, 0.25);
 }
 
 .tooltip--right {
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-left: 8px;
+  margin-left: 12px;
 }
 
 .tooltip--bottom-right {
   left: 100%;
   top: 100%;
-  margin-left: 4px;
-  margin-top: 4px;
+  margin-left: 6px;
+  margin-top: 6px;
 }
 
 @keyframes tooltipFadeIn {
@@ -54,13 +70,9 @@
   animation-name: tooltipFadeInBottomRight;
 }
 
+.tooltip--bottom-right::before { display: none; }
+
 @keyframes tooltipFadeInBottomRight {
-  from {
-    opacity: 0;
-    transform: translateX(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
 }

@@ -1,14 +1,8 @@
 /**
- * NavItem Component Styles
+ * NavItem — lean atlas rail button
  *
- * Production reference: chronas/src/components/menu/Menu.js
- * Theme colors from: chronas/src/properties.js (light theme)
- * 
- * Light theme colors:
- * - foreColors[0]: #6a6a6a (default icon color)
- * - highlightColors[0]: rgb(173, 135, 27) (hover/active color)
- *
- * Requirements: 2.4, 3.1-3.7, 4.1-4.9, 8.2, 8.3
+ * 40×40 inside a 50px rail. Active state shows a gold indicator on the
+ * left edge (like a bookmark tab) rather than a filled background.
  */
 
 .nav-item {
@@ -16,141 +10,172 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  margin: 4px 0;
+  margin: 2px 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   background: transparent;
-  /* Production foreColors[0]: #6a6a6a */
-  color: #6a6a6a;
+  color: #78736a;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 120ms ease;
 }
 
-/* Hover state - production highlightColors[0] */
+/* Left-edge gold indicator — sits in the sidebar gutter */
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 2px;
+  height: 0;
+  background-color: #ad872d;
+  border-radius: 0 2px 2px 0;
+  transform: translateY(-50%);
+  transition: height 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+/* Hover — soft ivory pill, warmer icon tint */
 .nav-item:hover:not(.nav-item--disabled) {
-  background-color: rgba(0, 0, 0, 0.05);
-  /* Production highlightColors[0]: rgb(173, 135, 27) */
-  color: rgb(173, 135, 27);
+  background-color: rgba(173, 135, 27, 0.08);
+  color: #2a2925;
 }
 
-/* Active hover state - slightly darker */
+.nav-item:hover:not(.nav-item--disabled)::before {
+  height: 14px;
+  background-color: rgba(173, 135, 27, 0.55);
+}
+
 .nav-item:hover:not(.nav-item--disabled):active {
-  background-color: rgba(0, 0, 0, 0.1);
-  transform: scale(0.98);
+  transform: scale(0.95);
 }
 
 .nav-item:focus-visible {
-  /* Production highlightColors[0] */
-  outline: 2px solid rgb(173, 135, 27);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(173, 135, 27, 0.45);
 }
 
-/* Active/selected state - production highlightColors[0] */
+/* Active — gold indicator extends, icon goes darker */
 .nav-item--active {
-  background-color: rgba(0, 0, 0, 0.08);
-  /* Production highlightColors[0]: rgb(173, 135, 27) */
-  color: rgb(173, 135, 27);
+  background-color: rgba(173, 135, 27, 0.14);
+  color: #1f1d18;
+}
+
+.nav-item--active::before {
+  height: 22px;
+  background-color: #ad872d;
 }
 
 .nav-item--active:hover:not(.nav-item--disabled) {
-  background-color: rgba(0, 0, 0, 0.12);
+  background-color: rgba(173, 135, 27, 0.18);
 }
 
-/* Highlighted state - production highlightColors[0] */
-.nav-item--highlighted {
-  color: rgb(173, 135, 27);
-}
+/* Highlighted — gold icon without full active pill */
+.nav-item--highlighted { color: #ad872d; }
 
 .nav-item--disabled {
-  opacity: 0.3;
+  opacity: 0.28;
   cursor: default;
   pointer-events: none;
 }
 
-/* Icon container - consistent sizing */
 .nav-item__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
+  transition: transform 180ms ease;
 }
 
-/* SVG icon styling - consistent sizing */
 .nav-item__icon svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   fill: currentColor;
-  transition: fill 0.2s ease;
+  transition: fill 180ms ease;
+}
+
+.nav-item:hover:not(.nav-item--disabled) .nav-item__icon {
+  transform: translateY(-0.5px);
 }
 
 .nav-item__badge {
   position: absolute;
   top: 2px;
   right: 2px;
-  min-width: 18px;
-  height: 18px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 18px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 16px;
   text-align: center;
   color: #fff;
-  /* Production highlightColors[0] */
-  background-color: rgb(173, 135, 27);
-  border-radius: 9px;
-  border: 1px solid #fafafa;
+  background-color: #ad872d;
+  border-radius: 8px;
+  border: 1.5px solid #fdfcf8;
 }
-
 
 /* Dark theme */
-[data-theme='dark'] .nav-item {
-  color: #F2F2F2;
-}
+[data-theme='dark'] .nav-item { color: #a8a398; }
 
 [data-theme='dark'] .nav-item:hover:not(.nav-item--disabled) {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: rgba(173, 135, 27);
+  background-color: rgba(212, 169, 58, 0.12);
+  color: #f6f3ec;
+}
+
+[data-theme='dark'] .nav-item:hover:not(.nav-item--disabled)::before {
+  background-color: rgba(212, 169, 58, 0.7);
 }
 
 [data-theme='dark'] .nav-item--active {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: rgba(173, 135, 27);
+  background-color: rgba(212, 169, 58, 0.18);
+  color: #fff;
 }
 
-[data-theme='dark'] .nav-item--highlighted {
-  color: rgba(173, 135, 27);
+[data-theme='dark'] .nav-item--active::before {
+  background-color: #d4a93a;
 }
+
+[data-theme='dark'] .nav-item--highlighted { color: #d4a93a; }
 
 [data-theme='dark'] .nav-item__badge {
-  background-color: rgba(173, 135, 27);
-  border-color: #333;
+  background-color: #d4a93a;
+  border-color: #1e1c1a;
 }
 
 /* Luther theme */
-[data-theme='luther'] .nav-item {
-  color: #fff3d3;
-}
+[data-theme='luther'] .nav-item { color: #fff3d3; }
 
 [data-theme='luther'] .nav-item:hover:not(.nav-item--disabled) {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: rgba(69, 28, 46, 200);
+  background-color: rgba(255, 243, 211, 0.1);
+  color: #fff;
+}
+
+[data-theme='luther'] .nav-item:hover:not(.nav-item--disabled)::before {
+  background-color: rgba(255, 243, 211, 0.6);
 }
 
 [data-theme='luther'] .nav-item--active {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: rgba(69, 28, 46, 200);
+  background-color: rgba(255, 243, 211, 0.15);
+  color: #fff;
 }
 
-[data-theme='luther'] .nav-item--highlighted {
-  color: rgba(69, 28, 46, 200);
+[data-theme='luther'] .nav-item--active::before {
+  background-color: #fff3d3;
 }
+
+[data-theme='luther'] .nav-item--highlighted { color: #fff3d3; }
 
 [data-theme='luther'] .nav-item__badge {
-  background-color: rgba(69, 28, 46, 200);
+  background-color: #fff3d3;
+  color: #011c31;
   border-color: #011c31;
 }

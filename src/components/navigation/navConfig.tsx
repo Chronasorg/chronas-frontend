@@ -71,25 +71,24 @@ export interface NavItemConfig {
  * Bottom: Star (PRO), Collections, Play, Help, Logout
  */
 export const NAV_ITEMS: NavItemConfig[] = [
-  // Top section - matches production order exactly
   {
     id: 'layers',
-    icon: LayersIcon(),
+    icon: <LayersIcon />,
     label: 'Layers',
     action: 'layers',
     section: 'top',
   },
   {
     id: 'discover',
-    icon: DiscoverIcon(),
+    icon: <DiscoverIcon />,
     label: 'Discover',
     to: '/discover',
     section: 'top',
-    disabled: true, // Deferred: Discover page not yet implemented
+    disabled: true,
   },
   {
     id: 'random',
-    icon: RandomIcon(),
+    icon: <RandomIcon />,
     label: 'Random Article',
     action: 'random',
     section: 'top',
@@ -97,47 +96,46 @@ export const NAV_ITEMS: NavItemConfig[] = [
   },
   {
     id: 'settings',
-    icon: SettingsIcon(),
+    icon: <SettingsIcon />,
     label: 'Configuration',
     action: 'settings',
     section: 'top',
   },
 
-  // Bottom section - matches production order exactly
   {
     id: 'pro',
-    icon: StarIcon(),
+    icon: <StarIcon />,
     label: 'PRO Version',
     to: '/pro',
     section: 'bottom',
     highlightWhenPro: true,
-    disabled: true, // Deferred: PRO subscription page not yet implemented
+    disabled: true,
   },
   {
     id: 'collections',
-    icon: CollectionsIcon(),
+    icon: <CollectionsIcon />,
     label: 'Collections',
     action: 'collections',
     section: 'bottom',
-    disabled: true, // Deferred: Collections system not yet implemented
+    disabled: true,
   },
   {
     id: 'play',
-    icon: PlayIcon(),
+    icon: <PlayIcon />,
     label: 'Play',
     action: 'play',
     section: 'bottom',
   },
   {
     id: 'help',
-    icon: HelpIcon(),
+    icon: <HelpIcon />,
     label: 'Help',
     action: 'info',
     section: 'bottom',
   },
   {
     id: 'logout',
-    icon: LogoutIcon(),
+    icon: <LogoutIcon />,
     label: 'Logout',
     action: 'logout',
     section: 'bottom',

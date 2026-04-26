@@ -17,9 +17,9 @@ export interface DetailLevelPreset {
 }
 
 export const DETAIL_LEVEL_PRESETS: Record<DetailLevel, DetailLevelPreset> = {
-  low: { markerLimit: 0, clusterMarkers: true },
-  medium: { markerLimit: 2000, clusterMarkers: true },
-  high: { markerLimit: 5000, clusterMarkers: false },
+  low: { markerLimit: 2000, clusterMarkers: false },
+  medium: { markerLimit: 5000, clusterMarkers: false },
+  high: { markerLimit: 10000, clusterMarkers: false },
 };
 
 interface NavigatorWithDeviceMemory extends Navigator {

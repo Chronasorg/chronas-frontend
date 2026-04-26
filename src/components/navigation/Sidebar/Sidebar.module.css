@@ -1,103 +1,102 @@
 /**
- * Sidebar Component Styles
+ * Sidebar — lean editorial atlas rail
  *
- * Production-matching light theme sidebar.
- * Requirements: 1.1-1.6, 8.1-8.6, 9.1-9.4
- * 
- * Production reference: chronas/src/components/menu/Sidebar.js
- * Theme colors from: chronas/src/properties.js (light theme)
+ * 56px wide, ivory-paper background, subtle vertical grain via inner rule.
+ * The gold hairline on the trailing edge reads as a rule-off between the
+ * navigation and the map canvas (like a margin rule on a printed folio).
  */
 
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  /* Extend to full height - timeline is transparent so sidebar shows through */
   bottom: 0;
-  /* Production width: 50px */
+  /* Kept at 50px — several map/timeline components depend on this width */
   width: 50px;
-  /* Production gradient: linear-gradient(180deg,#fff 0,#F2F2F2) */
-  background: linear-gradient(180deg, #fff 0%, #F2F2F2 100%);
-  background-color: #ffffff;
-  /* Production foreColor[0]: #6a6a6a */
-  color: #6a6a6a;
-  /* Production z-index: 10000 */
+  background:
+    linear-gradient(180deg, #fdfcf8 0%, #f6f3ec 60%, #efeae0 100%);
+  color: #4b4942;
   z-index: 10000;
   display: flex;
   flex-direction: column;
-  border-radius: 0;
-  transition: margin 350ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
-  /* Production padding: 8px 4px */
-  padding: 8px 4px;
+  /* Warm hairline divider echoes the gold accent */
+  border-right: 1px solid rgba(120, 95, 40, 0.08);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.6),
+    1px 0 24px -10px rgba(40, 30, 10, 0.18);
+  padding: 8px 0;
+  transition: margin 350ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.sidebar.open {
-  margin-left: 0;
-}
-
-.sidebar.closed {
-  margin-left: -50px;
-}
+.sidebar.open { margin-left: 0; }
+.sidebar.closed { margin-left: -50px; }
 
 .content {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* No extra padding - sidebar already has padding */
   padding: 0;
   overflow-y: auto;
-  overflow-x: hidden;
+  /* Allow the gold active indicator to poke out from nav items */
+  overflow-x: visible;
 }
+
+.content::-webkit-scrollbar { width: 0; }
 
 .logoSection {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* Production marginBottom: 24px on logo */
-  margin-bottom: 24px;
-  /* Ensure logo is visible and not clipped */
+  padding: 6px 0 10px;
+  margin-bottom: 6px;
   flex-shrink: 0;
-  min-height: 50px;
+  position: relative;
 }
 
-.topSection {
+/* Tiny gold rule under the logo — editorial touch */
+.logoSection::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 1px;
+  background: rgba(173, 135, 27, 0.5);
+}
+
+.topSection,
+.bottomSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  flex: 1;
-  /* Production padding: 8px 4px */
-  padding: 8px 4px;
-  gap: 4px;
+  padding: 4px 0;
+  gap: 2px;
 }
+
+.topSection { justify-content: flex-start; flex: 1; }
+.bottomSection { justify-content: flex-end; }
 
 .spacer {
   flex: 1;
   min-height: 16px;
 }
 
-.bottomSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  /* Production padding: 8px 4px */
-  padding: 8px 4px;
-  gap: 4px;
-}
-
 .avatarSection {
-  margin-top: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(120, 95, 40, 0.1);
+  width: 32px;
+  display: flex;
+  justify-content: center;
 }
 
-/* Separator line between icon groups */
 .separator {
-  width: 32px;
+  width: 22px;
   height: 1px;
-  /* Production borderColors: rgba(200,200,200,100) */
-  background-color: rgba(200, 200, 200, 0.4);
-  margin: 8px 0;
+  background-color: rgba(120, 95, 40, 0.15);
+  margin: 6px 0;
 }
 
 .toggleButton {
@@ -107,88 +106,93 @@
   top: 50%;
   transform: translateY(-50%);
   width: 28px;
-  height: 48px;
-  background: linear-gradient(180deg, #fff 0%, #F2F2F2 100%);
-  border: 1px solid rgba(200, 200, 200, 0.4);
+  height: 52px;
+  background: linear-gradient(180deg, #fdfcf8 0%, #f6f3ec 100%);
+  border: 1px solid rgba(120, 95, 40, 0.12);
   border-left: none;
-  border-radius: 0 4px 4px 0;
-  color: #6a6a6a;
+  border-radius: 0 6px 6px 0;
+  color: #4b4942;
   cursor: pointer;
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
 }
 
-.toggleButton:hover {
-  /* Production highlightColors: rgb(173, 135, 27) */
-  color: rgb(173, 135, 27);
-}
+.toggleButton:hover { color: #ad872d; }
 
 .toggleButton:focus-visible {
-  outline: 2px solid rgb(173, 135, 27);
+  outline: 2px solid #ad872d;
   outline-offset: 2px;
 }
 
-/* Responsive: Mobile */
+/* Mobile */
 @media (max-width: 767px) {
-  .sidebar {
-    z-index: 10001;
-  }
-
-  .sidebar.closed {
-    margin-left: -50px;
-  }
-
-  .sidebar.open {
-    margin-left: 0;
-  }
-
-  .toggleButton {
-    display: flex;
-  }
+  .sidebar { z-index: 10001; }
+  .sidebar.closed { margin-left: -50px; }
+  .sidebar.open { margin-left: 0; }
+  .toggleButton { display: flex; }
 }
 
-/* Dark theme */
+/* Dark theme — darker charcoal paper, warm gold accents unchanged */
 [data-theme='dark'] .sidebar {
-  background: linear-gradient(180deg, #333 0%, #000 100%);
-  background-color: #333;
-  color: #F2F2F2;
+  background:
+    linear-gradient(180deg, #1e1c1a 0%, #16140f 100%);
+  color: #d8d2c1;
+  border-right-color: rgba(173, 135, 27, 0.12);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.04),
+    1px 0 24px -10px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme='dark'] .logoSection::after {
+  background: rgba(173, 135, 27, 0.55);
+}
+
+[data-theme='dark'] .avatarSection {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .separator {
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme='dark'] .toggleButton {
-  background: linear-gradient(180deg, #333 0%, #000 100%);
-  border-color: rgba(200, 200, 200, 0.2);
-  color: #F2F2F2;
+  background: linear-gradient(180deg, #1e1c1a 0%, #16140f 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #d8d2c1;
 }
 
-[data-theme='dark'] .toggleButton:hover {
-  color: rgba(173, 135, 27);
-}
+[data-theme='dark'] .toggleButton:hover { color: #d4a93a; }
 
-/* Luther theme */
+/* Luther theme — deep navy + burgundy */
 [data-theme='luther'] .sidebar {
-  background: linear-gradient(180deg, #011c31 0%, #451c2e 100%);
-  background-color: #011c31;
+  background: linear-gradient(180deg, #011c31 0%, #3a1826 100%);
   color: #fff3d3;
+  border-right-color: rgba(255, 243, 211, 0.1);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.04),
+    1px 0 24px -10px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme='luther'] .logoSection::after {
+  background: rgba(255, 243, 211, 0.4);
+}
+
+[data-theme='luther'] .avatarSection {
+  border-top-color: rgba(255, 243, 211, 0.1);
+}
+
+[data-theme='luther'] .separator {
+  background-color: rgba(255, 243, 211, 0.1);
 }
 
 [data-theme='luther'] .toggleButton {
-  background: linear-gradient(180deg, #011c31 0%, #451c2e 100%);
-  border-color: rgba(200, 200, 200, 0.2);
+  background: linear-gradient(180deg, #011c31 0%, #3a1826 100%);
+  border-color: rgba(255, 243, 211, 0.1);
   color: #fff3d3;
 }
 
-[data-theme='luther'] .toggleButton:hover {
-  color: rgba(69, 28, 46, 200);
-}
-
-/* Desktop: Always visible */
 @media (min-width: 768px) {
-  .sidebar {
-    margin-left: 0;
-  }
-
-  .sidebar.closed {
-    margin-left: 0;
-  }
+  .sidebar { margin-left: 0; }
+  .sidebar.closed { margin-left: 0; }
 }

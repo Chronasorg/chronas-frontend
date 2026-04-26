@@ -190,6 +190,10 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   // Requirement 11.2: THE MapView SHALL debounce year change events (300ms)
   const debouncedYear = useDebounce(selectedYear, YEAR_CHANGE_DEBOUNCE_MS);
 
+  // Debounce the marker limit so dragging the slider doesn't fire a request per px
+  const markerLimit = useMapStore((state) => state.markerLimit);
+  const debouncedMarkerLimit = useDebounce(markerLimit, YEAR_CHANGE_DEBOUNCE_MS);
+
   /**
    * Memoized color match expressions for each dimension.
    * Requirement 4.3: Data-driven styling with categorical stops
@@ -541,6 +545,22 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedYear is intentionally omitted; we use debouncedYear to avoid excessive API calls (Requirement 11.2).
   }, [debouncedYear, loadAreaData, loadMarkers, cancelAreaDataRequest, cancelMarkersRequest]);
+
+  // Refetch markers when the user changes the marker limit slider.
+  // Skip the first render (initial mount) — the year-change effect already
+  // loads markers with the initial limit.
+  const prevMarkerLimitRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (prevMarkerLimitRef.current === null) {
+      prevMarkerLimitRef.current = debouncedMarkerLimit;
+      return;
+    }
+    if (prevMarkerLimitRef.current !== debouncedMarkerLimit) {
+      prevMarkerLimitRef.current = debouncedMarkerLimit;
+      cancelMarkersRequest();
+      void loadMarkers(debouncedYear);
+    }
+  }, [debouncedMarkerLimit, debouncedYear, loadMarkers, cancelMarkersRequest]);
 
   // Handle flyTo animations
   // Requirement 2.6: THE MapStore SHALL provide a flyTo action

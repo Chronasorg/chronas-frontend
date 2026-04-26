@@ -1,38 +1,43 @@
 /**
- * MenuDrawer Component Styles
- *
- * Theme-aware drawer using CSS custom properties.
- * Requirements: 6.1-6.9
+ * MenuDrawer — editorial archival panel that slides from the sidebar
  */
 
 .drawer {
   position: fixed;
   top: 0;
-  left: 50px; /* Positioned to the right of the sidebar */
+  left: 50px;
   bottom: 0;
-  width: auto;
-  min-width: 250px;
-  max-width: 350px;
-  /* Default dark background */
-  background-color: #2d2d2d;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-lg);
-  z-index: var(--z-fixed, 300);
+  width: 320px;
+  min-width: 280px;
+  max-width: 340px;
+  background-color: #faf7f0;
+  border-right: 1px solid rgba(120, 95, 40, 0.08);
+  box-shadow: 8px 0 28px -14px rgba(40, 30, 10, 0.22);
+  z-index: 300;
   display: flex;
   flex-direction: column;
   transform: translateX(-100%);
   opacity: 0;
   visibility: hidden;
-  transition: transform var(--transition-base), opacity var(--transition-base), visibility var(--transition-base);
-  color: #f2f2f2;
+  transition:
+    transform 280ms cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 240ms ease,
+    visibility 280ms ease;
+  color: #4b4942;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* Light theme variant for Layers panel */
+/* Light variant — for Layers + Settings (both use light paper tone) */
 .drawer.light {
-  background-color: rgb(242, 242, 242);
-  border-right: none;
-  color: rgb(73, 73, 73);
-  box-shadow: none;
+  background-color: #faf7f0;
+  color: #3a3731;
+}
+
+/* Dark variant — collections */
+.drawer:not(.light) {
+  background-color: #1f1d18;
+  color: #e8e3d6;
+  border-right-color: rgba(255, 255, 255, 0.06);
 }
 
 .drawer.open {
@@ -45,31 +50,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #252525;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid rgba(120, 95, 40, 0.1);
+  background-color: transparent;
   flex-shrink: 0;
 }
 
-/* Light theme header */
-.drawer.light .header {
-  background-color: #ffffff;
-  border-bottom: none;
-  padding: 12px 16px;
-  box-shadow: rgba(0, 0, 0, 0.4) 3px 6px 6px -3px;
+.drawer:not(.light) .header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 .title {
   margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: #f2f2f2;
+  font-family: 'Cinzel', 'Inter', serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2a2925;
+  position: relative;
 }
 
-.drawer.light .title {
-  color: rgb(106, 106, 106);
-  font-size: 16px;
-  font-weight: 400;
+/* Gold underline on title — editorial flourish */
+.title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -7px;
+  width: 26px;
+  height: 1.5px;
+  background: #ad872d;
+}
+
+.drawer:not(.light) .title {
+  color: #f6f3ec;
+}
+
+.drawer:not(.light) .title::after {
+  background: #d4a93a;
 }
 
 .closeButton {
@@ -81,54 +99,111 @@
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  color: #f2f2f2;
+  border-radius: 6px;
+  color: #78736a;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
-.drawer.light .closeButton {
-  color: #666;
-}
+.drawer:not(.light) .closeButton { color: #a8a398; }
 
 .closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background-color: rgba(173, 135, 27, 0.08);
+  color: #2a2925;
 }
 
-.drawer.light .closeButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #333;
+.drawer:not(.light) .closeButton:hover {
+  background-color: rgba(212, 169, 58, 0.1);
+  color: #fff;
 }
 
 .closeButton:focus-visible {
-  outline: 2px solid var(--chronas-highlight);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(173, 135, 27, 0.5);
 }
 
 .content {
   flex: 1;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 95, 40, 0.25) transparent;
 }
 
-/* Content padding for dark theme (collections) */
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 95, 40, 0.22);
+  border-radius: 3px;
+}
+
 .content.padded {
-  padding: var(--spacing-md);
+  padding: 20px 22px;
 }
 
-/* No padding for light theme (layers) - LayersContent handles its own padding */
+.headerHidden { display: none; }
 
-/* Hide header when using custom content header */
-.headerHidden {
-  display: none;
-}
-
-/* Responsive: Mobile */
 @media (max-width: 767px) {
   .drawer {
     left: 0;
-    width: auto;
-    min-width: 200px;
+    width: 280px;
+    min-width: 260px;
     max-width: 300px;
   }
+}
+
+/* ============================================================
+ * Dark theme
+ * ============================================================ */
+[data-theme='dark'] .drawer.light {
+  background-color: #1e1c1a;
+  color: #e8e3d6;
+  border-right-color: rgba(212, 169, 58, 0.12);
+}
+
+[data-theme='dark'] .drawer.light .header {
+  border-bottom-color: rgba(212, 169, 58, 0.12);
+}
+
+[data-theme='dark'] .drawer.light .title { color: #f6f3ec; }
+[data-theme='dark'] .drawer.light .title::after { background: #d4a93a; }
+[data-theme='dark'] .drawer.light .closeButton { color: #a8a398; }
+[data-theme='dark'] .drawer.light .closeButton:hover {
+  background-color: rgba(212, 169, 58, 0.1);
+  color: #fff;
+}
+
+[data-theme='dark'] .content {
+  scrollbar-color: rgba(212, 169, 58, 0.25) transparent;
+}
+
+[data-theme='dark'] .content::-webkit-scrollbar-thumb {
+  background-color: rgba(212, 169, 58, 0.22);
+}
+
+/* ============================================================
+ * Luther theme
+ * ============================================================ */
+[data-theme='luther'] .drawer.light {
+  background-color: #011c31;
+  color: #fff3d3;
+  border-right-color: rgba(255, 243, 211, 0.12);
+}
+
+[data-theme='luther'] .drawer.light .header {
+  border-bottom-color: rgba(255, 243, 211, 0.12);
+}
+
+[data-theme='luther'] .drawer.light .title { color: #fff3d3; }
+[data-theme='luther'] .drawer.light .title::after { background: #d4a84b; }
+[data-theme='luther'] .drawer.light .closeButton { color: rgba(255, 243, 211, 0.65); }
+[data-theme='luther'] .drawer.light .closeButton:hover {
+  background-color: rgba(255, 243, 211, 0.1);
+  color: #fff;
+}
+
+[data-theme='luther'] .content {
+  scrollbar-color: rgba(255, 243, 211, 0.25) transparent;
+}
+
+[data-theme='luther'] .content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 243, 211, 0.22);
 }

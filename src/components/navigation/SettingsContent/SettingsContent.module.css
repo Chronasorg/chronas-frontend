@@ -1,127 +1,290 @@
+/**
+ * SettingsContent — editorial configuration panel
+ *
+ * Flat sections separated by hairlines. Small-caps tracked labels.
+ * Lightweight controls — no heavy borders.
+ */
+
 .container {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 8px 0;
-  background: rgb(242, 242, 242);
-  color: rgb(73, 73, 73);
-  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
-  font-size: 14px;
+  padding: 4px 0 16px;
+  background: #faf7f0;
+  color: #3a3731;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
   height: 100%;
 }
 
 .section {
-  padding: 8px 0;
-  border: 1px solid rgb(217, 217, 217);
-  background: rgb(255, 255, 255);
-  margin-bottom: 8px;
+  padding: 14px 22px 14px;
+  border: none;
+  border-bottom: 1px solid rgba(120, 95, 40, 0.08);
+  background: transparent;
+  margin: 0;
 }
 
+.section:last-of-type { border-bottom: none; }
+
 .sectionLabel {
-  color: rgba(106, 106, 106, 0.54);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 48px;
-  padding-left: 16px;
+  display: block;
+  color: #8a847a;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0;
+  margin: 0 0 10px;
   width: 100%;
 }
 
+/* ============================================================
+ * Lightweight segmented control — underline indicator, no borders
+ * ============================================================ */
 .themeButtons {
   display: flex;
   flex-direction: row;
-  gap: 8px;
-  padding: 0 16px 12px;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(120, 95, 40, 0.1);
+  border-radius: 0;
+  overflow: visible;
+  position: relative;
 }
 
 .themeBtn {
   flex: 1;
-  padding: 8px 0;
-  border: 1px solid rgb(217, 217, 217);
-  border-radius: 4px;
-  background: rgb(255, 255, 255);
-  color: rgb(73, 73, 73);
-  font-size: 13px;
+  padding: 8px 2px 10px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #8a847a;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 160ms ease;
+  position: relative;
 }
 
-.themeBtn:hover {
-  background: rgb(242, 242, 242);
-  border-color: rgb(180, 180, 180);
+.themeBtn::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  transition: background 180ms ease;
+  border-radius: 1px;
 }
+
+.themeBtn:hover { color: #2a2925; }
 
 .themeBtnActive {
-  background: rgb(63, 81, 181);
-  border-color: rgb(63, 81, 181);
-  color: rgb(255, 255, 255);
+  background: transparent;
+  color: #8a6a1f;
+  font-weight: 600;
 }
 
-.themeBtnActive:hover {
-  background: rgb(48, 63, 159);
-  border-color: rgb(48, 63, 159);
-  color: rgb(255, 255, 255);
+.themeBtnActive::after {
+  background: #ad872d;
 }
 
+/* ============================================================
+ * Select — language / map labels
+ * ============================================================ */
 .languageSelect {
   display: block;
-  width: calc(100% - 32px);
-  margin: 0 16px 12px;
-  padding: 8px 12px;
-  border: 1px solid rgb(217, 217, 217);
-  border-radius: 4px;
-  background: rgb(255, 255, 255);
-  color: rgb(73, 73, 73);
-  font-size: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 28px 8px 2px;
+  border: none;
+  border-bottom: 1px solid rgba(120, 95, 40, 0.18);
+  border-radius: 0;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236a655b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 13px;
+  color: #2a2925;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
   cursor: pointer;
-  appearance: auto;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: border-color 160ms ease;
 }
+
+.languageSelect:hover { border-bottom-color: rgba(173, 135, 27, 0.55); }
 
 .languageSelect:focus {
-  outline: 2px solid rgb(63, 81, 181);
-  outline-offset: -1px;
+  border-bottom-color: #ad872d;
 }
 
+/* ============================================================
+ * Action buttons — ghost pills
+ * ============================================================ */
 .actionButtons {
   display: flex;
   flex-direction: row;
   gap: 8px;
-  padding: 0 16px 12px;
+  padding: 0;
 }
 
 .actionBtn {
   flex: 1;
-  padding: 8px 12px;
-  border: 1px solid rgb(217, 217, 217);
-  border-radius: 4px;
-  background: rgb(255, 255, 255);
-  color: rgb(73, 73, 73);
-  font-size: 13px;
+  padding: 8px 14px;
+  border: 1px solid rgba(120, 95, 40, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: #3a3731;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .actionBtn:hover {
-  background: rgb(242, 242, 242);
-  border-color: rgb(180, 180, 180);
+  background: rgba(173, 135, 27, 0.06);
+  border-color: rgba(173, 135, 27, 0.45);
+  color: #2a2925;
 }
 
 .actionBtnActive {
-  background: rgb(63, 81, 181);
-  border-color: rgb(63, 81, 181);
-  color: rgb(255, 255, 255);
+  background: rgba(173, 135, 27, 0.12);
+  border-color: rgba(173, 135, 27, 0.55);
+  color: #8a6a1f;
 }
 
 .actionBtnActive:hover {
-  background: rgb(48, 63, 159);
-  border-color: rgb(48, 63, 159);
-  color: rgb(255, 255, 255);
+  background: rgba(173, 135, 27, 0.18);
+  color: #6a4e14;
 }
 
+/* ============================================================
+ * Caption — detail-level description
+ * ============================================================ */
 .caption {
-  padding: 0 16px 10px;
-  color: rgba(106, 106, 106, 0.72);
-  font-size: 12px;
-  line-height: 1.4;
+  padding: 8px 0 0;
+  color: #8a847a;
+  font-size: 11.5px;
+  line-height: 1.5;
+  font-style: italic;
+  letter-spacing: 0.01em;
 }
+
+/* ============================================================
+ * Dark theme
+ * ============================================================ */
+[data-theme='dark'] .container {
+  background: #1e1c1a;
+  color: #e8e3d6;
+}
+
+[data-theme='dark'] .section {
+  border-bottom-color: rgba(212, 169, 58, 0.12);
+}
+
+[data-theme='dark'] .sectionLabel { color: rgba(212, 169, 58, 0.68); }
+
+[data-theme='dark'] .themeButtons {
+  border-bottom-color: rgba(212, 169, 58, 0.12);
+}
+
+[data-theme='dark'] .themeBtn { color: #a8a398; }
+[data-theme='dark'] .themeBtn:hover { color: #f6f3ec; }
+[data-theme='dark'] .themeBtnActive { color: #d4a93a; }
+[data-theme='dark'] .themeBtnActive::after { background: #d4a93a; }
+
+[data-theme='dark'] .languageSelect {
+  color: #e8e3d6;
+  border-bottom-color: rgba(212, 169, 58, 0.22);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a398' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+[data-theme='dark'] .languageSelect option { background: #1e1c1a; color: #e8e3d6; }
+[data-theme='dark'] .languageSelect:hover { border-bottom-color: rgba(212, 169, 58, 0.55); }
+[data-theme='dark'] .languageSelect:focus { border-bottom-color: #d4a93a; }
+
+[data-theme='dark'] .actionBtn {
+  border-color: rgba(212, 169, 58, 0.22);
+  color: #e8e3d6;
+}
+
+[data-theme='dark'] .actionBtn:hover {
+  background: rgba(212, 169, 58, 0.1);
+  border-color: rgba(212, 169, 58, 0.55);
+  color: #fff;
+}
+
+[data-theme='dark'] .actionBtnActive {
+  background: rgba(212, 169, 58, 0.18);
+  border-color: rgba(212, 169, 58, 0.55);
+  color: #d4a93a;
+}
+
+[data-theme='dark'] .caption { color: #a8a398; }
+
+/* ============================================================
+ * Luther theme
+ * ============================================================ */
+[data-theme='luther'] .container {
+  background: #011c31;
+  color: #fff3d3;
+}
+
+[data-theme='luther'] .section {
+  border-bottom-color: rgba(255, 243, 211, 0.12);
+}
+
+[data-theme='luther'] .sectionLabel { color: rgba(255, 243, 211, 0.65); }
+
+[data-theme='luther'] .themeButtons {
+  border-bottom-color: rgba(255, 243, 211, 0.12);
+}
+
+[data-theme='luther'] .themeBtn { color: rgba(255, 243, 211, 0.65); }
+[data-theme='luther'] .themeBtn:hover { color: #fff3d3; }
+[data-theme='luther'] .themeBtnActive { color: #d4a84b; }
+[data-theme='luther'] .themeBtnActive::after { background: #d4a84b; }
+
+[data-theme='luther'] .languageSelect {
+  color: #fff3d3;
+  border-bottom-color: rgba(255, 243, 211, 0.22);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff3d3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+[data-theme='luther'] .languageSelect option { background: #011c31; color: #fff3d3; }
+[data-theme='luther'] .languageSelect:hover { border-bottom-color: rgba(255, 243, 211, 0.55); }
+[data-theme='luther'] .languageSelect:focus { border-bottom-color: #d4a84b; }
+
+[data-theme='luther'] .actionBtn {
+  border-color: rgba(255, 243, 211, 0.22);
+  color: #fff3d3;
+}
+
+[data-theme='luther'] .actionBtn:hover {
+  background: rgba(255, 243, 211, 0.1);
+  border-color: rgba(255, 243, 211, 0.55);
+  color: #fff;
+}
+
+[data-theme='luther'] .actionBtnActive {
+  background: rgba(255, 243, 211, 0.18);
+  border-color: rgba(255, 243, 211, 0.55);
+  color: #d4a84b;
+}
+
+[data-theme='luther'] .caption { color: rgba(255, 243, 211, 0.7); }
