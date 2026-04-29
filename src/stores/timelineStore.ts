@@ -468,7 +468,7 @@ export function toWikipediaUrl(wikiArticle: string): string {
  * Used to fly the map to show epic-related locations.
  *
  * Cached in-memory per epicId — the same epic is often re-clicked in a
- * session and the backing call hits DocumentDB's `links` doc (and soon
+ * session and the backing call hits DynamoDB's links-store (per-entity
  * the per-entity DynamoDB links table). Cutting the request count here
  * saves 30–50% of that endpoint's traffic at near-zero effort.
  *
