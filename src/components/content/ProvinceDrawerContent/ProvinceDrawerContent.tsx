@@ -2,13 +2,11 @@
  * ProvinceDrawerContent Component
  *
  * Displays detailed province information in the right drawer with
- * tabbed navigation (Issue #16):
- *   Summary | Ruler | Culture | Religion | Wikipedia
+ * tabbed navigation matching the map tooltip categories:
+ *   Ruler | Culture | Religion | Religion General
  *
- * - Summary: structured Chronas metadata (ruler, culture, religion, religionGeneral, population)
- * - Ruler / Culture / Religion: shows the entity's color + name as a header, then embeds that
- *   entity's Wikipedia article (so users can read about the empire itself, not just the province)
- * - Wikipedia: the province's own Wikipedia article
+ * Each tab shows the entity's color + name as a header, then embeds that
+ * entity's Wikipedia article.
  */
 
 import type React from 'react';
@@ -35,21 +33,23 @@ export interface ProvinceDrawerContentProps {
   wikiUrl?: string;
 }
 
-type TabId = 'summary' | 'ruler' | 'culture' | 'religion';
+type TabId = 'ruler' | 'culture' | 'religion' | 'religionGeneral';
 
 interface EntityTabConfig {
-  id: Extract<TabId, 'ruler' | 'culture' | 'religion'>;
+  id: TabId;
   dataIndex: number;
   metadataKey: keyof EntityMetadata;
   labelKey: string;
   labelFallback: string;
   icon: string;
+  isDerived?: boolean;
 }
 
 const ENTITY_TABS: EntityTabConfig[] = [
   { id: 'ruler', dataIndex: 0, metadataKey: 'ruler', labelKey: 'map.ruler', labelFallback: 'Ruler', icon: '👑' },
   { id: 'culture', dataIndex: 1, metadataKey: 'culture', labelKey: 'map.culture', labelFallback: 'Culture', icon: '🎭' },
   { id: 'religion', dataIndex: 2, metadataKey: 'religion', labelKey: 'map.religion', labelFallback: 'Religion', icon: '⛪' },
+  { id: 'religionGeneral', dataIndex: -1, metadataKey: 'religionGeneral', labelKey: 'map.religionGeneral', labelFallback: 'Religion Gen.', icon: '☯️', isDerived: true },
 ];
 
 interface EntityRowProps {
@@ -82,10 +82,9 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
   provinceId,
   provinceData,
   metadata,
-  wikiUrl,
 }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabId>('summary');
+  const [activeTab, setActiveTab] = useState<TabId>('ruler');
 
   const [, , religionId, , population] = provinceData;
   const formattedPopulation = formatPopulation(population);
@@ -94,70 +93,23 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
   // Precompute entity entries + their wiki urls so the tab panels render cleanly
   const entityEntries = useMemo(() => {
     return ENTITY_TABS.map((cfg) => {
+      if (cfg.isDerived) {
+        return { cfg, entityId: religionGeneralEntry.name, entry: religionGeneralEntry, wiki: buildEntityWikiUrl(religionGeneralEntry, religionGeneralEntry.name) };
+      }
       const entityId = provinceData[cfg.dataIndex] as string;
       const entry = getEntityMetadata(entityId, cfg.metadataKey, metadata);
       return { cfg, entityId, entry, wiki: buildEntityWikiUrl(entry, entityId) };
     });
-  }, [provinceData, metadata]);
+  }, [provinceData, metadata, religionGeneralEntry]);
 
   const tabLabel = (id: TabId): string => {
-    switch (id) {
-      case 'summary':
-        return t('drawer.tabs.summary', 'Summary');
-      case 'ruler':
-        return t('map.ruler', 'Ruler');
-      case 'culture':
-        return t('map.culture', 'Culture');
-      case 'religion':
-        return t('map.religion', 'Religion');
-    }
+    const cfg = ENTITY_TABS.find(tab => tab.id === id);
+    return cfg ? t(cfg.labelKey, cfg.labelFallback) : id;
   };
 
-  const TAB_ORDER: TabId[] = ['summary', 'ruler', 'culture', 'religion'];
+  const TAB_ORDER: TabId[] = ['ruler', 'culture', 'religion', 'religionGeneral'];
 
   const renderTabPanel = (): React.ReactNode => {
-    if (activeTab === 'summary') {
-      return (
-        <>
-          <section
-            className={styles['entitySection']}
-            data-testid="entity-section"
-            aria-label="Province entity details"
-          >
-            {entityEntries.map(({ cfg, entry }) => (
-              <EntityRow
-                key={cfg.metadataKey}
-                label={t(cfg.labelKey, cfg.labelFallback)}
-                entry={entry}
-                icon={cfg.icon}
-              />
-            ))}
-            <EntityRow
-              label={t('map.religionGeneral', 'Religion Gen.')}
-              entry={religionGeneralEntry}
-              icon="☯️"
-            />
-            <div className={styles['populationRow']} data-testid="population-row">
-              <span className={styles['populationLabel']}>
-                {t('map.population', 'Population')}:
-              </span>
-              <span className={styles['populationValue']} data-testid="population-value">
-                {formattedPopulation}
-              </span>
-            </div>
-          </section>
-          <section
-            className={styles['articleSection']}
-            data-testid="article-section"
-            aria-label="Wikipedia article"
-          >
-            <ArticleIframe url={wikiUrl} title={`Wikipedia article for ${provinceId}`} />
-          </section>
-        </>
-      );
-    }
-
-    // Entity tab (ruler/culture/religion): header row + iframe of the entity's wiki
     const found = entityEntries.find((e) => e.cfg.id === activeTab);
     if (!found) return null;
     const { entry, entityId, wiki, cfg } = found;
@@ -165,6 +117,14 @@ export const ProvinceDrawerContent: React.FC<ProvinceDrawerContentProps> = ({
       <>
         <section className={styles['entitySection']} aria-label={`${tabLabel(activeTab)} details`}>
           <EntityRow label={t(cfg.labelKey, cfg.labelFallback)} entry={entry} icon={cfg.icon} />
+          <div className={styles['populationRow']} data-testid="population-row">
+            <span className={styles['populationLabel']}>
+              {provinceId}
+            </span>
+            <span className={styles['populationValue']} data-testid="population-value">
+              {formattedPopulation}
+            </span>
+          </div>
         </section>
         <section
           className={styles['articleSection']}
