@@ -140,6 +140,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
     action: 'logout',
     section: 'bottom',
     highlightWhenAuth: true,
+    disabled: true,
   },
 ];
 
