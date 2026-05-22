@@ -7,6 +7,7 @@ import { RightDrawer } from './RightDrawer/RightDrawer';
 import { CollectionsPlaceholder } from '../placeholders';
 import { LayersContent } from '../navigation/LayersContent';
 import { SettingsContent } from '../navigation/SettingsContent';
+import { SearchContent } from '../navigation/SearchContent';
 import { LoadingBar } from '../global/LoadingBar';
 import { AnnouncementBanner } from '../global/AnnouncementBanner/AnnouncementBanner';
 import { LoginDialog } from '../auth/LoginDialog/LoginDialog';
@@ -68,6 +69,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
           {drawerContent === 'layers' && <LayersContent onClose={closeDrawer} />}
           {drawerContent === 'collections' && <CollectionsPlaceholder />}
           {drawerContent === 'settings' && <SettingsContent onClose={closeDrawer} />}
+          {drawerContent === 'search' && <SearchContent onClose={closeDrawer} />}
         </MenuDrawer>
         
         <MainContent>
