@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { checkWebGLSupport } from './MapView.utils';
+import { checkWebGLSupport, normalizeFeatureProperties } from './MapView.utils';
 import { MapErrorBoundary } from './MapErrorBoundary';
 
 // Note: MapView component tests that require react-map-gl are skipped
@@ -56,6 +56,80 @@ describe('checkWebGLSupport', () => {
     });
 
     expect(checkWebGLSupport()).toBe(false);
+  });
+});
+
+describe('normalizeFeatureProperties (issue #38 regression)', () => {
+  // Mirror of react-map-gl's internal deepEqual, which crashes on
+  // null-prototype objects because it calls b.hasOwnProperty(key).
+  // See node_modules/react-map-gl/dist/mapbox-legacy/utils/deep-equal.js
+  function deepEqualLikeReactMapGl(a: unknown, b: unknown): boolean {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    if (typeof a === 'object' && typeof b === 'object') {
+      const aKeys = Object.keys(a);
+      const bKeys = Object.keys(b);
+      if (aKeys.length !== bKeys.length) return false;
+      for (const key of aKeys) {
+        // This is the exact call that throws on null-prototype objects.
+        // Intentionally mirrors react-map-gl's deepEqual verbatim, so the
+        // no-prototype-builtins rule is disabled here on purpose.
+        // eslint-disable-next-line no-prototype-builtins
+        if (!b.hasOwnProperty(key)) return false;
+        if (
+          !deepEqualLikeReactMapGl(
+            (a as Record<string, unknown>)[key],
+            (b as Record<string, unknown>)[key]
+          )
+        )
+          return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Mimics how react-map-gl diffs source data: prev and next are distinct
+  // object instances with equal content (a new hover fires each mousemove).
+  function makeRawProps(): Record<string, unknown> {
+    const raw = Object.create(null) as Record<string, unknown>;
+    raw['name'] = 'Croatia';
+    raw['r'] = 'byzantine_empire';
+    return raw;
+  }
+
+  it('reproduces the crash: raw Mapbox GL v3 null-prototype properties break deepEqual', () => {
+    // Mapbox GL v3 returns feature.properties as Object.create(null)
+    expect(() => deepEqualLikeReactMapGl(makeRawProps(), makeRawProps())).toThrow(
+      /hasOwnProperty is not a function/
+    );
+  });
+
+  it('normalizes null-prototype properties so deepEqual no longer throws', () => {
+    const prev = normalizeFeatureProperties(makeRawProps());
+    const next = normalizeFeatureProperties(makeRawProps());
+
+    expect(Object.getPrototypeOf(next)).toBe(Object.prototype);
+    expect(typeof next.hasOwnProperty).toBe('function');
+    expect(() => deepEqualLikeReactMapGl(prev, next)).not.toThrow();
+    expect(deepEqualLikeReactMapGl(prev, next)).toBe(true);
+  });
+
+  it('preserves all property values', () => {
+    const rawProps = Object.create(null) as Record<string, unknown>;
+    rawProps['name'] = 'Finnmark';
+    rawProps['p'] = 12345;
+
+    const normalized = normalizeFeatureProperties(rawProps);
+
+    expect(normalized['name']).toBe('Finnmark');
+    expect(normalized['p']).toBe(12345);
+  });
+
+  it('returns an empty plain object for null or undefined input', () => {
+    expect(normalizeFeatureProperties(null)).toEqual({});
+    expect(normalizeFeatureProperties(undefined)).toEqual({});
+    expect(Object.getPrototypeOf(normalizeFeatureProperties(null))).toBe(Object.prototype);
   });
 });
 

@@ -46,6 +46,7 @@ import {
   calculateMaxPopulation,
   checkWebGLSupport,
   markersToGeoJSON,
+  normalizeFeatureProperties,
 } from './MapView.utils';
 
 // Mapbox access token - should be set via environment variable
@@ -888,9 +889,13 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         return;
       }
       
-      const properties = feature.properties ?? {};
+      // Mapbox GL v3 returns feature.properties as a null-prototype object.
+      // Normalize to a plain-prototype object so downstream consumers (e.g.
+      // react-map-gl's deepEqual, which calls `.hasOwnProperty` when diffing
+      // the area-hover <Source> data) don't crash the map. See issue #38.
+      const properties = normalizeFeatureProperties(feature.properties);
       const layerId = feature.layer?.id;
-      
+
       // Check if hovering over an area label (line or point)
       if (layerId === 'area-labels-layer' || layerId === 'area-labels-points') {
         const labelName = (properties['n'] as string | undefined) ?? (properties['name'] as string | undefined);
@@ -985,9 +990,10 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         return;
       }
       
-      const properties = feature.properties ?? {};
+      // Normalize null-prototype properties from Mapbox GL v3 (see issue #38).
+      const properties = normalizeFeatureProperties(feature.properties);
       const layerId = feature.layer?.id;
-      
+
       // Check if clicked on an area label (line or point)
       // When a label is clicked, open the right drawer with the entity's Wikipedia article
       if (layerId === 'area-labels-layer' || layerId === 'area-labels-points') {

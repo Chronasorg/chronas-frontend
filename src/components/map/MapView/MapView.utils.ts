@@ -19,6 +19,25 @@ import {
 } from './MapView.constants';
 
 /**
+ * Normalizes a Mapbox GL feature's `properties` into a plain-prototype object.
+ *
+ * Mapbox GL v3 returns `feature.properties` as a null-prototype object
+ * (created via `Object.create(null)`). Such objects have no `hasOwnProperty`
+ * method, so when they flow into the `area-hover` <Source> data, react-map-gl's
+ * `deepEqual` (which calls `b.hasOwnProperty(key)` while diffing source props)
+ * throws `hasOwnProperty is not a function` and crashes the map into the error
+ * boundary. Spreading into a fresh object literal restores `Object.prototype`.
+ *
+ * @param properties - Raw feature properties (may be null-prototype or null)
+ * @returns A plain object with `Object.prototype` in its chain
+ */
+export function normalizeFeatureProperties(
+  properties: Record<string, unknown> | null | undefined
+): Record<string, unknown> {
+  return { ...(properties ?? {}) };
+}
+
+/**
  * Custom hook for debouncing a value.
  * Requirement 11.2: Add debounce to year change handler (300ms)
  *
