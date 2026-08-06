@@ -12,7 +12,7 @@ import { create } from 'zustand';
 /**
  * Drawer content types
  */
-export type DrawerContent = 'layers' | 'collections' | 'settings';
+export type DrawerContent = 'layers' | 'collections' | 'settings' | 'search';
 
 /**
  * Navigation state interface

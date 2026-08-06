@@ -3,6 +3,7 @@
     "layers": "Ebenen",
     "discover": "Entdecken",
     "random": "Zufälliger Artikel",
+    "search": "Suche",
     "configuration": "Konfiguration",
     "settings": "Konfiguration",
     "pro": "PRO Version",
@@ -12,6 +13,18 @@
     "logout": "Abmelden",
     "community": "Community Forum",
     "account": "Konto verwalten"
+  },
+  "search": {
+    "placeholder": "Orte, Städte, Regionen suchen…",
+    "hint": "Geben Sie einen Ortsnamen ein, um Provinzen, Städte und historische Wahrzeichen zu finden. Bei Auswahl bewegt sich die Karte dorthin.",
+    "inView": "Im Blickfeld",
+    "acrossHistory": "Im Verlauf der Geschichte",
+    "empty": "Keine Treffer gefunden.",
+    "province": "Provinz",
+    "marker": "Markierung",
+    "otherYear": "Anderes Jahr",
+    "close": "Suche schließen",
+    "clear": "Suche löschen"
   },
   "auth": {
     "signIn": "Anmelden",
