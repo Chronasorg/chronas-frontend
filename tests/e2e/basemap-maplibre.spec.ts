@@ -17,7 +17,11 @@
 import { test, expect } from '@playwright/test';
 import type { Page, Request, Response } from '@playwright/test';
 
-test.setTimeout(120_000);
+// Boot waits out one hosted stylesheet and most tests then wait out one swap.
+// Each of those is a single fetch from OpenFreeMap, measured at 47s for 43 kB
+// while a control download on the same CDN edge ran at 1.2 MB/s — so the budget
+// is set by the provider's throughput, not by anything this suite does.
+test.setTimeout(180_000);
 test.use({ actionTimeout: 15_000 });
 
 // ---------------------------------------------------------------------------
@@ -307,6 +311,40 @@ async function waitForOwnSourcesLoaded(page: Page): Promise<void> {
 }
 
 /**
+ * Waits until every Chronas *layer* is back in the style.
+ *
+ * A style swap tears the whole stylesheet down, and react-map-gl re-adds our
+ * `<Source>`s before its `<Layer>`s. So "sources have finished parsing" is
+ * strictly earlier than "our layers exist again", and a test that reads layer
+ * ids straight after `waitForOwnSourcesLoaded` can observe the gap — which is
+ * what made the four-basemap round trip flaky rather than any product bug.
+ */
+async function waitForOwnLayers(page: Page): Promise<void> {
+  try {
+    await page.waitForFunction(
+      (ownLayerIds: string[]) => {
+        const map = (window as any).__chronasMap;
+        if (!map) return false;
+        return ownLayerIds.every((id) => !!map.getLayer(id));
+      },
+      OWN_LAYER_IDS,
+      { timeout: 30_000 }
+    );
+  } catch (error) {
+    const present = await page
+      .evaluate(
+        (ids: string[]) =>
+          ids.filter((id) => !(window as any).__chronasMap?.getLayer(id)),
+        OWN_LAYER_IDS
+      )
+      .catch(() => ['<unavailable>']);
+    throw new Error(`Chronas layers missing after the style settled: ${JSON.stringify(present)}`, {
+      cause: error,
+    });
+  }
+}
+
+/**
  * Per-source tile-state histogram, for failure messages.
  *
  * Reads `style.tileManagers`, which is where MapLibre 6 keeps them; the
@@ -357,17 +395,53 @@ const BASEMAP_SIGNATURES: Record<BasemapKey, (facts: StyleFacts) => boolean> = {
     !facts.sourceIds.includes('openmaptiles') && !facts.sourceIds.includes('eox-s2cloudless'),
 };
 
+/**
+ * Distinguishes "the app failed to swap the style" from "the provider never
+ * delivered the stylesheet".
+ *
+ * A hosted style is a single JSON fetch, and OpenFreeMap — free, unmetered, no
+ * SLA — has been measured serving it at under 1 kB/s (43 kB liberty in 47.7s)
+ * while a control download on the same edge ran at 1.2 MB/s. Without this, a
+ * stalled fetch and a broken `mapStyle` binding both surface as the same
+ * unactionable "style never became active", and the suite gets blamed for the
+ * provider.
+ */
+async function styleRequestState(page: Page): Promise<unknown> {
+  return page
+    .evaluate(() =>
+      performance
+        .getEntriesByType('resource')
+        .filter((entry) => /\/styles\/|\.json$/.test(entry.name))
+        .map((entry) => ({
+          url: entry.name.replace('https://tiles.openfreemap.org', ''),
+          // `responseEnd === 0` means the fetch is still in flight: the entry is
+          // created at request start and only stamped on completion.
+          pending: (entry as PerformanceResourceTiming).responseEnd === 0,
+          ms: Math.round(entry.duration),
+          bytes: (entry as PerformanceResourceTiming).transferSize,
+        }))
+    )
+    .catch(() => ({ resourceTimingUnavailable: true }));
+}
+
 async function waitForBasemap(page: Page, basemap: BasemapKey): Promise<StyleFacts> {
   const matches = BASEMAP_SIGNATURES[basemap];
   let facts = await readStyleFacts(page);
-  const deadline = Date.now() + 45_000;
+  const deadline = Date.now() + 60_000;
   while (!matches(facts) && Date.now() < deadline) {
     await page.waitForTimeout(400);
     facts = await readStyleFacts(page);
   }
-  expect(matches(facts), `basemap "${basemap}" style never became active`).toBe(true);
+  expect(
+    matches(facts),
+    `basemap "${basemap}" style never became active.\n` +
+      `  observed sources: ${JSON.stringify(facts.sourceIds)}\n` +
+      `  stylesheet fetches: ${JSON.stringify(await styleRequestState(page))}\n` +
+      `  map state: ${JSON.stringify(await diagnose(page))}`
+  ).toBe(true);
   await waitForStyleParsed(page);
   await waitForOwnSourcesLoaded(page);
+  await waitForOwnLayers(page);
   return readStyleFacts(page);
 }
 
@@ -378,6 +452,7 @@ async function gotoMap(page: Page): Promise<void> {
   await page.getByTestId('map-container').waitFor({ state: 'visible', timeout: 30_000 });
   await waitForStyleParsed(page);
   await waitForOwnSourcesLoaded(page);
+  await waitForOwnLayers(page);
 }
 
 /** The timeline canvas overlays the sidebar hit area; house pattern from `layer-controls`. */
@@ -782,6 +857,10 @@ test.describe('Basemap: switching styles', () => {
   });
 
   test('survives a round trip through all four basemaps', async ({ page }) => {
+    // Four stylesheet fetches, three of them from OpenFreeMap — the only test
+    // here that waits out more than one swap, so it needs more than the
+    // file-wide budget.
+    test.setTimeout(300_000);
     const log = collectRequests(page);
     await gotoMap(page);
 
