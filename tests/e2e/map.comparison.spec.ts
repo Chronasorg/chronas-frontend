@@ -34,13 +34,13 @@ test.describe('Map Production Comparison', () => {
         await page.goto(`${PRODUCTION_URL}?year=${String(year)}`);
         
         // Wait for map to load
-        await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+        await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
         
         // Wait for data to load (provinces should be colored)
         await page.waitForTimeout(3000);
         
         // Capture production map screenshot
-        const mapCanvas = page.locator('.mapboxgl-canvas');
+        const mapCanvas = page.locator('.maplibregl-canvas');
         await expect(mapCanvas).toHaveScreenshot(`production-map-${String(year)}.png`, {
           threshold: PIXEL_THRESHOLD,
         });
@@ -51,13 +51,13 @@ test.describe('Map Production Comparison', () => {
         await page.goto(`${LOCAL_URL}?year=${String(year)}`);
         
         // Wait for map to load
-        await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+        await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
         
         // Wait for data to load
         await page.waitForTimeout(3000);
         
         // Capture local map screenshot
-        const mapCanvas = page.locator('.mapboxgl-canvas');
+        const mapCanvas = page.locator('.maplibregl-canvas');
         await expect(mapCanvas).toHaveScreenshot(`local-map-${String(year)}.png`, {
           threshold: PIXEL_THRESHOLD,
         });
@@ -75,7 +75,7 @@ test.describe('Map Production Comparison', () => {
         await page.goto(`${LOCAL_URL}?year=${String(year)}`);
         
         // Wait for map to load
-        await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+        await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
         
         // Wait for markers to load
         await page.waitForTimeout(3000);
@@ -105,7 +105,7 @@ test.describe('Map Production Comparison', () => {
       await page.goto(LOCAL_URL);
       
       // Wait for map to load
-      await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+      await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
       await page.waitForTimeout(2000);
       
       // Check if ruler layer is visible
@@ -128,7 +128,7 @@ test.describe('Map Production Comparison', () => {
       await page.goto(LOCAL_URL);
       
       // Wait for map to load
-      await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+      await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
       await page.waitForTimeout(2000);
       
       // Check layer visibility
@@ -163,7 +163,7 @@ test.describe('Map Production Comparison', () => {
       await page.goto(LOCAL_URL);
       
       // Wait for map to load
-      await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+      await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
       
       // Get viewport state
       const viewport = await page.evaluate(() => {
@@ -202,7 +202,7 @@ test.describe('Map Production Comparison', () => {
       await page.goto(LOCAL_URL);
       
       // Wait for map to load
-      await page.waitForSelector('.mapboxgl-canvas', { timeout: MAP_LOAD_TIMEOUT });
+      await page.waitForSelector('.maplibregl-canvas', { timeout: MAP_LOAD_TIMEOUT });
       
       // Wait for error to appear (if any)
       await page.waitForTimeout(2000);

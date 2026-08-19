@@ -32,7 +32,6 @@ export interface ViewStateChangeEvent {
 // Mock Map component props
 interface MapProps {
   children?: React.ReactNode;
-  mapboxAccessToken?: string;
   initialViewState?: {
     latitude: number;
     longitude: number;
@@ -46,7 +45,7 @@ interface MapProps {
   onMove?: (evt: ViewStateChangeEvent) => void;
   onLoad?: () => void;
   onMoveEnd?: () => void;
-  attributionControl?: boolean;
+  attributionControl?: boolean | { compact?: boolean; customAttribution?: string | string[] };
   reuseMaps?: boolean;
 }
 

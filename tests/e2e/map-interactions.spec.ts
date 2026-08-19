@@ -34,7 +34,7 @@ async function waitForMapLoad(page: Page): Promise<void> {
   const mapSelectors = [
     '[data-testid="map-container"]',
     '[data-testid="map-view"]',
-    '.mapboxgl-map',
+    '.maplibregl-map',
   ];
 
   let found = false;
@@ -49,7 +49,7 @@ async function waitForMapLoad(page: Page): Promise<void> {
   }
 
   if (!found) {
-    await page.waitForSelector('.mapboxgl-canvas', { timeout: 15000 });
+    await page.waitForSelector('.maplibregl-canvas', { timeout: 15000 });
   }
 
   await page.waitForTimeout(2000);
@@ -61,7 +61,7 @@ async function waitForMapLoad(page: Page): Promise<void> {
 async function getMapCanvasBounds(
   page: Page
 ): Promise<{ x: number; y: number; width: number; height: number } | null> {
-  const mapCanvas = page.locator('.mapboxgl-canvas');
+  const mapCanvas = page.locator('.maplibregl-canvas');
   return mapCanvas.boundingBox();
 }
 
@@ -417,7 +417,7 @@ test.describe('Marker Interaction Tests', () => {
     await page.waitForTimeout(3000);
 
     // Check for marker elements
-    const markers = page.locator('.mapboxgl-marker');
+    const markers = page.locator('.maplibregl-marker');
     const markerCount = await markers.count();
 
     if (markerCount > 0) {
@@ -445,7 +445,7 @@ test.describe('Marker Interaction Tests', () => {
 
     // Move mouse around to find a marker
     // Markers are typically at specific locations
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
 
     // Check cursor style when hovering over map
     const cursor = await mapCanvas.evaluate((el) => {
@@ -462,7 +462,7 @@ test.describe('Marker Interaction Tests', () => {
     await waitForMapLoad(page);
     await page.waitForTimeout(3000);
 
-    const markers = page.locator('.mapboxgl-marker');
+    const markers = page.locator('.maplibregl-marker');
     const markerCount = await markers.count();
 
     if (markerCount > 0) {
@@ -496,7 +496,7 @@ test.describe('Marker Interaction Tests', () => {
     await waitForMapLoad(page);
     await page.waitForTimeout(3000);
 
-    const markers = page.locator('.mapboxgl-marker');
+    const markers = page.locator('.maplibregl-marker');
     const markerCount = await markers.count();
 
     if (markerCount > 0) {
@@ -774,7 +774,7 @@ test.describe('Fit Bounds and URL State Tests', () => {
     // Get initial viewport state
     const initialViewport = await page.evaluate(() => {
       // Try to get map viewport from window or map instance
-      const mapElement = document.querySelector('.mapboxgl-map');
+      const mapElement = document.querySelector('.maplibregl-map');
       if (mapElement) {
         return {
           width: mapElement.clientWidth,
@@ -900,7 +900,7 @@ test.describe('Map Width Adjustment Tests', () => {
     await page.waitForTimeout(2000);
 
     // Get initial map width
-    const mapContainer = page.locator('[data-testid="map-container"], .mapboxgl-map').first();
+    const mapContainer = page.locator('[data-testid="map-container"], .maplibregl-map').first();
     const initialBox = await mapContainer.boundingBox();
 
     if (!initialBox) {
@@ -955,7 +955,7 @@ test.describe('Map Width Adjustment Tests', () => {
     const drawerOpen = await rightDrawer.isVisible().catch(() => false);
 
     if (drawerOpen) {
-      const mapContainer = page.locator('[data-testid="map-container"], .mapboxgl-map').first();
+      const mapContainer = page.locator('[data-testid="map-container"], .maplibregl-map').first();
       const widthWithDrawer = (await mapContainer.boundingBox())?.width ?? 0;
 
       // Close drawer

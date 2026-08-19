@@ -13,9 +13,15 @@ export default defineConfig({
       '@': resolve(import.meta.dirname, './src'),
     },
   },
-  // Optimize mapbox-gl for ESM compatibility
   optimizeDeps: {
-    include: ['mapbox-gl'],
+    // maplibre-gl must NOT be pre-bundled. It resolves its tile worker with
+    // `new URL('./maplibre-gl-worker.mjs', import.meta.url)`, and esbuild copies
+    // only the entry chunk into `node_modules/.vite/deps/` — so that URL 404s
+    // and the worker never boots. The failure mode is nearly silent: raster
+    // relief and sprites still render, but every vector/GeoJSON source stays
+    // stuck with `_isUpdatingWorker === true`, `isStyleLoaded()` never turns
+    // true, `load` never fires, and MapView shows "Loading map..." forever.
+    exclude: ['maplibre-gl'],
   },
   server: {
     port: 5173,

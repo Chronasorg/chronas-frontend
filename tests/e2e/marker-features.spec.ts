@@ -33,7 +33,7 @@ async function waitForMapLoad(page: Page): Promise<void> {
   const mapSelectors = [
     '[data-testid="map-container"]',
     '[data-testid="map-view"]',
-    '.mapboxgl-map',
+    '.maplibregl-map',
   ];
 
   let found = false;
@@ -48,8 +48,8 @@ async function waitForMapLoad(page: Page): Promise<void> {
   }
 
   if (!found) {
-    // Just wait for mapbox canvas as fallback
-    await page.waitForSelector('.mapboxgl-canvas', { timeout: 15000 });
+    // Just wait for the MapLibre canvas as fallback
+    await page.waitForSelector('.maplibregl-canvas', { timeout: 15000 });
   }
 
   await page.waitForTimeout(2000);

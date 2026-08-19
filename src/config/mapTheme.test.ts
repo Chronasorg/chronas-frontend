@@ -141,8 +141,9 @@ describe('mapTheme', () => {
       expect(languageToFont['ar']).toBe('Cairo');
     });
 
-    it('should map Russian to Noto Sans', () => {
-      expect(languageToFont['ru']).toBe('Noto Sans');
+    it('should map Russian to Noto Sans Regular', () => {
+      // 'Noto Sans' is not a real fontstack on OpenFreeMap; 'Noto Sans Regular' is.
+      expect(languageToFont['ru']).toBe('Noto Sans Regular');
     });
   });
 
@@ -351,8 +352,11 @@ describe('mapTheme', () => {
     });
 
     describe('fallbackFonts', () => {
-      it('should have Arial Unicode MS Regular as fallback', () => {
-        expect(AREA_LABEL_CONFIG.fallbackFonts).toContain('Arial Unicode MS Regular');
+      it('should fall back to a font the glyph endpoint actually serves', () => {
+        // Was 'Arial Unicode MS Regular', which only existed on Mapbox's glyph
+        // endpoint. OpenFreeMap publishes 'Noto Sans Regular'; anything else
+        // 404s on every range.
+        expect(AREA_LABEL_CONFIG.fallbackFonts).toContain(DEFAULT_FONT);
       });
     });
   });
@@ -361,7 +365,6 @@ describe('mapTheme', () => {
     it('should return Cinzel Regular as primary for English', () => {
       const fonts = getAreaLabelFonts('en');
       expect(fonts[0]).toBe('Cinzel Regular');
-      expect(fonts[1]).toBe('Arial Unicode MS Regular');
     });
 
     it('should return Noto Sans SC as primary for Chinese', () => {
@@ -374,9 +377,24 @@ describe('mapTheme', () => {
       expect(fonts[0]).toBe('Cairo');
     });
 
-    it('should always return a 2-element tuple', () => {
-      const fonts = getAreaLabelFonts('en');
-      expect(fonts).toHaveLength(2);
+    it('should return a single-font stack', () => {
+      // Deliberate: a glyph server resolves ['a', 'b'] as one request for the
+      // comma-joined stack 'a,b', and OpenFreeMap 404s on those, which would
+      // drop every glyph in the layer.
+      expect(getAreaLabelFonts('en')).toHaveLength(1);
+      expect(getAreaLabelFonts('zh')).toHaveLength(1);
+      expect(getAreaLabelFonts('ar')).toHaveLength(1);
+    });
+
+    it('should only emit fonts that are self-hosted or published upstream', () => {
+      const publishedUpstream = new Set(['Noto Sans Regular', 'Noto Sans Italic', 'Noto Sans Bold']);
+      for (const locale of Object.keys(languageToFont)) {
+        const [font] = getAreaLabelFonts(locale);
+        expect(
+          LOCAL_FONT_NAMES.has(font) || publishedUpstream.has(font),
+          `${locale} -> ${font} is neither self-hosted nor published by OpenFreeMap`
+        ).toBe(true);
+      }
     });
   });
 

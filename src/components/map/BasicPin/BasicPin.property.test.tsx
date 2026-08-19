@@ -16,8 +16,8 @@ import * as fc from 'fast-check';
 import { BasicPin } from './BasicPin';
 import { isValidCoordinates, DEFAULT_PIN_SIZE } from './BasicPin.utils';
 
-// Mock react-map-gl/mapbox Marker component
-vi.mock('react-map-gl/mapbox', () => ({
+// Mock react-map-gl/maplibre Marker component
+vi.mock('react-map-gl/maplibre', () => ({
   Marker: ({ children, longitude, latitude, anchor }: {
     children: React.ReactNode;
     longitude: number;

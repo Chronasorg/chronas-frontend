@@ -8,7 +8,7 @@ export default defineConfig({
     alias: {
       '@': resolve(import.meta.dirname, './src'),
       // Mock react-map-gl for tests - the package has module resolution issues
-      'react-map-gl/mapbox': resolve(import.meta.dirname, './tests/__mocks__/react-map-gl.tsx'),
+      'react-map-gl/maplibre': resolve(import.meta.dirname, './tests/__mocks__/react-map-gl.tsx'),
     },
   },
   test: {

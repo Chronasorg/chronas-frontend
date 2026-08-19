@@ -16,6 +16,8 @@ export default tseslint.config(
       'playwright-report',
       'test-results',
       '.playwright-mcp',
+      // Vendored third-party bundle — see src/config/rtlText.ts for provenance
+      'public/vendor',
       '*.config.js',
       '*.config.mts',
       'playwright.deploy.config.ts',

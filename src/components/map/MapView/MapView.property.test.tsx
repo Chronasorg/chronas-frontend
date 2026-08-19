@@ -3092,17 +3092,20 @@ describe('MapView Property Tests', () => {
     const basemapPairArb = fc.tuple(basemapTypeArb, basemapTypeArb);
 
     /**
-     * Expected Mapbox style URLs for each basemap type.
+     * Expected style URLs for each basemap type.
      * These must match the BASEMAP_STYLES constant in mapStore.
+     *
+     * All four are keyless (issue #46): two OpenFreeMap hosted styles and two
+     * styles served from our own origin out of `public/styles/`.
      */
     const EXPECTED_BASEMAP_STYLES: Record<'topographic' | 'satellite' | 'light' | 'none', string> = {
-      topographic: 'mapbox://styles/mapbox/outdoors-v12',
-      satellite: 'mapbox://styles/mapbox/satellite-v9',
-      light: 'mapbox://styles/mapbox/light-v11',
-      none: 'mapbox://styles/mapbox/empty-v9',
+      topographic: 'https://tiles.openfreemap.org/styles/liberty',
+      satellite: '/styles/satellite-eox.json',
+      light: 'https://tiles.openfreemap.org/styles/positron',
+      none: '/styles/empty.json',
     };
 
-    it('should return a valid Mapbox style URL for any basemap type', () => {
+    it('should return a valid keyless style URL for any basemap type', () => {
       fc.assert(
         fc.property(basemapTypeArb, (basemapType) => {
           // Get the style URL for the basemap type
@@ -3112,8 +3115,12 @@ describe('MapView Property Tests', () => {
           expect(styleUrl).toBeDefined();
           expect(typeof styleUrl).toBe('string');
 
-          // Verify the style URL is a valid Mapbox style URL format
-          expect(styleUrl.startsWith('mapbox://styles/')).toBe(true);
+          // Verify the style resolves without an API key
+          expect(styleUrl).not.toMatch(/mapbox/i);
+          expect(
+            styleUrl.startsWith('https://tiles.openfreemap.org/styles/') ||
+              styleUrl.startsWith('/styles/')
+          ).toBe(true);
 
           // Verify the style URL matches the expected value
           expect(styleUrl).toBe(EXPECTED_BASEMAP_STYLES[basemapType]);
@@ -3280,13 +3287,18 @@ describe('MapView Property Tests', () => {
       );
     });
 
-    it('should return style URLs that are valid Mapbox protocol URLs', () => {
+    it('should return style URLs that need no API key', () => {
       fc.assert(
         fc.property(basemapTypeArb, (basemapType) => {
           const styleUrl = BASEMAP_STYLES[basemapType];
 
-          // Verify the URL follows Mapbox style URL format: mapbox://styles/{owner}/{style}
-          expect(styleUrl).toMatch(/^mapbox:\/\/styles\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$/);
+          // Either an OpenFreeMap hosted style or a local style document.
+          // Nothing may carry a token/key query parameter — that dependency is
+          // exactly what broke the production map (issue #46).
+          expect(styleUrl).toMatch(
+            /^(https:\/\/tiles\.openfreemap\.org\/styles\/[a-z0-9_-]+|\/styles\/[a-z0-9_.-]+\.json)$/
+          );
+          expect(styleUrl).not.toMatch(/[?&](access_token|key|api_key)=/i);
         }),
         { numRuns: 100 }
       );

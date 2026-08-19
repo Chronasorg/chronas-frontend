@@ -142,7 +142,7 @@ test.describe('Map Feature Tests', () => {
     
     // Check for province fill layers in the map
     // The map should have fill layers with colors
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
     await expect(mapCanvas.first()).toBeVisible();
     
     console.log('   ✅ Map canvas is visible');
@@ -163,7 +163,7 @@ test.describe('Map Feature Tests', () => {
     
     // Check for text elements that might be labels
     // Labels like "Byzantine Empire", "Fatimid Caliphate" should be visible
-    const mapContainer = page.locator('.mapboxgl-map');
+    const mapContainer = page.locator('.maplibregl-map');
     await expect(mapContainer.first()).toBeVisible();
     
     console.log('   ✅ Map container with labels is visible');
@@ -274,13 +274,13 @@ test.describe('Province Coloring Verification', () => {
     // Wait for map to fully load
     await page.waitForTimeout(5000);
     
-    // Check if the map has loaded by looking for Mapbox elements
-    const mapboxMap = page.locator('.mapboxgl-map');
-    await expect(mapboxMap.first()).toBeVisible();
+    // Check if the map has loaded by looking for MapLibre elements
+    const maplibreMap = page.locator('.maplibregl-map');
+    await expect(maplibreMap.first()).toBeVisible();
     
     // Try to access the map's style to verify layers exist
     // This is done by checking if the map canvas has rendered content
-    const canvas = page.locator('.mapboxgl-canvas');
+    const canvas = page.locator('.maplibregl-canvas');
     const canvasVisible = await canvas.first().isVisible().catch(() => false);
     
     if (canvasVisible) {

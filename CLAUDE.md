@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Stack:** React 19, TypeScript 6 (strict), Vite 8, Zustand 5, React Router 7 (HashRouter)
 
-**What the app does:** Chronas is a historical map application. Users explore an interactive map (Deck.gl + Mapbox GL) with a timeline (vis-timeline) to navigate through historical periods. Areas and markers on the map link to content displayed in a right drawer panel.
+**What the app does:** Chronas is a historical map application. Users explore an interactive map (Deck.gl + MapLibre GL) with a timeline (vis-timeline) to navigate through historical periods. Areas and markers on the map link to content displayed in a right drawer panel.
 
 ### State Management (Zustand stores in `src/stores/`)
 
@@ -49,7 +49,10 @@ Axios client with JWT Bearer token injection (request interceptor) and 401 redir
 
 ### Map Visualization
 
-- **react-map-gl** wraps Mapbox GL for the base map
+- **react-map-gl** (`react-map-gl/maplibre`) wraps **MapLibre GL JS** for the base map
+- Basemap styles are keyless: `topographic`/`light` are OpenFreeMap hosted styles
+  (`tiles.openfreemap.org/styles/{liberty,positron}`), `satellite` and `none` are
+  local JSON in `public/styles/`. No access token is needed anywhere — see issue #46.
 - **Deck.gl** provides GeoJSON overlay layers
 - **@turf/turf** for geospatial computations
 - Map theme config in `src/config/mapTheme.ts`
@@ -83,7 +86,7 @@ i18next via react-i18next. Setup in `src/i18n/`. Locale preference managed by ui
 ## Environment Variables
 
 Required: `VITE_API_BASE_URL`, `VITE_ENVIRONMENT` (development|staging|production).
-Optional: `VITE_ENABLE_DEV_TOOLS`, `VITE_MAPBOX_TOKEN`.
+Optional: `VITE_ENABLE_DEV_TOOLS`.
 Validated at startup in `src/config/env.ts`.
 
 ## Deployment

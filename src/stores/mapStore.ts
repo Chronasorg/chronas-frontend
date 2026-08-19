@@ -82,13 +82,21 @@ export type BasemapType = 'topographic' | 'satellite' | 'light' | 'none';
 export type LabelNameMode = 'historical' | 'modern' | 'both';
 
 /**
- * Mapping of basemap types to Mapbox style URLs.
+ * Mapping of basemap types to token-free MapLibre style URLs.
+ *
+ * OpenFreeMap requires no API key, has no request or map-view limit, and serves
+ * the unmodified OpenMapTiles schema (so `name:xx` label localization works).
+ * 'liberty' keeps Natural Earth shaded relief up to z6; 'positron' has no relief.
+ * Vector tiles are z0-14.
+ *
+ * The satellite and empty styles are served from our own `public/styles/` so no
+ * third party is involved in those two.
  */
 export const BASEMAP_STYLES: Record<BasemapType, string> = {
-  topographic: 'mapbox://styles/mapbox/outdoors-v12',
-  satellite: 'mapbox://styles/mapbox/satellite-v9',
-  light: 'mapbox://styles/mapbox/light-v11',
-  none: 'mapbox://styles/mapbox/empty-v9',
+  topographic: 'https://tiles.openfreemap.org/styles/liberty',
+  satellite: '/styles/satellite-eox.json',
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  none: '/styles/empty.json',
 };
 
 /**

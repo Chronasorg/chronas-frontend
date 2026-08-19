@@ -1,0 +1,18 @@
+{
+  "version": 8,
+  "name": "Empty",
+  "metadata": {
+    "chronas:note": "Token-free replacement for mapbox://styles/mapbox/empty-v9. Renders no basemap; Chronas draws its own province/marker layers on top. Glyphs are required so our own symbol layers (area labels) can resolve fonts."
+  },
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#f8f4f0"
+      }
+    }
+  ]
+}

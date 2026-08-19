@@ -24,7 +24,7 @@ const BASE_URL = process.env['BASE_URL'] ?? 'https://d1q6nlczw9cdpt.cloudfront.n
  */
 async function waitForMapLoad(page: Page, timeout = 10000): Promise<void> {
   await page.waitForSelector('[data-testid="app-shell"]', { timeout });
-  await page.waitForSelector('.mapboxgl-canvas', { timeout });
+  await page.waitForSelector('.maplibregl-canvas', { timeout });
   // Wait for map tiles and data to render
   await page.waitForTimeout(3000);
 }
@@ -35,7 +35,7 @@ async function waitForMapLoad(page: Page, timeout = 10000): Promise<void> {
  */
 async function getCanvasPixelColor(page: Page, x: number, y: number): Promise<{ r: number; g: number; b: number }> {
   return await page.evaluate(({ x, y }) => {
-    const canvas = document.querySelector('.mapboxgl-canvas');
+    const canvas = document.querySelector('.maplibregl-canvas');
     if (!(canvas instanceof HTMLCanvasElement)) return { r: 0, g: 0, b: 0 };
     
     const ctx = canvas.getContext('2d');
@@ -78,7 +78,7 @@ test.describe('Province Coloring Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Take screenshot of the map
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     // Capture screenshot for visual comparison
@@ -95,7 +95,7 @@ test.describe('Province Coloring Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1500`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('provinces-ruler-year-1500.png', {
@@ -110,7 +110,7 @@ test.describe('Province Coloring Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1900`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('provinces-ruler-year-1900.png', {
@@ -181,7 +181,7 @@ test.describe('Color Dimension Switching Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1000&dim=culture`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('dimension-culture.png', {
@@ -196,7 +196,7 @@ test.describe('Color Dimension Switching Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1000&dim=religion`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('dimension-religion.png', {
@@ -211,7 +211,7 @@ test.describe('Color Dimension Switching Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1000&dim=religionGeneral`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('dimension-religionGeneral.png', {
@@ -226,7 +226,7 @@ test.describe('Color Dimension Switching Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1000&dim=population`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('dimension-population.png', {
@@ -288,7 +288,7 @@ test.describe('Historical Markers Visual Tests', () => {
     // Zoom in to see markers more clearly
     await page.evaluate(() => {
       // Trigger zoom if map API is available
-      const mapElement = document.querySelector('.mapboxgl-map');
+      const mapElement = document.querySelector('.maplibregl-map');
       if (mapElement) {
         mapElement.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 }));
       }
@@ -400,7 +400,7 @@ test.describe('Entity Labels Visual Tests', () => {
     
     // Zoom in to see labels more clearly
     await page.evaluate(() => {
-      const map = document.querySelector('.mapboxgl-map');
+      const map = document.querySelector('.maplibregl-map');
       if (map) {
         // Simulate zoom
         for (let i = 0; i < 3; i++) {
@@ -423,7 +423,7 @@ test.describe('Entity Labels Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Check for text elements in the map
-    const mapContainer = page.locator('.mapboxgl-map');
+    const mapContainer = page.locator('.maplibregl-map');
     await expect(mapContainer.first()).toBeVisible();
     
     await expect(page).toHaveScreenshot('labels-font-sizes.png', {
@@ -480,7 +480,7 @@ test.describe('Entity Outline Visual Tests', () => {
     });
     
     // Click on a province (center of the map)
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     if (box) {
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -503,7 +503,7 @@ test.describe('Entity Outline Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Click on a province
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     if (box) {
       // Click slightly off-center to hit a province
@@ -524,7 +524,7 @@ test.describe('Entity Outline Visual Tests', () => {
     await page.goto(`${BASE_URL}/#/?year=1000`, { waitUntil: 'networkidle' });
     await waitForMapLoad(page);
     
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     
     if (box) {
@@ -567,7 +567,7 @@ test.describe('Province Interactions Visual Tests', () => {
     });
     
     // Hover over a province
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     if (box) {
       await page.mouse.move(box.x + box.width * 0.45, box.y + box.height * 0.45);
@@ -588,7 +588,7 @@ test.describe('Province Interactions Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Click on a province
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     if (box) {
       await page.mouse.click(box.x + box.width * 0.45, box.y + box.height * 0.45);
@@ -609,7 +609,7 @@ test.describe('Province Interactions Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Click on a province
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     if (box) {
       await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.4);
@@ -643,7 +643,7 @@ test.describe('Marker Interactions Visual Tests', () => {
     
     // Zoom in to see markers better
     await page.evaluate(() => {
-      const map = document.querySelector('.mapboxgl-map');
+      const map = document.querySelector('.maplibregl-map');
       if (map) {
         for (let i = 0; i < 5; i++) {
           map.dispatchEvent(new WheelEvent('wheel', { deltaY: -50, bubbles: true }));
@@ -665,7 +665,7 @@ test.describe('Marker Interactions Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Try to click on a marker area
-    const canvas = page.locator('.mapboxgl-canvas').first();
+    const canvas = page.locator('.maplibregl-canvas').first();
     const box = await canvas.boundingBox();
     if (box) {
       // Click in an area likely to have markers
@@ -675,7 +675,7 @@ test.describe('Marker Interactions Visual Tests', () => {
     await page.waitForTimeout(1000);
     
     // Check for popup
-    const popup = page.locator('.mapboxgl-popup');
+    const popup = page.locator('.maplibregl-popup');
     const popupVisible = await popup.isVisible().catch(() => false);
     
     if (popupVisible) {
@@ -835,7 +835,7 @@ test.describe('Error Handling Visual Tests', () => {
     await waitForMapLoad(page);
     
     // The app should still render without crashing
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('year-2100-edge-case.png', {
@@ -852,7 +852,7 @@ test.describe('Error Handling Visual Tests', () => {
     await waitForMapLoad(page);
     
     // The app should still render without crashing
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('year-4000bc-edge-case.png', {
@@ -869,7 +869,7 @@ test.describe('Error Handling Visual Tests', () => {
     await waitForMapLoad(page);
     
     // The app should still render without crashing (likely with default year)
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('invalid-year-param.png', {
@@ -1139,7 +1139,7 @@ test.describe('Performance Visual Tests', () => {
     await page.waitForTimeout(3000);
     
     // Should still be functional
-    const mapCanvas = page.locator('.mapboxgl-canvas').first();
+    const mapCanvas = page.locator('.maplibregl-canvas').first();
     await expect(mapCanvas).toBeVisible();
     
     await expect(page).toHaveScreenshot('performance-rapid-changes.png', {
