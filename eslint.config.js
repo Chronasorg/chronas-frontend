@@ -8,7 +8,18 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 export default tseslint.config(
   // Ignore patterns
   {
-    ignores: ['dist', 'dist-node', 'node_modules', 'coverage', '*.config.js', '*.config.mts', 'playwright.deploy.config.ts'],
+    ignores: [
+      'dist',
+      'dist-node',
+      'node_modules',
+      'coverage',
+      'playwright-report',
+      'test-results',
+      '.playwright-mcp',
+      '*.config.js',
+      '*.config.mts',
+      'playwright.deploy.config.ts',
+    ],
   },
 
   // Base JavaScript recommended rules
