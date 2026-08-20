@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/maplibre';
-import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
+import type { GeoJSONSource, Map as MapLibreMap, ProjectionSpecification, StyleSpecification } from 'maplibre-gl';
 import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'geojson';
 import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type LabelFeatureCollection, type LabelLineFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
@@ -896,6 +896,44 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       // Style may not be loaded yet — the styledata bump will retry.
     }
   }, [labelNameMode, isLoaded, basemap, styleVersion]);
+
+  /**
+   * Keep the world round.
+   *
+   * Chronas has never asked for a globe in code — the round world came from
+   * Mapbox's hosted style JSON, which declares `projection: {name: globe}`, and
+   * Mapbox GL JS renders whatever the stylesheet says. None of the four styles
+   * we moved to declares a projection (checked: `liberty`, `positron`,
+   * `satellite-eox.json`, `empty.json`), and both style specs default to
+   * `mercator`, so the migration silently flattened the map.
+   *
+   * MapLibre's `globe` is the adaptive one: a sphere when zoomed out,
+   * interpolating to mercator as you zoom in, which is what Chronas's z2.5
+   * default view wants. It has to be re-applied per style because
+   * `Style.setState` resets the projection to `stylesheet.projection?.type ||
+   * 'mercator'` on every style load — so this effect is keyed on `styleVersion`
+   * for the same reason the label effects above are.
+   */
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !isLoaded) return;
+
+    try {
+      // Idempotency guard — see `styleVersion` above; `setProjection` triggers a
+      // repaint and would otherwise re-enter through `styledata`.
+      //
+      // Annotated, because MapLibre types `getProjection()` as always returning a
+      // projection while it in fact returns `undefined` whenever the stylesheet
+      // declares none — which is the state right after every basemap swap, and
+      // reading `.type` off it threw straight into this `catch`, leaving the map
+      // flat until some later `styledata` happened to arrive.
+      const currentType = (map.getProjection() as ProjectionSpecification | undefined)?.type;
+      if (currentType === 'globe') return;
+      map.setProjection({ type: 'globe' });
+    } catch {
+      // Style may not be loaded yet — the styledata bump will retry.
+    }
+  }, [isLoaded, basemap, styleVersion]);
 
   /**
    * Handles flyTo animation completion and syncs viewport position to URL.

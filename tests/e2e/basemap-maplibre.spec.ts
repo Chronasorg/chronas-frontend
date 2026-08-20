@@ -262,6 +262,21 @@ const OWN_SOURCE_IDS = [
   'entity-outline',
 ];
 
+/**
+ * The active projection's type, or `undefined` if the map has none.
+ *
+ * `Map.getProjection()` is typed as non-nullable but really returns `undefined`
+ * whenever the stylesheet declares no projection — which is the state of every
+ * style we load, since none of the four declares one. Read defensively here so a
+ * lost globe fails the assertion instead of throwing an unhelpful TypeError.
+ */
+async function projectionType(page: Page): Promise<string | undefined> {
+  return page.evaluate(() => {
+    const map = (window as any).__chronasMap;
+    return map?.getProjection()?.type as string | undefined;
+  });
+}
+
 async function readStyleFacts(page: Page): Promise<StyleFacts> {
   return page.evaluate((ownSourceIds: string[]) => {
     const probe = (window as any).__chronasProbe;
@@ -350,7 +365,13 @@ async function waitForStyleParsed(page: Page): Promise<void> {
         return Array.isArray(style?.layers) && style.layers.length > 0;
       },
       undefined,
-      { timeout: 60_000 }
+      // Timer-polled, not the default `raf`. MapLibre parses the stylesheet
+      // inside `browser.frameAsync()` and paints from the same frame budget, so
+      // while the map is decoding a screenful of tiles frames get sparse — and a
+      // frame-driven predicate stops being evaluated exactly when the condition
+      // it is waiting for turns true. Seen for real: this timed out at 60s while
+      // the very next `evaluate` showed the style parsed and all sources added.
+      { timeout: 60_000, polling: 250 }
     );
   } catch (error) {
     throw new Error(`map style was never parsed: ${JSON.stringify(await diagnose(page))}`, {
@@ -399,7 +420,8 @@ async function waitForOwnSourcesLoaded(page: Page): Promise<void> {
         });
       },
       OWN_SOURCE_IDS,
-      { timeout: 60_000 }
+      // Timer-polled for the same reason as `waitForStyleParsed`.
+      { timeout: 60_000, polling: 250 }
     );
   } catch (error) {
     const report = await workerReport(page);
@@ -480,7 +502,8 @@ async function waitForOwnLayers(page: Page): Promise<void> {
         return ownLayerIds.every((id) => !!map.getLayer(id));
       },
       OWN_LAYER_IDS,
-      { timeout: 30_000 }
+      // Timer-polled for the same reason as `waitForStyleParsed`.
+      { timeout: 30_000, polling: 250 }
     );
   } catch (error) {
     const present = await page
@@ -716,6 +739,27 @@ async function selectBasemap(page: Page, basemap: BasemapKey): Promise<StyleFact
   await clickUntilVisible(page, 'advanced-section-toggle', 'advanced-section-content');
   await page.getByTestId('basemap-select').selectOption(basemap);
   return waitForBasemap(page, basemap);
+}
+
+/**
+ * Selects a basemap and waits only until the new stylesheet is the active one.
+ *
+ * `selectBasemap` additionally waits for our GeoJSON sources and layers to
+ * settle, which needs the provider to answer glyph and tile requests. The
+ * projection has no reason to pay that cost — and paying it pushed the globe test
+ * past a 240s budget while OpenFreeMap was slow.
+ */
+async function swapBasemapStyleOnly(page: Page, basemap: BasemapKey): Promise<void> {
+  await openLayersPanel(page);
+  await clickUntilVisible(page, 'advanced-section-toggle', 'advanced-section-content');
+  await page.getByTestId('basemap-select').selectOption(basemap);
+  const matches = BASEMAP_SIGNATURES[basemap];
+  await expect
+    .poll(async () => matches(await readStyleFacts(page)), {
+      message: `basemap "${basemap}" never became the active style`,
+      timeout: 60_000,
+    })
+    .toBe(true);
 }
 
 async function openSettings(page: Page): Promise<void> {
@@ -1168,6 +1212,8 @@ test.describe('Basemap: switching styles', () => {
       for (const id of OWN_LAYER_IDS) {
         expect(facts.layerIds, `own layer "${id}" lost on ${basemap}`).toContain(id);
       }
+      // Every style load resets the projection to the stylesheet's — see section 12.
+      expect(await projectionType(page), `${basemap} flattened the globe`).toBe('globe');
     }
     expect(mapboxRequests(log)).toEqual([]);
   });
@@ -1503,5 +1549,53 @@ test.describe('Basemap: attribution', () => {
       .textContent();
     expect(text).toMatch(/Sentinel-2 cloudless/i);
     expect(text).toMatch(/EOX/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 12. Globe projection — the round world, which used to come from the provider
+// ---------------------------------------------------------------------------
+
+test.describe('Basemap: globe projection', () => {
+  // One boot and one swap in a single test on purpose: every extra `gotoMap` in
+  // this file is another minute of exposure to the provider's throughput, and the
+  // four-basemap round trip in section 5 already asserts the globe per swap.
+  test('renders a globe on first load and keeps it across a swap', async ({ page }) => {
+    await gotoMap(page);
+    expect(await projectionType(page), 'the world booted flat').toBe('globe');
+    expect((await readStyleFacts(page)).errors).toEqual([]);
+
+    // `Style.setState` resets the projection to `stylesheet.projection?.type ||
+    // 'mercator'` on every style load, so a swap flattens the map unless the
+    // effect re-fires. It regressed once already: the idempotency guard read
+    // `.type` off a `getProjection()` that returns *undefined* when the
+    // stylesheet declares none, threw into a swallowing catch, and left the map
+    // flat on the new basemap.
+    await swapBasemapStyleOnly(page, 'light');
+    // Polled, not read once: the effect is keyed on the `styledata` bump, so it
+    // lands a React render after the new style becomes active.
+    await expect
+      .poll(() => projectionType(page), {
+        message: 'the swap flattened the world',
+        timeout: 15_000,
+      })
+      .toBe('globe');
+  });
+
+  test('none of our stylesheets declares a projection, so the effect is load-bearing', () => {
+    // Mapbox's hosted styles declared `projection: {name: globe}` and Mapbox GL
+    // rendered whatever the stylesheet said — that, not any code in this repo,
+    // is where Chronas's round world came from. If a provider ever starts
+    // declaring one, this test turns red and the effect can be reconsidered.
+    const stylesheets: [string, string][] = [
+      ['liberty', readStyleFixture('liberty')],
+      ['positron', readStyleFixture('positron')],
+      ['satellite-eox', readFileSync(join(FIXTURE_DIR, '../../../public/styles/satellite-eox.json'), 'utf8')],
+      ['empty', readFileSync(join(FIXTURE_DIR, '../../../public/styles/empty.json'), 'utf8')],
+    ];
+    for (const [name, body] of stylesheets) {
+      const projection: unknown = (JSON.parse(body) as { projection?: unknown }).projection;
+      expect(projection, `${name} now declares a projection`).toBeUndefined();
+    }
   });
 });
