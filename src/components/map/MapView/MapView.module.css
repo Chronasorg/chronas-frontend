@@ -138,12 +138,38 @@
   outline: none;
 }
 
+/* The MapLibre wordmark is optional branding, so it stays hidden. The
+ * attribution control next to it is NOT: the OpenStreetMap credit is an ODbL
+ * obligation and the Sentinel-2 cloudless credit is a CC BY 4.0 term, so it
+ * must never be display:none'd. */
 :global(.maplibregl-ctrl-logo) {
   display: none !important;
 }
 
-:global(.maplibregl-ctrl-attrib) {
-  display: none !important;
+/* Lift the bottom-right controls clear of the timeline, which is fixed to
+ * bottom:0 at 110px tall (64px under 768px). Without this the credits render
+ * behind the timeline's gradient and year labels — technically "displayed" but
+ * illegible, which does not discharge the attribution obligation. The z-index
+ * keeps them readable when the timeline is expanded to 280px too; the timeline
+ * is pointer-events:none, so nothing is stolen from it.
+ *
+ * `!important` because maplibre-gl.css sets `bottom: 0` and `z-index: 2` on the
+ * same single-class selectors and is injected after this module, so it would
+ * otherwise win on document order. */
+:global(.maplibregl-ctrl-bottom-right) {
+  bottom: 114px !important;
+  z-index: calc(var(--z-timeline, 350) + 1) !important;
+}
+
+@media (max-width: 767px) {
+  :global(.maplibregl-ctrl-bottom-right) {
+    bottom: 68px !important;
+  }
+}
+
+/* Keep the credits legible over both light basemaps and dark satellite imagery. */
+:global(.maplibregl-ctrl-attrib.maplibregl-compact) {
+  background-color: rgba(255, 255, 255, 0.85);
 }
 
 /* Ensure map fills container */

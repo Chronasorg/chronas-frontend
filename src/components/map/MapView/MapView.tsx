@@ -770,7 +770,15 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     mapRef.current = instance;
 
     const map = instance?.getMap();
-    if (!map || iconsInstalledRef.current) return;
+    if (!map) {
+      // The ref guards against installing the resolver twice on one instance, so
+      // it has to be cleared on detach: otherwise a second Map mounted inside the
+      // same MapView (a basemap remount, a Fast Refresh cycle) would be skipped
+      // and silently render no marker icons at all.
+      iconsInstalledRef.current = false;
+      return;
+    }
+    if (iconsInstalledRef.current) return;
     iconsInstalledRef.current = true;
 
     // Expose the MapLibre instance for end-to-end tests. MapLibre doesn't

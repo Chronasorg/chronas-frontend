@@ -14,8 +14,11 @@
  * catch upstream drift.
  *
  * Requires `window.__chronasMap` (installed by MapView's ref callback under
- * `import.meta.env.DEV` / `MODE === 'test'`), so it runs against the dev server
- * or a dev/staging build — not against a production bundle.
+ * `import.meta.env.DEV` / `MODE === 'test'`), so **this suite is dev-server-only**.
+ * It cannot run against any deployed artifact: `npm run build` is plain
+ * `vite build` with no `--mode`, and `scripts/deploy.ts` calls it unchanged for
+ * every environment, so dev *and* staging deploys are both MODE=production and
+ * never expose the handle. Point it at `npm run dev`.
  *
  * Run with: npx playwright test tests/e2e/basemap-maplibre.spec.ts
  */
@@ -26,6 +29,8 @@ import { fileURLToPath } from 'node:url';
 
 import { test, expect } from '@playwright/test';
 import type { APIRequestContext, Page, Request, Response } from '@playwright/test';
+
+import { LOCAL_FONT_NAMES as SOURCE_LOCAL_FONT_NAMES } from '../../src/config/mapTheme';
 
 // Budget note: a boot plus one basemap swap each wait on the map settling, and
 // the basemap's tiles come from a free no-SLA provider whose throughput was
@@ -127,8 +132,29 @@ const OWN_LAYER_IDS = [
   'entity-outline-layer',
 ];
 
-/** Fonts served from `public/fonts/`, redirected by MapView's `transformRequest`. */
-const LOCAL_FONT_NAMES = ['Cinzel Regular', 'Cairo', 'Noto Sans SC'];
+/**
+ * Fonts served from `public/fonts/`, redirected by MapView's `transformRequest`.
+ *
+ * Imported from the source rather than duplicated: a hand-copied list makes the
+ * "is this fontstack self-hosted?" assertions tautological — they would pass
+ * against the copy even after someone dropped a family from the real config.
+ * `mapTheme.ts` only type-imports from the store, so it is safe to pull into
+ * Node.
+ *
+ * This is not the same call as `expectedNameExpression` below, which deliberately
+ * re-derives what it checks. That one asserts a *computed output*, so importing
+ * it would compare the implementation against itself. This is a *configuration
+ * input*, and the assertions ask whether it covers what the layers actually
+ * reference and whether the wire agrees — neither of which the config can make
+ * true by fiat.
+ *
+ * `Noto Sans Regular` / `Noto Sans Bold` are also published by OpenFreeMap, but
+ * we self-host them because they carry every label Chronas draws itself — the
+ * default fallback, cluster counts, marker labels and el/ja/ko/vi/hi/ru area
+ * labels — which would otherwise blank out during an OpenFreeMap outage even on
+ * the dependency-free `none` basemap.
+ */
+const LOCAL_FONT_NAMES = [...SOURCE_LOCAL_FONT_NAMES];
 
 /** Custom marker icons cut out of `public/images/themed-atlas.png`. */
 const MARKER_ICON_IDS = ['marker-p', 'marker-c', 'marker-b', 'marker-cp'];
@@ -1263,7 +1289,7 @@ test.describe('Basemap: glyphs and images', () => {
     }
   });
 
-  test('serves all three self-hosted font families', async ({ page }) => {
+  test('serves every self-hosted font family', async ({ page }) => {
     await gotoMap(page);
 
     // Latin (0-255) and the Arabic range Cairo exists for (1536-1791).
@@ -1273,8 +1299,127 @@ test.describe('Basemap: glyphs and images', () => {
           `/fonts/${encodeURIComponent(font)}/${range}.pbf`
         );
         expect(response.status(), `/fonts/${font}/${range}.pbf`).toBe(200);
+
+        // A 200 alone would pass against the SPA's index.html fallback, which is
+        // what a missing font directory actually produces. Assert it is a real
+        // protobuf payload, not an HTML page.
+        const body = await response.body();
+        expect(body.byteLength, `/fonts/${font}/${range}.pbf is empty`).toBeGreaterThan(0);
+        expect(
+          body.subarray(0, 14).toString('utf8').toLowerCase(),
+          `/fonts/${font}/${range}.pbf served HTML, so the range file is missing`
+        ).not.toContain('<!doctype');
       }
     }
+  });
+
+  test('serves the scripts our locales need, from our own origin', async ({ page }) => {
+    await gotoMap(page);
+
+    // `Noto Sans Regular` is the universal DEFAULT_FONT and the fontstack that
+    // el/ja/ko/vi/hi/ru area labels resolve to, so its coverage is load-bearing
+    // for those locales. One representative range per script block.
+    const scripts: [string, string][] = [
+      ['Latin', '0-255'],
+      ['Greek', '768-1023'],
+      ['Cyrillic', '1024-1279'],
+      ['Arabic', '1536-1791'],
+      ['Devanagari', '2304-2559'],
+      ['Kana', '12288-12543'],
+      ['CJK', '19968-20223'],
+      ['Hangul', '44032-44287'],
+    ];
+
+    for (const font of ['Noto Sans Regular', 'Noto Sans Bold']) {
+      for (const [script, range] of scripts) {
+        const response = await page.request.get(
+          `/fonts/${encodeURIComponent(font)}/${range}.pbf`
+        );
+        expect(response.status(), `${font} is missing the ${script} range`).toBe(200);
+        const body = await response.body();
+        // Empty ranges come back as ~29-byte stubs, so a real script block is
+        // comfortably above that.
+        expect(
+          body.byteLength,
+          `${font} range ${range} (${script}) has no glyph data`
+        ).toBeGreaterThan(1_000);
+      }
+    }
+  });
+
+  test('resolves every fontstack of our own layers from our own origin', async ({ page }) => {
+    const log = collectRequests(page);
+    await gotoMap(page);
+    await page.waitForTimeout(3_000);
+
+    // Scoped to OWN_LAYER_IDS on purpose. The basemap's own labels may keep
+    // resolving fonts from the basemap's glyph endpoint — `liberty` uses
+    // `Noto Sans Italic` for water labels, and self-hosting that would buy
+    // nothing, since if OpenFreeMap is down the tiles those labels annotate are
+    // gone too. What must survive an outage is the layers *Chronas* draws: they
+    // render over the dependency-free `none` basemap, so their fonts have to be
+    // ours. Every fontstack found here must therefore be in LOCAL_FONT_NAMES.
+    const ownStacks = await page.evaluate((layerIds: string[]) => {
+      const map = (window as any).__chronasMap;
+      const stacks = new Set<string>();
+      for (const id of layerIds) {
+        let font: unknown;
+        try {
+          font = map.getLayoutProperty(id, 'text-font');
+        } catch {
+          continue; // layer absent for the current dimension/filter state
+        }
+        if (Array.isArray(font)) {
+          for (const entry of font) {
+            if (typeof entry === 'string') stacks.add(entry);
+          }
+        }
+      }
+      return [...stacks];
+    }, OWN_LAYER_IDS);
+
+    expect(ownStacks.length, 'no fontstack found on any Chronas layer').toBeGreaterThan(0);
+    // Guards the fix itself: at locale `en` these are Cinzel Regular (area
+    // labels), Noto Sans Regular (markers-label) and Noto Sans Bold
+    // (cluster-count). The two Noto stacks are exactly what used to come from
+    // OpenFreeMap, so if they stop showing up here the test has gone blind.
+    expect(ownStacks).toContain('Noto Sans Regular');
+    expect(ownStacks).toContain('Noto Sans Bold');
+    for (const stack of ownStacks) {
+      expect(
+        LOCAL_FONT_NAMES,
+        `layer fontstack "${stack}" is not self-hosted, so our labels die with the provider`
+      ).toContain(stack);
+    }
+
+    // Then prove the redirect actually fires on the wire, rather than trusting
+    // the config. Locale `ja` is load-bearing here: at `en` the area labels use
+    // Cinzel and the Noto stacks are *referenced* but never *requested* (no
+    // marker or cluster label is rendered at the default view), so this check
+    // would pass vacuously even with the redirect removed. `ja` routes area
+    // labels to Noto Sans Regular, which forces real glyph traffic for it.
+    await selectLocale(page, 'ja');
+    await waitForLocalizedLabels(page, 'ja');
+    await page.waitForTimeout(2_000);
+
+    const ownOrigin = new URL(page.url()).origin;
+    const glyphRequests = log.urls
+      .map((url) => {
+        const match = /\/fonts\/([^/]+)\/\d+-\d+\.pbf/.exec(url);
+        return match ? { url, stack: decodeURIComponent(match[1]!) } : null;
+      })
+      .filter((entry): entry is { url: string; stack: string } => entry !== null);
+
+    const notoRequests = glyphRequests.filter((entry) => entry.stack === 'Noto Sans Regular');
+    expect(
+      notoRequests.length,
+      'no Noto Sans Regular glyph traffic at locale ja, so the wire check proves nothing'
+    ).toBeGreaterThan(0);
+
+    const escaped = glyphRequests
+      .filter((entry) => ownStacks.includes(entry.stack) && !entry.url.startsWith(ownOrigin))
+      .map((entry) => entry.url);
+    expect(escaped, `a glyph request for one of our fontstacks left ${ownOrigin}`).toEqual([]);
   });
 
   test('reports no MapLibre errors on first load', async ({ page }) => {
@@ -1510,12 +1655,18 @@ test.describe('Basemap: attribution', () => {
     await expect(attribution).toHaveCount(1);
     const inner = attribution.locator('.maplibregl-ctrl-attrib-inner');
 
+    // Assert *visibility*, not just presence. A previous revision enabled the
+    // control in JS and then hid it with `.maplibregl-ctrl-attrib {display:none}`
+    // in MapView.module.css; a `textContent` assertion passed the whole time
+    // while no credit was on screen, which breached ODbL. `toBeVisible()` is what
+    // makes that unrepeatable, so do not weaken it back to a text-only check.
+    await expect(attribution).toBeVisible();
+    await expect(inner).toBeVisible();
+
     // Our own credits are declared on the map and appear with it; the OSM and
     // OpenFreeMap ones are declared by the *source*, so MapLibre only shows them
     // once it has fetched the vector TileJSON — a separate request to the
-    // provider. Read `textContent` rather than `innerText` (the control is
-    // `compact`, so the credits are collapsed and visually hidden), and poll,
-    // because asserting immediately after boot races that fetch.
+    // provider. Poll, because asserting immediately after boot races that fetch.
     await expect(inner).toHaveText(/Natural Earth/i);
     try {
       await expect(inner).toHaveText(/OpenStreetMap/i, { timeout: 60_000 });
@@ -1544,11 +1695,39 @@ test.describe('Basemap: attribution', () => {
     await gotoMap(page);
     await selectBasemap(page, 'satellite');
 
-    const text = await page
-      .locator('.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-inner')
-      .textContent();
-    expect(text).toMatch(/Sentinel-2 cloudless/i);
-    expect(text).toMatch(/EOX/i);
+    // Sentinel-2 cloudless is CC BY 4.0, so this credit is a licence term too —
+    // assert it is visible before reading it, for the same reason as above.
+    const inner = page.locator('.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-inner');
+    await expect(inner).toBeVisible();
+    await expect(inner).toHaveText(/Sentinel-2 cloudless/i);
+    await expect(inner).toHaveText(/EOX/i);
+  });
+
+  test('credits are not obscured by the timeline', async ({ page }) => {
+    await gotoMap(page);
+
+    // Visibility alone is not enough: the control ships at `bottom: 0`, which is
+    // behind the timeline's gradient and year labels. Hit-test the credits' own
+    // pixels — if anything paints over them they are not really displayed.
+    const covering = await page.evaluate(() => {
+      const inner = document.querySelector('.maplibregl-ctrl-attrib-inner');
+      if (!inner) return ['no attribution control'];
+      const rect = inner.getBoundingClientRect();
+      return [0.1, 0.35, 0.6, 0.9]
+        .map((fraction) => {
+          const top = document.elementFromPoint(
+            rect.left + rect.width * fraction,
+            rect.top + rect.height / 2
+          );
+          if (top?.closest('.maplibregl-ctrl-attrib')) return null;
+          const x = Math.round(rect.left + rect.width * fraction);
+          const covering = top ? `${top.tagName}.${top.className}` : 'nothing';
+          return `x=${String(x)} covered by ${covering}`;
+        })
+        .filter((entry): entry is string => entry !== null);
+    });
+
+    expect(covering, 'something is painted over the attribution credits').toEqual([]);
   });
 });
 
