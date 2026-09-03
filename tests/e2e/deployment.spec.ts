@@ -406,14 +406,86 @@ test.describe('Map Integration Checks', () => {
 
   test('should have clickable year marker label', async ({ page }) => {
     await page.goto(`${BASE_URL}/?year=1000`, { waitUntil: 'networkidle' });
-    
+
     // Wait for vis-timeline to render
     await page.waitForTimeout(5000);
-    
+
     // Check that the year marker label exists
     const yearMarker = page.locator('.vis-custom-time.selectedYear');
     const count = await yearMarker.count();
     console.log(`   Year marker elements found: ${String(count)}`);
     expect(count).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Static assets outside dist/assets/
+//
+// These can only be checked against a deployed artifact. `scripts/deploy.ts`
+// uploads in two passes — an `s3 sync` that excludes `*.js` everywhere, then an
+// `s3 cp --include "*.js"` — so a JS file the second pass does not cover is
+// never uploaded at all. It was scoped to `dist/assets/`, which silently dropped
+// `dist/vendor/mapbox-gl-rtl-text.js` from every deploy that has ever run.
+//
+// Nothing caught it: CloudFront maps 404 to `index.html` for SPA routing, so the
+// missing script answered **200 with HTML**, and `basemap-maplibre.spec.ts` is
+// dev-server-only (the dev server serves `public/` straight off disk, where the
+// file is present). The user-visible symptom was Arabic and Hebrew labels
+// rendering unshaped, on a site that has a live `ar.chronas.org` subdomain.
+// ---------------------------------------------------------------------------
+
+test.describe('Static asset deployment', () => {
+  /**
+   * Non-fingerprinted static files that live outside `dist/assets/` and are
+   * fetched at runtime by URL, so a build cannot fail loudly when one is absent.
+   */
+  const RUNTIME_ASSETS = [
+    { path: '/vendor/mapbox-gl-rtl-text.js', type: /javascript/, minBytes: 50_000 },
+    { path: '/styles/liberty.json', type: /json/, minBytes: 50_000 },
+    { path: '/styles/satellite-eox.json', type: /json/, minBytes: 500 },
+    { path: '/styles/empty.json', type: /json/, minBytes: 200 },
+    { path: '/fonts/Noto Sans Regular/0-255.pbf', type: /./, minBytes: 1_000 },
+    { path: '/fonts/Noto Sans Bold/0-255.pbf', type: /./, minBytes: 1_000 },
+    { path: '/fonts/Cinzel Regular/0-255.pbf', type: /./, minBytes: 1_000 },
+    { path: '/fonts/Cairo/0-255.pbf', type: /./, minBytes: 1_000 },
+    { path: '/fonts/Noto Sans SC/19968-20223.pbf', type: /./, minBytes: 1_000 },
+  ];
+
+  // One test over the whole inventory rather than one per asset: this file runs in
+  // serial mode, so separate tests would abort at the first gap and hide the rest.
+  // Every asset is probed, then all failures are reported together.
+  test('serves every runtime asset as a real file, not the SPA fallback', async ({ request }) => {
+    const problems: string[] = [];
+
+    for (const asset of RUNTIME_ASSETS) {
+      const response = await request.get(`${BASE_URL}${asset.path}`);
+      const status = response.status();
+      const contentType = response.headers()['content-type'] ?? '';
+      const body = status === 200 ? await response.body() : Buffer.alloc(0);
+      const head = body.subarray(0, 20).toString('utf8').toLowerCase();
+
+      // A 200 proves nothing on its own — it is exactly what the SPA fallback
+      // returns for a missing path. Content type and a size floor are what
+      // distinguish the real file from index.html.
+      if (status !== 200) {
+        problems.push(`${asset.path}: HTTP ${String(status)}`);
+      } else if (contentType.includes('text/html') || head.includes('<!doctype')) {
+        problems.push(
+          `${asset.path}: served index.html (${String(body.byteLength)} bytes of HTML) — the file is not deployed`
+        );
+      } else if (!asset.type.test(contentType)) {
+        problems.push(`${asset.path}: unexpected content-type "${contentType}"`);
+      } else if (body.byteLength <= asset.minBytes) {
+        problems.push(
+          `${asset.path}: only ${String(body.byteLength)} bytes, expected more than ${String(asset.minBytes)}`
+        );
+      } else {
+        console.log(`   ✅ ${asset.path} — ${String(body.byteLength)} bytes, ${contentType}`);
+      }
+    }
+
+    expect(problems, `runtime assets missing from the deployment:\n  - ${problems.join('\n  - ')}`).toEqual(
+      []
+    );
   });
 });
