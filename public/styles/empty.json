@@ -2,9 +2,13 @@
   "version": 8,
   "name": "Empty",
   "metadata": {
-    "chronas:note": "Token-free replacement for mapbox://styles/mapbox/empty-v9. Renders no basemap; Chronas draws its own province/marker layers on top. Glyphs are required so our own symbol layers (area labels) can resolve fonts."
+    "chronas:note": "Token-free replacement for mapbox://styles/mapbox/empty-v9. Renders no basemap; Chronas draws its own province/marker layers on top. Glyphs are declared so our own symbol layers (area labels) can resolve fonts, but nothing reaches OpenFreeMap: every fontstack Chronas references is in LOCAL_FONT_NAMES and rewritten to public/fonts/ by MapView's transformRequest.",
+    "chronas:note-projection": "Chronas has a round world. MapLibre resets the projection to stylesheet.projection ?? mercator on every style load, so declaring it here is what makes the globe survive a basemap switch."
   },
   "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "projection": {
+    "type": "globe"
+  },
   "sources": {},
   "layers": [
     {

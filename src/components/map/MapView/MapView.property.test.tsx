@@ -3095,11 +3095,12 @@ describe('MapView Property Tests', () => {
      * Expected style URLs for each basemap type.
      * These must match the BASEMAP_STYLES constant in mapStore.
      *
-     * All four are keyless (issue #46): two OpenFreeMap hosted styles and two
-     * styles served from our own origin out of `public/styles/`.
+     * All four are keyless (issue #46): three stylesheets served from our own
+     * origin out of `public/styles/`, and `light`, which is still fetched from
+     * OpenFreeMap at runtime.
      */
     const EXPECTED_BASEMAP_STYLES: Record<'topographic' | 'satellite' | 'light' | 'none', string> = {
-      topographic: 'https://tiles.openfreemap.org/styles/liberty',
+      topographic: '/styles/liberty.json',
       satellite: '/styles/satellite-eox.json',
       light: 'https://tiles.openfreemap.org/styles/positron',
       none: '/styles/empty.json',

@@ -89,11 +89,22 @@ export type LabelNameMode = 'historical' | 'modern' | 'both';
  * 'liberty' keeps Natural Earth shaded relief up to z6; 'positron' has no relief.
  * Vector tiles are z0-14.
  *
- * The satellite and empty styles are served from our own `public/styles/` so no
- * third party is involved in those two.
+ * Three of the four stylesheets are ours, served from `public/styles/`:
+ *
+ *  - `satellite` and `none` were written here from scratch.
+ *  - `topographic` is a vendored copy of OpenFreeMap's `liberty`, patched to
+ *    declare the globe projection and to cut the relief tile count by two
+ *    thirds. Its tiles, sprites and basemap glyphs still come from OpenFreeMap;
+ *    only the 43 kB stylesheet fetch is gone. The `metadata` block in
+ *    `public/styles/liberty.json` documents each patch, and the `Provider
+ *    contract` E2E group fails if the copy drifts from upstream by anything
+ *    other than those patches.
+ *
+ * `light` is the one style still fetched from the provider at runtime, so the
+ * runtime `setProjection` call in MapView is still load-bearing for it.
  */
 export const BASEMAP_STYLES: Record<BasemapType, string> = {
-  topographic: 'https://tiles.openfreemap.org/styles/liberty',
+  topographic: '/styles/liberty.json',
   satellite: '/styles/satellite-eox.json',
   light: 'https://tiles.openfreemap.org/styles/positron',
   none: '/styles/empty.json',

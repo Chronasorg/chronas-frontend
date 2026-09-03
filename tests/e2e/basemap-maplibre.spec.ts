@@ -179,6 +179,16 @@ const MARKER_ICON_IDS = ['marker-p', 'marker-c', 'marker-b', 'marker-cp'];
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/openfreemap');
 
+/** The stylesheets we serve ourselves, as `BASEMAP_STYLES` points at them. */
+const LOCAL_STYLE_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../public/styles');
+
+/**
+ * Styles still fetched from OpenFreeMap at runtime, plus `liberty`.
+ *
+ * `liberty` is vendored into `public/styles/` and no longer fetched, but it stays
+ * in this list because the live drift detector and `PLACE_LABEL_IDS` checks below
+ * still need its pinned upstream copy to compare against.
+ */
 const HOSTED_STYLES = ['liberty', 'positron'] as const;
 
 function readStyleFixture(name: (typeof HOSTED_STYLES)[number]): string {
@@ -882,15 +892,24 @@ test.describe('Basemap: token-free rendering', () => {
     expect(log.urls.filter((url) => url.includes('access_token='))).toEqual([]);
   });
 
-  test('loads the OpenFreeMap style and its vector tiles', async ({ page }) => {
+  test('serves its own stylesheet and loads OpenFreeMap vector tiles', async ({ page }) => {
     const log = collectRequests(page);
     await gotoMap(page, { liveStyles: true });
 
     const openfreemap = (): string[] => log.urls.filter((url) => url.includes('tiles.openfreemap.org'));
+
+    // The stylesheet is ours; only the tiles inside it are the provider's. Both
+    // halves are asserted, because either one silently flipping is a regression:
+    // fetching liberty from the provider again would restore the boot-time
+    // dependency the vendored copy exists to remove.
     expect(
-      openfreemap().some((url) => url.includes('/styles/liberty')),
-      'the default basemap must be fetched from OpenFreeMap'
+      log.urls.some((url) => url.endsWith('/styles/liberty.json')),
+      'the default basemap stylesheet must be served from our own origin'
     ).toBe(true);
+    expect(
+      openfreemap().filter((url) => url.includes('/styles/')),
+      'no stylesheet may be fetched from OpenFreeMap on the default basemap'
+    ).toEqual([]);
     // Polled, not read once: `gotoMap` returns as soon as *our* sources are
     // assertable, and when the provider is slow to hand over the stylesheet the
     // map has not asked for a single basemap tile by then. A bounded poll keeps
@@ -980,6 +999,37 @@ test.describe('Provider contract: live OpenFreeMap styles', () => {
   test('liberty still carries the three ref-only route shields', async ({ request }) => {
     const live = styleInvariants(await fetchLiveStyle(request, 'liberty'));
     expect([...live.refOnlyIds].sort()).toEqual([...REF_ONLY_SHIELD_IDS].sort());
+  });
+
+  test('our vendored liberty is upstream plus exactly the documented patches', () => {
+    // Offline and network-free: the pinned fixture is upstream's bytes, so this
+    // compares the file we actually serve against them without a request.
+    //
+    // Reverting our patches and demanding an exact match is the point. An
+    // invariant-style comparison would not notice a stray edit to a paint colour
+    // or a dropped source, and the whole risk of vendoring 107 kB of someone
+    // else's stylesheet is that it rots by exactly that kind of edit. If this
+    // fails, either a patch was added without documenting it here, or the file
+    // was hand-edited.
+    const vendored = JSON.parse(readFileSync(join(LOCAL_STYLE_DIR, 'liberty.json'), 'utf8')) as Record<
+      string,
+      unknown
+    > & { sources: Record<string, Record<string, unknown>> };
+
+    expect(vendored['projection'], 'the globe patch is missing').toEqual({ type: 'globe' });
+    expect(vendored.sources['ne2_shaded']?.['tileSize'], 'the relief tileSize patch is missing').toBe(512);
+    expect(vendored['metadata'], 'the patches must stay documented in the file itself').toBeTruthy();
+
+    // Revert all four documented patches, then require byte-equality of structure.
+    delete vendored['name'];
+    delete vendored['metadata'];
+    delete vendored['projection'];
+    vendored.sources['ne2_shaded']!['tileSize'] = 256;
+
+    expect(
+      vendored,
+      'public/styles/liberty.json differs from upstream by more than the documented patches'
+    ).toEqual(JSON.parse(readStyleFixture('liberty')));
   });
 });
 
@@ -1761,20 +1811,26 @@ test.describe('Basemap: globe projection', () => {
       .toBe('globe');
   });
 
-  test('none of our stylesheets declares a projection, so the effect is load-bearing', () => {
+  test('every stylesheet we serve declares the globe itself', () => {
     // Mapbox's hosted styles declared `projection: {name: globe}` and Mapbox GL
-    // rendered whatever the stylesheet said — that, not any code in this repo,
-    // is where Chronas's round world came from. If a provider ever starts
-    // declaring one, this test turns red and the effect can be reconsidered.
-    const stylesheets: [string, string][] = [
-      ['liberty', readStyleFixture('liberty')],
-      ['positron', readStyleFixture('positron')],
-      ['satellite-eox', readFileSync(join(FIXTURE_DIR, '../../../public/styles/satellite-eox.json'), 'utf8')],
-      ['empty', readFileSync(join(FIXTURE_DIR, '../../../public/styles/empty.json'), 'utf8')],
-    ];
-    for (const [name, body] of stylesheets) {
+    // rendered whatever the stylesheet said — that, not any code in this repo, is
+    // where Chronas's round world came from. The three stylesheets we serve now
+    // say it themselves, so the globe survives a style load without depending on
+    // the runtime effect, which is what makes this the primary guarantee and the
+    // effect the backstop.
+    for (const name of ['liberty', 'satellite-eox', 'empty']) {
+      const body = readFileSync(join(LOCAL_STYLE_DIR, `${name}.json`), 'utf8');
       const projection: unknown = (JSON.parse(body) as { projection?: unknown }).projection;
-      expect(projection, `${name} now declares a projection`).toBeUndefined();
+      expect(projection, `${name}.json stopped declaring the globe`).toEqual({ type: 'globe' });
     }
+  });
+
+  test('positron declares none, so the runtime effect is still load-bearing', () => {
+    // The one style still fetched from the provider. If OpenFreeMap ever starts
+    // declaring a projection this turns red and the effect can be reconsidered —
+    // until then, deleting it would flatten the `light` basemap.
+    const projection: unknown = (JSON.parse(readStyleFixture('positron')) as { projection?: unknown })
+      .projection;
+    expect(projection, 'positron now declares a projection').toBeUndefined();
   });
 });

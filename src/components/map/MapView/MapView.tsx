@@ -910,10 +910,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    *
    * Chronas has never asked for a globe in code — the round world came from
    * Mapbox's hosted style JSON, which declares `projection: {name: globe}`, and
-   * Mapbox GL JS renders whatever the stylesheet says. None of the four styles
-   * we moved to declares a projection (checked: `liberty`, `positron`,
-   * `satellite-eox.json`, `empty.json`), and both style specs default to
-   * `mercator`, so the migration silently flattened the map.
+   * Mapbox GL JS renders whatever the stylesheet says. None of the styles we
+   * moved to declared one, and both style specs default to `mercator`, so the
+   * migration silently flattened the map.
    *
    * MapLibre's `globe` is the adaptive one: a sphere when zoomed out,
    * interpolating to mercator as you zoom in, which is what Chronas's z2.5
@@ -921,6 +920,12 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    * `Style.setState` resets the projection to `stylesheet.projection?.type ||
    * 'mercator'` on every style load — so this effect is keyed on `styleVersion`
    * for the same reason the label effects above are.
+   *
+   * The three stylesheets we serve ourselves now declare `globe` directly, which
+   * makes this a no-op for them (the guard below early-returns). It stays because
+   * `light` is still fetched from OpenFreeMap, whose `positron` declares no
+   * projection — and because it is the only thing that keeps the globe if a
+   * future stylesheet forgets to. `BASEMAP_STYLES` is the list to check.
    */
   useEffect(() => {
     const map = mapRef.current?.getMap();

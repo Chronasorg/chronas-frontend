@@ -4,9 +4,13 @@
   "metadata": {
     "chronas:note": "Token-free replacement for mapbox://styles/mapbox/satellite-v9. EOX Sentinel-2 cloudless, no API key required. We deliberately use the 's2cloudless_3857' (2016) mosaic because it is CC BY 4.0; every later year (2017+ except 2017 itself) is CC BY-NC-SA 4.0, which would impose a NonCommercial restriction. Imagery age is irrelevant for a historical atlas.",
     "chronas:license": "CC BY 4.0",
-    "chronas:tile-axis-order": "WMTS RESTful is {TileMatrix}/{TileRow}/{TileCol}, i.e. {z}/{y}/{x} - not {z}/{x}/{y}. Verified empirically."
+    "chronas:tile-axis-order": "WMTS RESTful is {TileMatrix}/{TileRow}/{TileCol}, i.e. {z}/{y}/{x} - not {z}/{x}/{y}. Verified empirically.",
+    "chronas:note-projection": "Chronas has a round world. MapLibre resets the projection to stylesheet.projection ?? mercator on every style load, so declaring it here is what makes the globe survive a basemap switch."
   },
   "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "projection": {
+    "type": "globe"
+  },
   "sources": {
     "eox-s2cloudless": {
       "type": "raster",

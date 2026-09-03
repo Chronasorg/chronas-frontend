@@ -1164,7 +1164,10 @@ describe('utility functions', () => {
      * update the map style to reflect the selected basemap
      */
     it('should have style URL for topographic', () => {
-      expect(BASEMAP_STYLES.topographic).toBe('https://tiles.openfreemap.org/styles/liberty');
+      // Our own vendored copy of OpenFreeMap's liberty, not the hosted URL: it
+      // declares the globe projection and caps the relief tile count, and it
+      // removes a 43 kB no-SLA fetch from the boot path. See public/styles/.
+      expect(BASEMAP_STYLES.topographic).toBe('/styles/liberty.json');
     });
 
     it('should have style URL for satellite', () => {
