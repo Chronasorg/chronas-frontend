@@ -106,6 +106,13 @@ export function getThemeHighlightColor(theme: Theme): string {
  *
  * Western locales use Cinzel Regular (serif font for historical feel)
  * Asian and other locales use Noto Sans variants for proper character support
+ *
+ * Every value here must be a fontstack we can actually serve. In practice that
+ * means one of `LOCAL_FONT_NAMES` (self-hosted PBF ranges under `public/fonts/`,
+ * redirected by MapView's `transformRequest`) — every value below is now local,
+ * so area labels no longer depend on a third-party glyph endpoint. If you add a
+ * remote one, note OpenFreeMap publishes exactly `Noto Sans Regular`,
+ * `Noto Sans Italic` and `Noto Sans Bold` — plain `Noto Sans` 404s.
  */
 export const languageToFont: Record<string, string> = {
   // Western languages - Cinzel Regular
@@ -118,26 +125,40 @@ export const languageToFont: Record<string, string> = {
   nl: 'Cinzel Regular',
   pl: 'Cinzel Regular',
   sv: 'Cinzel Regular',
-  el: 'Cinzel Regular',
+
+  // Greek - Cinzel has no Greek block, so use the universal Noto stack
+  el: 'Noto Sans Regular',
 
   // Asian languages - Noto Sans variants
   zh: 'Noto Sans SC',
-  ja: 'Noto Sans',
-  ko: 'Noto Sans',
-  vi: 'Noto Sans',
-  hi: 'Noto Sans',
+  ja: 'Noto Sans Regular',
+  ko: 'Noto Sans Regular',
+  vi: 'Noto Sans Regular',
+  hi: 'Noto Sans Regular',
 
   // Arabic - Cairo font
   ar: 'Cairo',
 
   // Russian and Cyrillic - Noto Sans
-  ru: 'Noto Sans',
+  ru: 'Noto Sans Regular',
 };
 
 /**
- * Default font for locales not in the mapping
+ * Default font for locales not in the mapping.
+ *
+ * `Noto Sans Regular` is a merged build covering Latin, Greek, Cyrillic,
+ * Devanagari, Arabic, Kana, CJK and Hangul, so it is a safe universal default.
+ * (Verified against the self-hosted copies: ranges 768-1023, 1024-1279,
+ * 1536-1791, 2304-2559, 12288-12543, 19968-20223 and 44032-44287 all carry
+ * glyph data.) Self-hosted — see {@link LOCAL_FONT_NAMES}.
  */
-export const DEFAULT_FONT = 'Noto Sans';
+export const DEFAULT_FONT = 'Noto Sans Regular';
+
+/**
+ * Bold companion to {@link DEFAULT_FONT}, for labels that need emphasis
+ * (cluster counts). Also self-hosted — see {@link LOCAL_FONT_NAMES}.
+ */
+export const DEFAULT_BOLD_FONT = 'Noto Sans Bold';
 
 /**
  * Gets the appropriate font for a locale.
@@ -255,8 +276,14 @@ export const AREA_LABEL_CONFIG = {
     1.5, 0,
     2.5, 1,
   ],
-  /** Fallback font stack when locale-specific font is unavailable */
-  fallbackFonts: ['Arial Unicode MS Regular'] as string[],
+  /**
+   * Fallback font used when the locale has no mapping in `languageToFont`.
+   *
+   * Was `Arial Unicode MS Regular`, which only ever existed on Mapbox's glyph
+   * endpoint. It is not published by OpenFreeMap and is not self-hosted, so it
+   * would 404 on every range.
+   */
+  fallbackFonts: [DEFAULT_FONT] as string[],
   bezierOptions: {
     sharpness: 0.85,
     resolution: 10000,
@@ -264,27 +291,50 @@ export const AREA_LABEL_CONFIG = {
 };
 
 /**
- * Builds the Mapbox text-font array for area labels based on locale.
+ * Builds the `text-font` array for area labels based on locale.
+ *
+ * Returns a **single-font** stack, deliberately. A glyph server resolves
+ * `text-font: [a, b]` as one request for the comma-joined stack `a,b`, and
+ * OpenFreeMap serves only exact single-font names — `Noto Sans Regular,Noto
+ * Sans Bold` 404s even though both fonts exist individually. A two-font stack
+ * would therefore drop every glyph in the layer.
+ *
+ * This is not a behaviour change in practice: the previous
+ * `[primary, 'Arial Unicode MS Regular']` tuple was already collapsed to
+ * `primary` for all three self-hosted fonts by MapView's `transformRequest`
+ * redirect. `getFontForLocale` now returns a font with full script coverage for
+ * its locale, so the fallback slot has nothing left to do.
  *
  * @param locale - The locale code (e.g. 'en', 'zh', 'ar')
- * @returns A [primaryFont, fallbackFont] tuple for Mapbox GL
+ * @returns A single-element font stack
  */
-export function getAreaLabelFonts(locale: string): [string, string] {
-  const primary = getFontForLocale(locale);
-  const fallback = AREA_LABEL_CONFIG.fallbackFonts[0] ?? 'Arial Unicode MS Regular';
-  return [primary, fallback];
+export function getAreaLabelFonts(locale: string): [string] {
+  return [getFontForLocale(locale)];
 }
 
 /**
- * Fonts served locally as PBF glyphs in public/fonts/.
- * Mapbox GL styles resolve font requests via their glyphs endpoint.
- * Hosted styles (mapbox://...) don't include these fonts, so we intercept
- * requests via `transformRequest` and redirect to local files.
+ * Fonts served locally as PBF glyphs in public/fonts/ (all 256 ranges each).
+ *
+ * MapView's `transformRequest` intercepts glyph requests for these fontstacks
+ * and redirects them to the local files, bypassing the basemap's own `glyphs`
+ * endpoint. Two reasons a font ends up here:
+ *
+ *  - `Cinzel Regular`, `Cairo` and `Noto Sans SC` are not published by any
+ *    basemap glyph endpoint at all, so redirecting is the only way to get them.
+ *  - `Noto Sans Regular` / `Noto Sans Bold` *are* published by OpenFreeMap, but
+ *    they carry every label Chronas draws itself — the `DEFAULT_FONT` fallback,
+ *    cluster counts, marker labels, and el/ja/ko/vi/hi/ru area labels. Leaving
+ *    them remote meant an OpenFreeMap outage blanked Chronas's own labels even
+ *    on the `none` basemap, which has no third-party dependency otherwise. The
+ *    ranges here are byte-for-byte copies of OpenFreeMap's, so self-hosting is
+ *    cartographically a no-op. See docs/adr/0001-openfreemap-hosted-basemaps.md.
  */
 export const LOCAL_FONT_NAMES = new Set([
   'Cinzel Regular',
   'Cairo',
   'Noto Sans SC',
+  'Noto Sans Regular',
+  'Noto Sans Bold',
 ]);
 
 /**

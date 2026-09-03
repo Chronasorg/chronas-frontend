@@ -19,8 +19,6 @@ export interface EnvironmentConfig {
   environment: 'development' | 'staging' | 'production';
   /** Whether developer tools should be enabled */
   enableDevTools: boolean;
-  /** Optional Mapbox token for map functionality */
-  mapboxToken?: string | undefined;
 }
 
 /**
@@ -121,7 +119,6 @@ export function validateEnvConfig(
     apiBaseUrl: config.apiBaseUrl,
     environment: config.environment,
     enableDevTools: config.enableDevTools ?? false,
-    mapboxToken: config.mapboxToken,
   };
 }
 
@@ -137,12 +134,10 @@ function createEnvConfig(): EnvironmentConfig {
 
   // Get raw values from Vite environment
   // Use nullish coalescing for optional values
-  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
   const rawConfig: Partial<EnvironmentConfig> = {
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
     environment: import.meta.env.VITE_ENVIRONMENT,
     enableDevTools: parseBoolean(import.meta.env.VITE_ENABLE_DEV_TOOLS),
-    mapboxToken: mapboxToken ?? undefined,
   };
 
   // Validate and return the configuration

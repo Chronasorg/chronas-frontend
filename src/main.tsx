@@ -2,13 +2,20 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
-// Mapbox GL CSS for map rendering (required by react-map-gl)
-import 'mapbox-gl/dist/mapbox-gl.css';
+// MapLibre GL CSS for map rendering (required by react-map-gl)
+import 'maplibre-gl/dist/maplibre-gl.css';
 // i18n initialization (must be imported before App)
 import './i18n/i18n';
 import { useUIStore } from './stores/uiStore';
 import { useMapStore } from './stores/mapStore';
 import { DETAIL_LEVEL_PRESETS, detectDetailLevel } from './utils/detailLevelUtils';
+import { registerMapWorker } from './config/mapWorker';
+import { registerRTLTextPlugin } from './config/rtlText';
+
+// Both must run before any Map is constructed: MapLibre caches its worker pool
+// globally, and RTL shaping happens inside those workers.
+registerMapWorker();
+registerRTLTextPlugin();
 
 declare const __BUILD_TIMESTAMP__: string;
 console.log(`%cChronas build: ${__BUILD_TIMESTAMP__}`, 'color: #888; font-size: 10px;');

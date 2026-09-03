@@ -1,0 +1,43 @@
+{
+  "version": 8,
+  "name": "Satellite (Sentinel-2 cloudless)",
+  "metadata": {
+    "chronas:note": "Token-free replacement for mapbox://styles/mapbox/satellite-v9. EOX Sentinel-2 cloudless, no API key required. We deliberately use the 's2cloudless_3857' (2016) mosaic because it is CC BY 4.0; every later year (2017+ except 2017 itself) is CC BY-NC-SA 4.0, which would impose a NonCommercial restriction. Imagery age is irrelevant for a historical atlas.",
+    "chronas:license": "CC BY 4.0",
+    "chronas:tile-axis-order": "WMTS RESTful is {TileMatrix}/{TileRow}/{TileCol}, i.e. {z}/{y}/{x} - not {z}/{x}/{y}. Verified empirically.",
+    "chronas:note-projection": "Chronas has a round world. MapLibre resets the projection to stylesheet.projection ?? mercator on every style load, so declaring it here is what makes the globe survive a basemap switch."
+  },
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "eox-s2cloudless": {
+      "type": "raster",
+      "tiles": [
+        "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg"
+      ],
+      "tileSize": 256,
+      "minzoom": 0,
+      "maxzoom": 14,
+      "attribution": "<a href=\"https://s2maps.eu\">Sentinel-2 cloudless</a> by <a href=\"https://eox.at\">EOX IT Services GmbH</a> (Contains modified Copernicus Sentinel data 2016) &mdash; <a href=\"https://creativecommons.org/licenses/by/4.0/\">CC BY 4.0</a>"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#0a1520"
+      }
+    },
+    {
+      "id": "eox-s2cloudless",
+      "type": "raster",
+      "source": "eox-s2cloudless",
+      "paint": {
+        "raster-opacity": 1
+      }
+    }
+  ]
+}

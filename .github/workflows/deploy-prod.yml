@@ -36,6 +36,4 @@ jobs:
           aws configure set region eu-west-1 --profile chronas-prod
 
       - name: Build and deploy
-        env:
-          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
         run: npm run deploy:prod

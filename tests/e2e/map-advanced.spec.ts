@@ -35,7 +35,7 @@ async function waitForMapLoad(page: Page): Promise<void> {
   const mapSelectors = [
     '[data-testid="map-container"]',
     '[data-testid="map-view"]',
-    '.mapboxgl-map',
+    '.maplibregl-map',
   ];
   
   let found = false;
@@ -50,8 +50,8 @@ async function waitForMapLoad(page: Page): Promise<void> {
   }
   
   if (!found) {
-    // Just wait for mapbox canvas as fallback
-    await page.waitForSelector('.mapboxgl-canvas', { timeout: 15000 });
+    // Just wait for the MapLibre canvas as fallback
+    await page.waitForSelector('.maplibregl-canvas', { timeout: 15000 });
   }
   
   await page.waitForTimeout(2000);
@@ -223,7 +223,7 @@ test.describe('Sidebar and Layout Integration Tests', () => {
     }
     
     if (!isVisible) {
-      mapContainer = page.locator('.mapboxgl-map');
+      mapContainer = page.locator('.maplibregl-map');
       isVisible = await mapContainer.isVisible().catch(() => false);
     }
     
@@ -271,7 +271,7 @@ test.describe('Sidebar and Layout Integration Tests', () => {
     let isVisible = await mapContainer.isVisible().catch(() => false);
     
     if (!isVisible) {
-      mapContainer = page.locator('.mapboxgl-map');
+      mapContainer = page.locator('.maplibregl-map');
       isVisible = await mapContainer.isVisible().catch(() => false);
     }
     
@@ -339,7 +339,7 @@ test.describe('Marker Filtering Tests', () => {
     
     // Check for marker elements on the map
     // Markers are typically rendered as circles or icons
-    const markerLayer = page.locator('.mapboxgl-marker');
+    const markerLayer = page.locator('.maplibregl-marker');
     const markerCount = await markerLayer.count();
     
     if (markerCount > 0) {
@@ -385,7 +385,7 @@ test.describe('Map Interaction Tests', () => {
     await waitForMapLoad(page);
     
     // Get map canvas
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
     await expect(mapCanvas).toBeVisible();
     
     // Perform drag to pan
@@ -411,7 +411,7 @@ test.describe('Map Interaction Tests', () => {
     await waitForMapLoad(page);
     
     // Get map canvas
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
     await expect(mapCanvas).toBeVisible();
     
     // Get bounding box for zoom interaction
@@ -436,7 +436,7 @@ test.describe('Map Interaction Tests', () => {
     await waitForMapLoad(page);
     
     // Get map canvas
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
     const box = await mapCanvas.boundingBox();
     
     if (box) {
@@ -465,7 +465,7 @@ test.describe('Map Interaction Tests', () => {
     await waitForMapLoad(page);
     
     // Get map canvas
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
     const box = await mapCanvas.boundingBox();
     
     if (box) {
@@ -512,7 +512,7 @@ test.describe('Map Features Visual Tests', () => {
     let isVisible = await mapContainer.isVisible().catch(() => false);
     
     if (!isVisible) {
-      mapContainer = page.locator('.mapboxgl-map');
+      mapContainer = page.locator('.maplibregl-map');
       isVisible = await mapContainer.isVisible().catch(() => false);
     }
     
@@ -550,7 +550,7 @@ test.describe('Map Features Visual Tests', () => {
     await waitForMapLoad(page);
     
     // Get map canvas for zoom interaction
-    const mapCanvas = page.locator('.mapboxgl-canvas');
+    const mapCanvas = page.locator('.maplibregl-canvas');
     const box = await mapCanvas.boundingBox();
     
     if (box) {

@@ -10,7 +10,7 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 ## 1. App Shell & Map Loading
 
 - [ ] Navigate to the app — app shell (`data-testid="app-shell"`) renders
-- [ ] Map container is visible (`.mapboxgl-canvas` or `data-testid="map-container"`)
+- [ ] Map container is visible (`data-testid="map-container"`, with a `.maplibregl-canvas` inside it)
 - [ ] Sidebar navigation items are rendered and interactive
 - [ ] Take a screenshot to confirm visual layout
 
@@ -108,7 +108,7 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 - [ ] Language dropdown in Settings shows available languages
 - [ ] Changing language updates UI text (nav labels, drawer headings, etc.)
 
-## 14. Map Interactions (requires Mapbox token)
+## 14. Map Interactions (no API key needed — MapLibre + OpenFreeMap)
 
 - [ ] Map renders tiles and colored provinces
 - [ ] Hovering a province shows tooltip

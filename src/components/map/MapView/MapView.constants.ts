@@ -7,13 +7,22 @@
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.3, 5.3, 5.5, 11.2, 15.1, 15.2
  */
 
+import type { ExpressionSpecification } from '@maplibre/maplibre-gl-style-spec';
+import type { AttributionControlOptions } from 'maplibre-gl';
 import type { AreaColorDimension } from '../../../stores/mapStore';
 
 /**
- * Mapbox GL expression type for data-driven styling.
- * Using ExpressionSpecification from mapbox-gl for proper typing.
+ * A MapLibre GL expression for data-driven styling.
+ *
+ * This is the canonical spec type, re-exported so the rest of the map code has
+ * a single name for it. `mapbox-gl`'s types accepted a loose
+ * `[string, ...unknown[]]`; MapLibre's are precise, which means expressions
+ * assembled at runtime (colour `match` chains, opacity `interpolate` ramps)
+ * can't be inferred structurally and need a cast where they're built. Those
+ * casts live in the builder functions in `MapView.utils.ts`, so every consumer
+ * gets a properly typed expression.
  */
-export type MapboxExpression = [string, ...unknown[]];
+export type MapExpression = ExpressionSpecification;
 
 /**
  * Debounce delay for year changes in milliseconds.
@@ -96,28 +105,17 @@ export const MAX_POPULATION_FOR_OPACITY = 10000000; // 10 million
  */
 export const DEFAULT_FILL_OPACITY = 0.6;
 
-/**
- * Marker icon configuration for each marker type.
- * Requirement 5.5: THE MapView SHALL use appropriate icons for each marker type
+/*
+ * Requirement 5.5 (per-type marker icons) is implemented in `MapView.tsx`, not
+ * here: `MARKER_SPRITE_ICONS` slices Chronas's own sprite sheet into `marker-b`,
+ * `marker-c`, `marker-cp`, `marker-p`, … and registers them with
+ * `map.setMissingStyleImageResolver`. The `MARKER_ICONS` / `DEFAULT_MARKER_ICON`
+ * / `MARKER_ICON_SIZE` constants that used to live here named Mapbox **Maki**
+ * sprite ids (`castle`, `town-hall`, `star`, `monument`, `information`). They
+ * had no reader anywhere in the app, and Maki does not exist on OpenFreeMap's
+ * sprite — so they were only ever a false lead. Removed with the Mapbox
+ * migration rather than translated.
  */
-export const MARKER_ICONS: Record<string, string> = {
-  battle: 'castle', // Mapbox Maki icon for battles
-  city: 'town-hall', // Mapbox Maki icon for cities
-  capital: 'star', // Mapbox Maki icon for capitals
-  person: 'monument', // Mapbox Maki icon for persons
-  event: 'information', // Mapbox Maki icon for events
-  other: 'marker', // Default marker icon
-};
-
-/**
- * Default marker icon for unknown types.
- */
-export const DEFAULT_MARKER_ICON = 'marker';
-
-/**
- * Marker icon size.
- */
-export const MARKER_ICON_SIZE = 1.0;
 
 /**
  * Marker icon colors by type.
@@ -130,4 +128,43 @@ export const MARKER_COLORS: Record<string, string> = {
   person: '#9b59b6', // Purple for persons
   event: '#2ecc71', // Green for events
   other: '#95a5a6', // Gray for other
+};
+
+/**
+ * Attribution control options for the basemap.
+ *
+ * MapLibre derives most of this automatically: the OpenFreeMap styles resolve
+ * their vector source through `https://tiles.openfreemap.org/planet`, whose
+ * TileJSON carries the OpenFreeMap / OpenMapTiles / OpenStreetMap credits, and
+ * `public/styles/satellite-eox.json` declares its EOX credit on the source.
+ *
+ * OpenStreetMap data is ODbL-licensed, so displaying attribution is a licence
+ * obligation, not a nicety — the control must stay enabled. `ne2_shaded`
+ * (the shaded-relief raster in the `liberty` style) declares no attribution of
+ * its own, so Natural Earth is credited here.
+ */
+/**
+ * Ids of the GeoJSON sources Chronas adds on top of the basemap.
+ *
+ * The label effects in `MapView` walk `map.getStyle().layers`, which contains
+ * our declarative `<Layer>`s alongside the basemap's. Without this set the
+ * locale rewrite would also overwrite the `text-field` of `markers-label` and
+ * `area-labels-points` — harmless in output (their coalesce chain still falls
+ * through to `name`) but it fights react-map-gl, which owns those layout
+ * properties declaratively and re-applies them on re-render.
+ */
+export const OWN_SOURCE_IDS: ReadonlySet<string> = new Set([
+  'provinces',
+  'area-hover',
+  'markers',
+  'area-label-lines',
+  'area-labels',
+  'entity-outline',
+]);
+
+export const ATTRIBUTION_OPTIONS: AttributionControlOptions = {
+  compact: true,
+  customAttribution: [
+    'Relief: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noreferrer">Natural Earth</a>',
+  ],
 };

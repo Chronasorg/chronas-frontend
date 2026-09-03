@@ -9,7 +9,7 @@
 
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import { Marker } from 'react-map-gl/mapbox';
+import { Marker } from 'react-map-gl/maplibre';
 import styles from './BasicPin.module.css';
 import { DEFAULT_PIN_SIZE, isValidCoordinates, type BasicPinProps } from './BasicPin.utils';
 

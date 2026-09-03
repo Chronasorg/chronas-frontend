@@ -53,7 +53,10 @@ describe('YearNotification - Property Tests', () => {
       fc.assert(
         fc.property(fc.integer({ min: -10000, max: 10000 }), (year) => {
           const result = formatYearWithEra(year);
-          const expectedValue = Math.abs(year).toLocaleString();
+          // Pin the locale: formatYearWithEra formats with 'en', so an ambient-locale
+          // expectation would fail on machines with a non-en ICU default (e.g. de-DE
+          // renders 1.000 instead of 1,000).
+          const expectedValue = Math.abs(year).toLocaleString('en');
           expect(result.value).toBe(expectedValue);
         }),
         { numRuns: 100 }
@@ -86,7 +89,7 @@ describe('YearNotification - Property Tests', () => {
           if (!Number.isFinite(year)) return true;
 
           const result = formatYearWithEra(year);
-          const expectedValue = Math.abs(Math.round(year)).toLocaleString();
+          const expectedValue = Math.abs(Math.round(year)).toLocaleString('en');
           expect(result.value).toBe(expectedValue);
 
           return true;
@@ -133,7 +136,7 @@ describe('YearNotification - Property Tests', () => {
           );
 
           const valueElement = screen.getByTestId('year-value');
-          const expectedValue = Math.abs(year).toLocaleString();
+          const expectedValue = Math.abs(year).toLocaleString('en');
           expect(valueElement).toHaveTextContent(expectedValue);
 
           unmount();

@@ -138,7 +138,7 @@ test.describe('Map layers after locale switch', () => {
     await page.waitForTimeout(3_000);
 
     // Map canvas should still be visible
-    const canvas = page.locator('.mapboxgl-canvas');
+    const canvas = page.locator('.maplibregl-canvas');
     await expect(canvas.first()).toBeVisible();
   });
 
@@ -255,7 +255,7 @@ test.describe('Locale round-trip', () => {
     expect(metadataRequests.length).toBeGreaterThan(afterDe);
 
     // Map should still be visible
-    const canvas = page.locator('.mapboxgl-canvas');
+    const canvas = page.locator('.maplibregl-canvas');
     await expect(canvas.first()).toBeVisible();
   });
 });

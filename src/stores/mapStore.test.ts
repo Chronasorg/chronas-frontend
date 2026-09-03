@@ -1164,7 +1164,10 @@ describe('utility functions', () => {
      * update the map style to reflect the selected basemap
      */
     it('should have style URL for topographic', () => {
-      expect(BASEMAP_STYLES.topographic).toBe('mapbox://styles/mapbox/outdoors-v12');
+      // Our own vendored copy of OpenFreeMap's liberty, not the hosted URL: it
+      // declares the globe projection and caps the relief tile count, and it
+      // removes a 43 kB no-SLA fetch from the boot path. See public/styles/.
+      expect(BASEMAP_STYLES.topographic).toBe('/styles/liberty.json');
     });
 
     it('should have style URL for satellite', () => {
@@ -1180,7 +1183,7 @@ describe('utility functions', () => {
     });
 
     it('should have style URL for none (empty/minimal style)', () => {
-      expect(BASEMAP_STYLES.none).toBe('mapbox://styles/mapbox/empty-v9');
+      expect(BASEMAP_STYLES.none).toBe('/styles/empty.json');
     });
 
     it('should have all four basemap types defined', () => {
@@ -1188,6 +1191,26 @@ describe('utility functions', () => {
       for (const type of basemapTypes) {
         expect(BASEMAP_STYLES[type]).toBeDefined();
         expect(typeof BASEMAP_STYLES[type]).toBe('string');
+      }
+    });
+
+    /**
+     * The whole point of the MapLibre migration (issue #46): no style may
+     * require an API key. A `mapbox://` URL cannot resolve without an access
+     * token, which is what took the production map down.
+     */
+    it('should not reference any keyed tile provider', () => {
+      for (const styleUrl of Object.values(BASEMAP_STYLES)) {
+        expect(styleUrl).not.toMatch(/mapbox/i);
+        expect(styleUrl).not.toMatch(/[?&](access_token|key|api_key)=/i);
+      }
+    });
+
+    it('should serve every style from OpenFreeMap or our own origin', () => {
+      for (const styleUrl of Object.values(BASEMAP_STYLES)) {
+        expect(
+          styleUrl.startsWith('https://tiles.openfreemap.org/') || styleUrl.startsWith('/styles/')
+        ).toBe(true);
       }
     });
   });

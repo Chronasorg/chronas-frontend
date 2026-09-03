@@ -2,7 +2,7 @@
  * MapView Component
  *
  * Main container component that renders the interactive historical map
- * using react-map-gl with Mapbox GL JS.
+ * using react-map-gl with MapLibre GL JS.
  *
  * Requirements: 1.1, 1.3, 1.4, 2.3, 2.8, 3.1, 3.4, 3.6, 6.1, 7.1, 7.2, 7.3, 7.4, 7.6, 12.5, 12.6, 13.2, 13.3, 15.1, 15.2, 15.3
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.3 (Province data visualization)
@@ -13,13 +13,14 @@
  */
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/mapbox';
+import Map, { type MapRef, type ViewStateChangeEvent, type MapMouseEvent, Source, Layer, Popup } from 'react-map-gl/maplibre';
+import type { GeoJSONSource, Map as MapLibreMap, ProjectionSpecification, StyleSpecification } from 'maplibre-gl';
 import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'geojson';
 import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type LabelFeatureCollection, type LabelLineFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
-import { getThemeConfig, AREA_LABEL_CONFIG, getAreaLabelFonts, LOCAL_FONT_NAMES } from '../../../config/mapTheme';
+import { getThemeConfig, AREA_LABEL_CONFIG, getAreaLabelFonts, LOCAL_FONT_NAMES, DEFAULT_FONT, DEFAULT_BOLD_FONT } from '../../../config/mapTheme';
 import { updatePositionInURL, updateYearInURL } from '../../../utils/mapUtils';
 import { updateURLState } from '../../../utils/urlStateUtils';
 import type { Marker } from '../../../api/types';
@@ -27,7 +28,7 @@ import { ProvinceTooltip } from '../ProvinceTooltip/ProvinceTooltip';
 import type { ProvinceFeatureProperties } from '../ProvinceTooltip/ProvinceTooltip.utils';
 import styles from './MapView.module.css';
 import {
-  type MapboxExpression,
+  type MapExpression,
   type HoverInfo,
   YEAR_CHANGE_DEBOUNCE_MS,
   SIDEBAR_WIDTH_OPEN,
@@ -38,6 +39,8 @@ import {
   POPULATION_OPACITY_MAX,
   MAX_POPULATION_FOR_OPACITY,
   DEFAULT_FILL_OPACITY,
+  ATTRIBUTION_OPTIONS,
+  OWN_SOURCE_IDS,
 } from './MapView.constants';
 import {
   useDebounce,
@@ -47,10 +50,100 @@ import {
   checkWebGLSupport,
   markersToGeoJSON,
   normalizeFeatureProperties,
+  textFieldReferencesName,
+  buildLocalizedNameExpression,
+  resolveLocalGlyphUrl,
 } from './MapView.utils';
 
-// Mapbox access token - should be set via environment variable
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+/** Icon dimensions from production properties.js */
+const ICON_WIDTH = 135;
+const ICON_HEIGHT = 127;
+
+/** Icon positions in `/images/themed-atlas.png`, from production iconMapping['them'] */
+const ICON_CONFIGS: Record<string, { x: number; y: number }> = {
+  'marker-cp': { x: 3 * ICON_WIDTH, y: 3 * ICON_HEIGHT },  // Capital
+  'marker-c0': { x: ICON_WIDTH, y: 4 * ICON_HEIGHT },      // Capital outline
+  'marker-c': { x: 0, y: 5 * ICON_HEIGHT },                // City
+  'marker-ca': { x: 0, y: 4 * ICON_HEIGHT },               // Castle
+  'marker-b': { x: ICON_WIDTH, y: 3 * ICON_HEIGHT },       // Battle
+  'marker-si': { x: 2 * ICON_WIDTH, y: 3 * ICON_HEIGHT },  // Siege
+  'marker-l': { x: 2 * ICON_WIDTH, y: 4 * ICON_HEIGHT },   // Landmark
+  'marker-m': { x: 2 * ICON_WIDTH, y: 2 * ICON_HEIGHT },   // Military
+  'marker-p': { x: 2 * ICON_WIDTH, y: 0 },                 // Politician/Person
+  'marker-e': { x: 3 * ICON_WIDTH, y: 0 },                 // Explorer
+  'marker-s': { x: 2 * ICON_WIDTH, y: ICON_HEIGHT },       // Scientist
+  'marker-a': { x: 0, y: ICON_HEIGHT },                    // Artist
+  'marker-r': { x: ICON_WIDTH, y: 0 },                     // Religious
+  'marker-at': { x: ICON_WIDTH, y: 2 * ICON_HEIGHT },      // Athlete
+  'marker-op': { x: 3 * ICON_WIDTH, y: ICON_HEIGHT },      // Unclassified
+  'marker-o': { x: 3 * ICON_WIDTH, y: 4 * ICON_HEIGHT },   // Unknown
+  'marker-ar': { x: 0, y: 3 * ICON_HEIGHT },               // Artifact
+  'marker-ai': { x: 2 * ICON_WIDTH, y: 4 * ICON_HEIGHT },  // Architecture (same as landmark)
+  'marker-h': { x: 2 * ICON_WIDTH, y: 0 },                 // Historical figure (same as person)
+};
+
+/**
+ * Wires up the custom `marker-*` icons, which are cut out of a single sprite
+ * atlas rather than taken from the basemap's sprite.
+ *
+ * Must be called as soon as the MapLibre instance exists — *not* from `onLoad`.
+ * `load` only fires after the first visually complete render, which is already
+ * past the first symbol placement, so a resolver registered there arrives too
+ * late for the initial marker icons.
+ *
+ * MapLibre v6 replaced the old `styleimagemissing` workaround with an awaited
+ * resolver: a `styleimagemissing` *listener* explicitly cannot resolve the image
+ * for the request that fired it, so the previous handler logged
+ * `Image "marker-p" could not be loaded` and dropped the icon for that render
+ * pass whenever a symbol was placed before the atlas finished downloading.
+ * MapLibre awaits this callback, so the race is gone. It also survives a
+ * basemap swap, which clears the style's image registry but not the resolver.
+ */
+function installMarkerIcons(map: MapLibreMap): void {
+  const atlasPromise = new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { resolve(img); };
+    img.onerror = () => { reject(new Error('Failed to load /images/themed-atlas.png')); };
+    img.src = '/images/themed-atlas.png';
+  });
+
+  const addIconFromAtlas = (id: string, img: HTMLImageElement) => {
+    if (map.hasImage(id)) return;
+    const config = ICON_CONFIGS[id];
+    if (!config) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = ICON_WIDTH;
+    canvas.height = ICON_HEIGHT;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(img, config.x, config.y, ICON_WIDTH, ICON_HEIGHT, 0, 0, ICON_WIDTH, ICON_HEIGHT);
+      const imageData = ctx.getImageData(0, 0, ICON_WIDTH, ICON_HEIGHT);
+      map.addImage(id, imageData, { sdf: false });
+    }
+  };
+
+  map.setMissingStyleImageResolver(async (id: string) => {
+    if (!ICON_CONFIGS[id]) return;
+    try {
+      addIconFromAtlas(id, await atlasPromise);
+    } catch (err) {
+      console.warn('[MapView] Failed to load themed-atlas.png:', err);
+    }
+  });
+
+  // Also add every icon eagerly once the atlas arrives, so the steady state
+  // needs no resolver round-trip at all.
+  atlasPromise
+    .then((img) => {
+      Object.keys(ICON_CONFIGS).forEach((id) => { addIconFromAtlas(id, img); });
+      console.log('[MapView] Custom marker icons loaded from themed-atlas.png');
+    })
+    .catch((err: unknown) => {
+      console.warn('[MapView] Failed to load themed-atlas.png:', err);
+    });
+}
 
 /**
  * Props for the MapView component
@@ -65,11 +158,11 @@ export interface MapViewProps {
 /**
  * MapView Component
  *
- * Renders the interactive map using react-map-gl with Mapbox GL JS.
+ * Renders the interactive map using react-map-gl with MapLibre GL JS.
  * Connects to mapStore for viewport state and uiStore for theme.
  *
  * Requirements:
- * - 1.1: THE MapView SHALL render using react-map-gl v7 with Mapbox GL JS
+ * - 1.1: THE MapView SHALL render using react-map-gl with MapLibre GL JS
  * - 1.3: THE MapView SHALL be the primary visual element on the home page
  * - 1.4: THE MapView SHALL display a loading indicator while initializing
  * - 2.3: WHEN the user pans or zooms the map, THE MapStore SHALL update the viewport state
@@ -81,7 +174,7 @@ export interface MapViewProps {
 export function MapView({ className, isBlurred = false }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const styleMissingHandlerRef = useRef<((e: { id: string }) => void) | null>(null);
+  const iconsInstalledRef = useRef(false);
   const [isLoaded, setIsLoaded] = useState(false);
   // Initialize WebGL support check eagerly to avoid a useEffect + setState cascade.
   // checkWebGLSupport() is synchronous and cheap (creates a temporary canvas).
@@ -258,7 +351,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    * Requirement 3.3: WHEN populationOpacity is false, THE MapView SHALL use uniform opacity for all province fills
    * Requirement 3.4: THE MapView SHALL normalize population values to an opacity range of 0.3 to 1.0
    */
-  const fillOpacityExpr = useMemo((): MapboxExpression | number => {
+  const fillOpacityExpr = useMemo((): MapExpression | number => {
     if (populationOpacity) {
       // When populationOpacity is enabled, use interpolate expression based on 'p' property (population)
       return [
@@ -656,136 +749,132 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   /**
    * Handles map load completion.
    * Requirement 1.4: THE MapView SHALL display a loading indicator while initializing
-   * Loads custom marker icons from the themed atlas sprite sheet.
+   *
+   * Kept as a backstop alongside `handleStyleData`, which normally wins the race
+   * by a wide margin. MapLibre's `load` waits for the *first visually complete
+   * render*, i.e. for every initially visible tile to have settled — see
+   * `handleStyleData` for why that is too late to gate the UI on.
    */
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
-    
-    // Load custom marker icons from the themed atlas
-    const map = mapRef.current?.getMap();
-    if (map) {
-      // Icon dimensions from production properties.js
-      const iconWidth = 135;
-      const iconHeight = 127;
-      
-      // Icon positions from production iconMapping['them']
-      const iconConfigs: Record<string, { x: number; y: number }> = {
-        'marker-cp': { x: 3 * iconWidth, y: 3 * iconHeight },  // Capital
-        'marker-c0': { x: iconWidth, y: 4 * iconHeight },      // Capital outline
-        'marker-c': { x: 0, y: 5 * iconHeight },               // City
-        'marker-ca': { x: 0, y: 4 * iconHeight },              // Castle
-        'marker-b': { x: iconWidth, y: 3 * iconHeight },       // Battle
-        'marker-si': { x: 2 * iconWidth, y: 3 * iconHeight },  // Siege
-        'marker-l': { x: 2 * iconWidth, y: 4 * iconHeight },   // Landmark
-        'marker-m': { x: 2 * iconWidth, y: 2 * iconHeight },   // Military
-        'marker-p': { x: 2 * iconWidth, y: 0 },                // Politician/Person
-        'marker-e': { x: 3 * iconWidth, y: 0 },                // Explorer
-        'marker-s': { x: 2 * iconWidth, y: iconHeight },       // Scientist
-        'marker-a': { x: 0, y: iconHeight },                   // Artist
-        'marker-r': { x: iconWidth, y: 0 },                    // Religious
-        'marker-at': { x: iconWidth, y: 2 * iconHeight },      // Athlete
-        'marker-op': { x: 3 * iconWidth, y: iconHeight },      // Unclassified
-        'marker-o': { x: 3 * iconWidth, y: 4 * iconHeight },   // Unknown
-        'marker-ar': { x: 0, y: 3 * iconHeight },              // Artifact
-        'marker-ai': { x: 2 * iconWidth, y: 4 * iconHeight },  // Architecture (same as landmark)
-        'marker-h': { x: 2 * iconWidth, y: 0 },                // Historical figure (same as person)
-      };
-      
-      // Track loaded atlas image for on-demand icon extraction
-      let atlasImage: HTMLImageElement | null = null;
-      
-      const addIconFromAtlas = (id: string, img: HTMLImageElement) => {
-        if (map.hasImage(id)) return;
-        const config = iconConfigs[id];
-        if (!config) return;
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = iconWidth;
-        canvas.height = iconHeight;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, config.x, config.y, iconWidth, iconHeight, 0, 0, iconWidth, iconHeight);
-          const imageData = ctx.getImageData(0, 0, iconWidth, iconHeight);
-          map.addImage(id, imageData, { sdf: false });
-        }
-      };
-      
-      // Remove previous listener if map reloaded
-      if (styleMissingHandlerRef.current) {
-        map.off('styleimagemissing', styleMissingHandlerRef.current);
-      }
-
-      // Handle missing images on-demand (fixes race condition)
-      const missingHandler = (e: { id: string }) => {
-        if (atlasImage && iconConfigs[e.id]) {
-          addIconFromAtlas(e.id, atlasImage);
-        }
-      };
-      styleMissingHandlerRef.current = missingHandler;
-      map.on('styleimagemissing', missingHandler);
-      
-      // Load the sprite atlas image
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        atlasImage = img;
-        Object.keys(iconConfigs).forEach((id) => {
-          addIconFromAtlas(id, img);
-        });
-        console.log('[MapView] Custom marker icons loaded from themed-atlas.png');
-      };
-      
-      img.onerror = (err) => {
-        console.warn('[MapView] Failed to load themed-atlas.png:', err);
-      };
-      
-      img.src = '/images/themed-atlas.png';
-    }
-  }, []);
-
-  // Cleanup styleimagemissing listener on unmount
-  useEffect(() => {
-    const ref = mapRef.current;
-    return () => {
-      const map = ref?.getMap();
-      if (map && styleMissingHandlerRef.current) {
-        map.off('styleimagemissing', styleMissingHandlerRef.current);
-      }
-    };
   }, []);
 
   /**
-   * Switch Mapbox basemap label language when locale changes.
-   * Mapbox vector styles have layers like 'country-label', 'state-label', etc.
-   * that support localized names via 'name_xx' properties.
+   * Ref callback for `<Map>`, used instead of passing `mapRef` directly so the
+   * marker-icon resolver can be installed the instant the MapLibre instance
+   * exists. React invokes this during the commit in which react-map-gl
+   * constructs the map — well before the first tile is parsed, and therefore
+   * before the first symbol placement asks for a `marker-*` image.
+   */
+  const attachMap = useCallback((instance: MapRef | null) => {
+    mapRef.current = instance;
+
+    const map = instance?.getMap();
+    if (!map) {
+      // The ref guards against installing the resolver twice on one instance, so
+      // it has to be cleared on detach: otherwise a second Map mounted inside the
+      // same MapView (a basemap remount, a Fast Refresh cycle) would be skipped
+      // and silently render no marker icons at all.
+      iconsInstalledRef.current = false;
+      return;
+    }
+    if (iconsInstalledRef.current) return;
+    iconsInstalledRef.current = true;
+
+    // Expose the MapLibre instance for end-to-end tests. MapLibre doesn't
+    // attach its instance to the DOM, so style internals (layers, resolved
+    // text-fields, queryRenderedFeatures) are otherwise unassertable from
+    // Playwright. Dev/test only — never shipped to production.
+    if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
+      (window as unknown as { __chronasMap?: unknown }).__chronasMap = map;
+    }
+
+    installMarkerIcons(map);
+  }, []);
+
+  /**
+   * Bumps on every `styledata` event so the label effects below re-run once a
+   * swapped basemap style is actually ready.
+   *
+   * Switching `mapStyle` tears down and rebuilds the style. The label effects
+   * are keyed on `basemap`, but React re-runs them immediately — before
+   * MapLibre has parsed the new style — so `setLayoutProperty` throws on a
+   * layer that doesn't exist yet and the swallowing `try/catch` leaves the new
+   * basemap's labels unlocalized. Re-running on `styledata` fixes that.
+   *
+   * Both effects are idempotent (they skip writes when the value already
+   * matches), which is what keeps this from looping: `setLayoutProperty` itself
+   * fires `styledata`, so a non-idempotent effect would re-trigger itself
+   * forever.
+   */
+  const [styleVersion, setStyleVersion] = useState(0);
+
+  /**
+   * Also the point at which the map is considered ready.
+   *
+   * `styledata` means the stylesheet is parsed, which is the *actual*
+   * precondition for everything gated on `isLoaded`: `setLayoutProperty` on the
+   * label layers below, and hiding the loading overlay. MapLibre's `load` event
+   * is much stronger — it additionally waits for every initially visible tile,
+   * and OpenFreeMap's z2 planet tiles are ~600 kB apiece on a free, unmetered
+   * CDN whose throughput we do not control. Measured against it while it was
+   * shaping us to ~5 kB/s: `styledata` arrived in 1.8s while `load` had still
+   * not fired after 60s. Gating on `load` therefore meant a spinner over a blank
+   * map for minutes and basemap labels stuck in the local language for just as
+   * long, where gating on the parsed style reveals the map as soon as there is
+   * something to draw and lets tiles paint in as they arrive — the normal
+   * behaviour of every other map on the web.
+   *
+   * The layer-count check is load-bearing: MapLibre also fires `styledata` for
+   * the initial *empty* style, well before the basemap JSON has been fetched.
+   * Treating that as ready hid the overlay after 734ms and left the user looking
+   * at a blank background for another 11s, which is worse than the spinner.
+   */
+  const handleStyleData = useCallback(() => {
+    setStyleVersion((version) => version + 1);
+    const map = mapRef.current?.getMap();
+    // Annotated, because MapLibre types `getStyle()` as always returning a
+    // style while `Style.serialize()` in fact bails out to `undefined` until
+    // `_loaded` — exactly the state the first `styledata` fires in.
+    const style: StyleSpecification | undefined = map?.getStyle();
+    if ((style?.layers.length ?? 0) > 0) {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  /**
+   * Switch basemap label language when locale changes.
+   *
+   * OpenMapTiles (OpenFreeMap's schema) exposes localized names as `name:xx`,
+   * not Mapbox Streets' `name_xx`. See `buildLocalizedNameExpression` and
+   * `textFieldReferencesName` for why we match on the expression rather than
+   * the layer id.
    */
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map || !isLoaded) return;
 
-    const mapboxLocale = locale === 'zh' ? 'zh-Hans' : locale;
+    const localizedName = buildLocalizedNameExpression(locale);
+    const serializedTarget = JSON.stringify(localizedName);
+
     try {
       const style = map.getStyle();
       for (const layer of style.layers) {
-        if (
-          layer.type === 'symbol' &&
-          layer.layout?.['text-field'] &&
-          layer.id.includes('label')
-        ) {
-          map.setLayoutProperty(layer.id, 'text-field', [
-            'coalesce',
-            ['get', `name_${mapboxLocale}`],
-            ['get', 'name'],
-          ]);
-        }
+        if (layer.type !== 'symbol') continue;
+        if (OWN_SOURCE_IDS.has(layer.source)) continue;
+        const textField = layer.layout?.['text-field'];
+        if (!textFieldReferencesName(textField)) continue;
+        // Idempotency guard — see `styleVersion` above.
+        if (JSON.stringify(textField) === serializedTarget) continue;
+        map.setLayoutProperty(layer.id, 'text-field', localizedName);
       }
     } catch {
-      // Style may not be loaded yet — ignore
+      // Style may not be loaded yet — the styledata bump will retry.
     }
-  }, [locale, isLoaded, basemap]);
+  }, [locale, isLoaded, basemap, styleVersion]);
 
   /**
-   * Toggle Mapbox basemap country/state/continent labels based on labelNameMode.
+   * Toggle basemap country/state labels based on labelNameMode.
    * In 'historical' mode, hide basemap labels so only custom area-labels are visible.
    * In 'modern' mode, show basemap labels and hide custom area-labels.
    * In 'both' mode, show both.
@@ -794,24 +883,70 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     const map = mapRef.current?.getMap();
     if (!map || !isLoaded) return;
 
+    const visibility = labelNameMode === 'historical' ? 'none' : 'visible';
+
     try {
       const style = map.getStyle();
       for (const layer of style.layers) {
-        if (
-          layer.type === 'symbol' &&
-          layer.id.includes('label') &&
-          (layer.id.includes('country') ||
-           layer.id.includes('state') ||
-           layer.id.includes('continent'))
-        ) {
-          const visibility = labelNameMode === 'historical' ? 'none' : 'visible';
-          map.setLayoutProperty(layer.id, 'visibility', visibility);
-        }
+        if (layer.type !== 'symbol') continue;
+        if (OWN_SOURCE_IDS.has(layer.source)) continue;
+        // OpenMapTiles ids are `label_country_1`, `label_state`; Mapbox Streets
+        // used `country-label`, `state-label`. Both match on these substrings.
+        // (The old filter also tested `continent`, which matches nothing in
+        // either schema.)
+        if (!layer.id.includes('label')) continue;
+        if (!layer.id.includes('country') && !layer.id.includes('state')) continue;
+        // Idempotency guard — `visibility` defaults to 'visible' when unset.
+        if ((layer.layout?.visibility ?? 'visible') === visibility) continue;
+        map.setLayoutProperty(layer.id, 'visibility', visibility);
       }
     } catch {
-      // Style may not be loaded yet
+      // Style may not be loaded yet — the styledata bump will retry.
     }
-  }, [labelNameMode, isLoaded, basemap]);
+  }, [labelNameMode, isLoaded, basemap, styleVersion]);
+
+  /**
+   * Keep the world round.
+   *
+   * Chronas has never asked for a globe in code — the round world came from
+   * Mapbox's hosted style JSON, which declares `projection: {name: globe}`, and
+   * Mapbox GL JS renders whatever the stylesheet says. None of the styles we
+   * moved to declared one, and both style specs default to `mercator`, so the
+   * migration silently flattened the map.
+   *
+   * MapLibre's `globe` is the adaptive one: a sphere when zoomed out,
+   * interpolating to mercator as you zoom in, which is what Chronas's z2.5
+   * default view wants. It has to be re-applied per style because
+   * `Style.setState` resets the projection to `stylesheet.projection?.type ||
+   * 'mercator'` on every style load — so this effect is keyed on `styleVersion`
+   * for the same reason the label effects above are.
+   *
+   * The three stylesheets we serve ourselves now declare `globe` directly, which
+   * makes this a no-op for them (the guard below early-returns). It stays because
+   * `light` is still fetched from OpenFreeMap, whose `positron` declares no
+   * projection — and because it is the only thing that keeps the globe if a
+   * future stylesheet forgets to. `BASEMAP_STYLES` is the list to check.
+   */
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !isLoaded) return;
+
+    try {
+      // Idempotency guard — see `styleVersion` above; `setProjection` triggers a
+      // repaint and would otherwise re-enter through `styledata`.
+      //
+      // Annotated, because MapLibre types `getProjection()` as always returning a
+      // projection while it in fact returns `undefined` whenever the stylesheet
+      // declares none — which is the state right after every basemap swap, and
+      // reading `.type` off it threw straight into this `catch`, leaving the map
+      // flat until some later `styledata` happened to arrive.
+      const currentType = (map.getProjection() as ProjectionSpecification | undefined)?.type;
+      if (currentType === 'globe') return;
+      map.setProjection({ type: 'globe' });
+    } catch {
+      // Style may not be loaded yet — the styledata bump will retry.
+    }
+  }, [isLoaded, basemap, styleVersion]);
 
   /**
    * Handles flyTo animation completion and syncs viewport position to URL.
@@ -889,12 +1024,12 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         return;
       }
       
-      // Mapbox GL v3 returns feature.properties as a null-prototype object.
+      // MapLibre GL returns feature.properties as a null-prototype object.
       // Normalize to a plain-prototype object so downstream consumers (e.g.
       // react-map-gl's deepEqual, which calls `.hasOwnProperty` when diffing
       // the area-hover <Source> data) don't crash the map. See issue #38.
       const properties = normalizeFeatureProperties(feature.properties);
-      const layerId = feature.layer?.id;
+      const layerId = feature.layer.id;
 
       // Check if hovering over an area label (line or point)
       if (layerId === 'area-labels-layer' || layerId === 'area-labels-points') {
@@ -990,9 +1125,9 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         return;
       }
       
-      // Normalize null-prototype properties from Mapbox GL v3 (see issue #38).
+      // Normalize null-prototype properties from MapLibre GL (see issue #38).
       const properties = normalizeFeatureProperties(feature.properties);
-      const layerId = feature.layer?.id;
+      const layerId = feature.layer.id;
 
       // Check if clicked on an area label (line or point)
       // When a label is clicked, open the right drawer with the entity's Wikipedia article
@@ -1039,29 +1174,31 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         
         if (map) {
           // Get the markers source to access cluster expansion zoom
-          const source = map.getSource('markers');
-          
-          if (source && 'getClusterExpansionZoom' in source && typeof source.getClusterExpansionZoom === 'function') {
-            // Get the cluster expansion zoom level
-            source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-              if (err) {
+          const source = map.getSource<GeoJSONSource>('markers');
+
+          if (source) {
+            // MapLibre's GeoJSONSource returns a promise here; Mapbox GL JS took
+            // an (err, zoom) callback. Passing a callback to the promise form
+            // silently never zooms, so this must stay promise-based.
+            void source
+              .getClusterExpansionZoom(clusterId)
+              .then((zoom) => {
+                // Get cluster coordinates from the feature geometry
+                const geometry = feature.geometry;
+                if (geometry.type === 'Point') {
+                  const [lng, lat] = geometry.coordinates as [number, number];
+
+                  // Animate map to cluster center at expansion zoom
+                  map.easeTo({
+                    center: [lng, lat],
+                    zoom,
+                    duration: 500,
+                  });
+                }
+              })
+              .catch((err: unknown) => {
                 console.error('Error getting cluster expansion zoom:', err);
-                return;
-              }
-              
-              // Get cluster coordinates from the feature geometry
-              const geometry = feature.geometry;
-              if (geometry.type === 'Point') {
-                const [lng, lat] = geometry.coordinates as [number, number];
-                
-                // Animate map to cluster center at expansion zoom
-                map.easeTo({
-                  center: [lng, lat],
-                  zoom: zoom ?? (map.getZoom() + 2), // Fallback to current zoom + 2
-                  duration: 500,
-                });
-              }
-            });
+              });
           }
         }
         return;
@@ -1210,19 +1347,23 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   }, [hoverInfo]);
 
   /**
-   * Intercept Mapbox GL glyph requests to serve locally-hosted fonts
-   * (Cinzel Regular, Cairo, Noto Sans SC) that aren't in the Mapbox CDN.
+   * Intercept glyph requests to serve locally-hosted fonts (Cinzel Regular,
+   * Cairo, Noto Sans SC) that the basemap's glyph endpoint doesn't publish.
    * The PBF files live in public/fonts/{fontstack}/{range}.pbf.
    */
   const transformRequest = useCallback((url: string, resourceType?: string) => {
     if (resourceType === 'Glyphs') {
-      for (const fontName of LOCAL_FONT_NAMES) {
-        if (url.includes(encodeURIComponent(fontName)) || url.includes(fontName)) {
-          const range = /(\d+-\d+\.pbf)/.exec(url)?.[1];
-          if (range) {
-            return { url: `/fonts/${fontName}/${range}` };
-          }
+      const local = resolveLocalGlyphUrl(url, LOCAL_FONT_NAMES);
+      if (local) {
+        if (local.droppedFonts.length > 0 && import.meta.env.DEV) {
+          // A self-hosted font can only be served on its own, so any other
+          // fonts in the stack lose their glyph coverage. `getAreaLabelFonts`
+          // emits single-font stacks precisely to avoid this.
+          console.warn(
+            `[MapView] Glyph stack collapsed to "${local.url}"; dropped: ${local.droppedFonts.join(', ')}`
+          );
         }
+        return { url: local.url };
       }
     }
     return { url };
@@ -1237,19 +1378,6 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
           <h2>WebGL Not Supported</h2>
           <p>Your browser does not support WebGL, which is required for the interactive map.</p>
           <p>Please try using a modern browser like Chrome, Firefox, or Edge.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Render missing token warning
-  if (!MAPBOX_TOKEN) {
-    return (
-      <div className={`${styles['container'] ?? ''} ${className ?? ''}`}>
-        <div className={styles['tokenError']}>
-          <h2>Mapbox Token Missing</h2>
-          <p>The Mapbox access token is not configured.</p>
-          <p>Please set the VITE_MAPBOX_TOKEN environment variable.</p>
         </div>
       </div>
     );
@@ -1278,9 +1406,10 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const rightOffset = rightDrawerOpen ? `${String(RIGHT_DRAWER_WIDTH_PERCENT)}%` : '0';
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className={containerClassName} 
+      className={containerClassName}
+      data-testid="map-container"
       data-theme={theme}
       data-sidebar-open={drawerOpen}
       data-right-drawer-open={rightDrawerOpen}
@@ -1357,8 +1486,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       {/* Requirement 1.3: THE MapView SHALL support four basemap options: topographic, satellite, light, and none */}
       {/* Requirement 1.4: WHEN basemap is set to "none", THE MapView SHALL display only province fill layers */}
       <Map
-        ref={mapRef}
-        mapboxAccessToken={MAPBOX_TOKEN}
+        ref={attachMap}
         transformRequest={transformRequest}
         initialViewState={{
           latitude: viewport.latitude,
@@ -1375,12 +1503,13 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
         mapStyle={BASEMAP_STYLES[basemap]}
         onMove={handleMove}
         onLoad={handleLoad}
+        onStyleData={handleStyleData}
         onMoveEnd={handleMoveEnd}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
         interactiveLayerIds={['area-fill', 'provinces-fill', 'ruler-fill', 'culture-fill', 'religion-fill', 'religionGeneral-fill', 'population-fill', 'markers-layer', 'clusters', 'area-labels-layer', 'area-labels-points']}
-        attributionControl={false}
+        attributionControl={ATTRIBUTION_OPTIONS}
         reuseMaps
         // Requirement 5.3: WHEN the user hovers over a marker, THE Cursor SHALL change to a pointer
         {...(hoveredMarkerId ? { cursor: 'pointer' } : {})}
@@ -1560,7 +1689,13 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             filter={['has', 'point_count']}
             layout={{
               'text-field': ['get', 'point_count_abbreviated'],
-              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+              // Single-font stack: a glyph server resolves `[a, b]` as one
+              // request for the comma-joined stack "a,b", and OpenFreeMap only
+              // serves exact single-font names. The previous
+              // ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'] was
+              // Mapbox-only on both entries, so cluster counts would have had
+              // no glyphs at all.
+              'text-font': [DEFAULT_BOLD_FONT],
               'text-size': 12,
               'text-allow-overlap': true,
             }}
@@ -1647,7 +1782,11 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-offset': [0, 1.2],
               'text-anchor': 'top',
               'text-optional': true,
-              'text-font': ['Noto Sans Regular', 'Arial Unicode MS Regular'],
+              // Single-font stack — see the cluster-count layer above.
+              // 'Arial Unicode MS Regular' only ever existed on Mapbox's glyph
+              // endpoint, and its presence turned this into the unservable
+              // stack "Noto Sans Regular,Arial Unicode MS Regular".
+              'text-font': [DEFAULT_FONT],
               'text-max-width': 10,
             }}
             paint={{
@@ -1671,7 +1810,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-font': getAreaLabelFonts(locale),
               'text-transform': AREA_LABEL_CONFIG.lineLayout.textTransform,
               'text-allow-overlap': AREA_LABEL_CONFIG.lineLayout.textAllowOverlap,
-              'text-size': AREA_LABEL_CONFIG.lineLayout.textSize as MapboxExpression,
+              'text-size': AREA_LABEL_CONFIG.lineLayout.textSize as MapExpression,
               'text-letter-spacing': AREA_LABEL_CONFIG.lineLayout.textLetterSpacing,
               'text-max-angle': AREA_LABEL_CONFIG.lineLayout.textMaxAngle,
               'text-padding': AREA_LABEL_CONFIG.lineLayout.textPadding,
@@ -1682,7 +1821,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-halo-width': AREA_LABEL_CONFIG.linePaint.textHaloWidth,
               'text-halo-blur': AREA_LABEL_CONFIG.linePaint.textHaloBlur,
               'text-halo-color': AREA_LABEL_CONFIG.linePaint.textHaloColor,
-              'text-opacity': AREA_LABEL_CONFIG.lineTextOpacity as MapboxExpression,
+              'text-opacity': AREA_LABEL_CONFIG.lineTextOpacity as MapExpression,
             }}
           />
         </Source>
@@ -1695,7 +1834,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
             layout={{
               visibility: labelNameMode === 'modern' ? 'none' : 'visible',
               'text-field': ['get', 'name'],
-              'text-size': AREA_LABEL_CONFIG.pointLayout.textSize as MapboxExpression,
+              'text-size': AREA_LABEL_CONFIG.pointLayout.textSize as MapExpression,
               'text-font': getAreaLabelFonts(locale),
               'text-anchor': AREA_LABEL_CONFIG.pointLayout.textAnchor,
               'text-allow-overlap': AREA_LABEL_CONFIG.pointLayout.textAllowOverlap,
@@ -1712,7 +1851,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-halo-color': AREA_LABEL_CONFIG.pointPaint.textHaloColor,
               'text-halo-width': AREA_LABEL_CONFIG.pointPaint.textHaloWidth,
               'text-halo-blur': AREA_LABEL_CONFIG.pointPaint.textHaloBlur,
-              'text-opacity': AREA_LABEL_CONFIG.pointTextOpacity as MapboxExpression,
+              'text-opacity': AREA_LABEL_CONFIG.pointTextOpacity as MapExpression,
             }}
           />
         </Source>

@@ -1,14 +1,18 @@
 /**
  * DeckGLOverlay Component
  *
- * Renders deck.gl layers on top of the Mapbox base map including
+ * Renders deck.gl layers on top of the MapLibre base map including
  * markers, arcs, city labels, and area color layers.
+ *
+ * `MapboxOverlay` keeps its name because that is what `@deck.gl/mapbox`
+ * exports; the package supports MapLibre and is the documented way to attach
+ * deck.gl to it.
  *
  * Requirements: 1.2, 5.2, 5.3, 5.5, 9.1, 9.2, 9.3, 9.4, 9.5, 9.9, 11.1, 11.2, 11.3, 11.4
  */
 
 import { useMemo, useCallback } from 'react';
-import { useControl } from 'react-map-gl/mapbox';
+import { useControl } from 'react-map-gl/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { IconLayer, TextLayer, ScatterplotLayer, ArcLayer, GeoJsonLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
@@ -60,7 +64,7 @@ function DeckGLOverlayControl(props: { layers: LayersList }) {
 /**
  * DeckGLOverlay Component
  *
- * Renders deck.gl layers on top of the Mapbox base map.
+ * Renders deck.gl layers on top of the MapLibre base map.
  * Includes IconLayer for markers with hover highlighting and click handling.
  *
  * Requirements:

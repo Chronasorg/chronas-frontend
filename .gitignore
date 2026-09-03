@@ -8,6 +8,7 @@ dist-node/
 
 # Environment files with secrets (keep templates)
 .env.development
+.env.dev-deploy
 .env.staging
 .env.production
 .env.local

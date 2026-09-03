@@ -21,7 +21,7 @@ test.setTimeout(60_000);
 /** Wait for app shell + map canvas + initial API data to be ready */
 async function waitForMap(page: Page): Promise<void> {
   await page.waitForSelector('[data-testid="app-shell"]', { timeout: 30_000 });
-  await page.waitForSelector('.mapboxgl-canvas, [data-testid="map-container"]', {
+  await page.waitForSelector('.maplibregl-canvas, [data-testid="map-container"]', {
     timeout: 15_000,
   });
   // Wait for sidebar nav to be interactive (signals React hydration is complete)

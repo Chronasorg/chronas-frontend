@@ -196,7 +196,7 @@ test.describe('Performance Checks', () => {
       console.log(`   - ${fileName}: ${sizeKB} KB`);
     }
     
-    // Total JS should be under 3MB (uncompressed) - includes map libraries (mapbox-gl ~1.6MB)
+    // Total JS should be under 3MB (uncompressed) - includes map libraries (maplibre-gl ~1MB)
     const totalSize = resources.reduce((sum, r) => sum + r.size, 0);
     expect(totalSize).toBeLessThan(3000 * 1024);
   });
@@ -209,8 +209,8 @@ test.describe('Map Integration Checks', () => {
     // Wait for React to hydrate
     await page.waitForSelector('[data-testid="app-shell"]', { timeout: 15000 });
     
-    // Verify the "Mapbox Token Missing" error is NOT displayed
-    const tokenError = page.locator('text=Mapbox Token Missing');
+    // Verify the removed "Mapbox Token Missing" gate is NOT displayed (issue #46)
+    const tokenError = page.locator("text=Token Missing");
     await expect(tokenError).not.toBeVisible();
     
     // Verify the "WebGL Not Supported" error is NOT displayed
@@ -220,44 +220,44 @@ test.describe('Map Integration Checks', () => {
     console.log('   ✅ Map loaded without configuration errors');
   });
 
-  test('should render the Mapbox map canvas', async ({ page }) => {
+  test("should render the MapLibre map canvas", async ({ page }) => {
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
     
     // Wait for React to hydrate
     await page.waitForSelector('[data-testid="app-shell"]', { timeout: 15000 });
     
-    // Give the map more time to initialize - Mapbox can take a while
+    // Give the map more time to initialize - tile loading can take a while
     await page.waitForTimeout(5000);
     
     // Check for various indicators that the map is working:
-    // 1. The mapboxgl-canvas (created by Mapbox GL JS)
-    // 2. The mapboxgl-map container
+    // 1. The maplibregl-canvas (created by MapLibre GL JS)
+    // 2. The maplibregl-map container
     // 3. Any canvas element within the map area
-    const mapCanvas = page.locator('.mapboxgl-canvas');
-    const mapboxMap = page.locator('.mapboxgl-map');
+    const mapCanvas = page.locator('.maplibregl-canvas');
+    const maplibreMap = page.locator('.maplibregl-map');
     const anyCanvas = page.locator('canvas');
     
     const canvasCount = await mapCanvas.count();
-    const mapboxMapCount = await mapboxMap.count();
+    const maplibreMapCount = await maplibreMap.count();
     const anyCanvasCount = await anyCanvas.count();
     
     // Log what we found for debugging
-    console.log(`   Map elements found: canvas=${String(canvasCount)}, mapboxgl-map=${String(mapboxMapCount)}, any canvas=${String(anyCanvasCount)}`);
+    console.log(`   Map elements found: canvas=${String(canvasCount)}, maplibregl-map=${String(maplibreMapCount)}, any canvas=${String(anyCanvasCount)}`);
     
     if (canvasCount > 0) {
-      console.log('   ✅ Mapbox canvas rendered successfully');
+      console.log('   ✅ MapLibre canvas rendered successfully');
       await expect(mapCanvas.first()).toBeVisible();
-    } else if (mapboxMapCount > 0) {
-      // Mapbox map container exists but canvas might still be loading
-      console.log('   ✅ Mapbox map container found, waiting for canvas...');
+    } else if (maplibreMapCount > 0) {
+      // MapLibre map container exists but canvas might still be loading
+      console.log('   ✅ MapLibre map container found, waiting for canvas...');
       try {
-        await page.waitForSelector('.mapboxgl-canvas', { timeout: 10000 });
-        await expect(page.locator('.mapboxgl-canvas').first()).toBeVisible();
-        console.log('   ✅ Mapbox canvas rendered after waiting');
+        await page.waitForSelector('.maplibregl-canvas', { timeout: 10000 });
+        await expect(page.locator('.maplibregl-canvas').first()).toBeVisible();
+        console.log('   ✅ MapLibre canvas rendered after waiting');
       } catch {
         // Canvas didn't appear but map container exists - this is acceptable
-        console.log('   ⚠️ Mapbox map container exists but canvas not visible (may be loading)');
-        await expect(mapboxMap.first()).toBeVisible();
+        console.log('   ⚠️ MapLibre map container exists but canvas not visible (may be loading)');
+        await expect(maplibreMap.first()).toBeVisible();
       }
     } else if (anyCanvasCount > 0) {
       // Some canvas exists - might be the map
@@ -272,7 +272,7 @@ test.describe('Map Integration Checks', () => {
         console.log('   ⏳ Map is still loading...');
         // Wait longer for the map to load
         try {
-          await page.waitForSelector('.mapboxgl-canvas, .mapboxgl-map, canvas', { timeout: 15000 });
+          await page.waitForSelector('.maplibregl-canvas, .maplibregl-map, canvas', { timeout: 15000 });
           console.log('   ✅ Map element appeared after extended wait');
         } catch {
           console.log('   ⚠️ Map still loading after extended wait - this may be expected for slow connections');
@@ -296,39 +296,98 @@ test.describe('Map Integration Checks', () => {
     }
   });
 
-  test('should make requests to Mapbox API', async ({ page }) => {
+  test('should fetch basemap tiles without contacting Mapbox', async ({ page }) => {
     const mapboxRequests: string[] = [];
-    
-    // Intercept requests to Mapbox APIs
+    const basemapRequests: string[] = [];
+
     page.on('request', (request) => {
       const url = request.url();
-      if (url.includes('mapbox.com') || url.includes('tiles.mapbox.com')) {
+      let hostname: string;
+      try {
+        hostname = new URL(url).hostname;
+      } catch {
+        return;
+      }
+      // Hostname, not substring: our own vendored RTL plugin is served from a
+      // same-origin path that contains "mapbox".
+      if (/(^|\.)mapbox\.com$/.test(hostname)) {
         mapboxRequests.push(url);
       }
+      if (hostname === 'tiles.openfreemap.org' || hostname === 'tiles.maps.eox.at') {
+        basemapRequests.push(url);
+      }
     });
-    
+
     await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-    
+
     // Wait for React to hydrate and map to start loading
     await page.waitForSelector('[data-testid="app-shell"]', { timeout: 15000 });
-    
-    // Give the map time to make API requests
+
+    // Give the map time to make its tile requests
     await page.waitForTimeout(5000);
-    
-    // Should have made at least one request to Mapbox
-    console.log(`   📡 Mapbox API requests: ${String(mapboxRequests.length)}`);
-    
-    // Log first few requests for debugging
-    if (mapboxRequests.length > 0) {
-      console.log('   Sample requests:');
-      for (const url of mapboxRequests.slice(0, 3)) {
-        // Truncate long URLs
-        const shortUrl = url.length > 80 ? url.substring(0, 80) + '...' : url;
-        console.log(`   - ${shortUrl}`);
-      }
+
+    console.log(`   📡 OpenFreeMap/EOX requests: ${String(basemapRequests.length)}`);
+    console.log(`   📡 Mapbox requests: ${String(mapboxRequests.length)}`);
+    for (const url of mapboxRequests.slice(0, 3)) {
+      console.log(`   - unexpected: ${url.length > 80 ? url.substring(0, 80) + '...' : url}`);
     }
-    
-    expect(mapboxRequests.length).toBeGreaterThan(0);
+
+    // Issue #46: Mapbox revoked the account token, and Mapbox GL JS cannot even
+    // construct a map without one. The migration's acceptance criterion is that
+    // production no longer depends on them at all.
+    expect(mapboxRequests).toEqual([]);
+    expect(basemapRequests.length).toBeGreaterThan(0);
+  });
+
+  test('should serve the MapLibre tile worker as JavaScript', async ({ page }) => {
+    // MapLibre resolves its own worker URL relative to whichever chunk it landed
+    // in, and never checks the result. In a bundled build nothing puts
+    // `maplibre-gl-worker.mjs` next to the hashed app chunk, so the request falls
+    // through to the SPA rewrite and comes back as `index.html` with a 200 — the
+    // worker then dies on a syntax error and every vector source hangs, showing
+    // "Loading map..." forever. `src/config/mapWorker.ts` points MapLibre at a
+    // Vite-bundled asset instead; this is the only suite that runs against a real
+    // build, so it is the only place that regression can be caught.
+    const workerResponses: { status: number; contentType: string }[] = [];
+
+    page.on('response', (response) => {
+      if (response.url().includes('maplibre-gl-worker')) {
+        workerResponses.push({
+          status: response.status(),
+          contentType: response.headers()['content-type'] ?? '',
+        });
+      }
+    });
+
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="app-shell"]', { timeout: 15000 });
+
+    // Give MapLibre time to spin up its worker pool.
+    await page.waitForTimeout(8000);
+
+    console.log(`   Worker responses: ${JSON.stringify(workerResponses)}`);
+
+    expect(workerResponses.length).toBeGreaterThan(0);
+    for (const response of workerResponses) {
+      expect(response.status).toBe(200);
+      // The SPA fallback would answer 200 with `text/html`.
+      expect(response.contentType).toMatch(/javascript/);
+    }
+
+    // The canvas must exist — a worker that dies on a syntax error still lets it
+    // mount, so this is necessary but not sufficient.
+    await expect(page.locator('.maplibregl-canvas')).toBeVisible();
+
+    // Note on what is deliberately *not* asserted here. The absence of the
+    // "Loading map" overlay used to stand in for "the worker booted", and no
+    // longer can: that overlay now lifts as soon as the style parses (see
+    // `handleStyleData` in MapView), which is main-thread work that succeeds with
+    // a dead worker. Proving that parsing completed needs `window.__chronasMap`,
+    // which is dev/test-only by design, so that assertion lives in
+    // `basemap-maplibre.spec.ts` ("boots the tile worker, so Chronas GeoJSON
+    // sources actually parse"). What this suite uniquely contributes — and the
+    // only place it can be caught — is that the bundled worker asset is served as
+    // JavaScript rather than swallowed by the SPA fallback.
   });
 
   test('should display timeline year labels', async ({ page }) => {

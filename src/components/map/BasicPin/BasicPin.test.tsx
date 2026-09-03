@@ -10,8 +10,8 @@ import { render, screen, act } from '@testing-library/react';
 import { BasicPin } from './BasicPin';
 import { DEFAULT_PIN_SIZE, isValidCoordinates } from './BasicPin.utils';
 
-// Mock react-map-gl/mapbox Marker component
-vi.mock('react-map-gl/mapbox', () => ({
+// Mock react-map-gl/maplibre Marker component
+vi.mock('react-map-gl/maplibre', () => ({
   Marker: ({ children, longitude, latitude, anchor }: {
     children: React.ReactNode;
     longitude: number;
