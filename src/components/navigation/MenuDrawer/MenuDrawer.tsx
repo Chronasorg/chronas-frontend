@@ -18,7 +18,7 @@ export interface MenuDrawerProps {
   /** Whether the drawer is open */
   isOpen: boolean;
   /** Content type to display */
-  contentType: 'layers' | 'collections' | 'settings' | null;
+  contentType: 'layers' | 'collections' | 'settings' | 'search' | null;
   /** Callback when close is requested */
   onClose: () => void;
   /** Children to render in the content area */
@@ -34,6 +34,7 @@ const TITLE_KEYS: Record<string, { key: string; fallback: string }> = {
   layers: { key: 'nav.layers', fallback: 'Layers' },
   collections: { key: 'nav.collections', fallback: 'Collections' },
   settings: { key: 'nav.configuration', fallback: 'Configuration' },
+  search: { key: 'nav.search', fallback: 'Search' },
 };
 
 /**
@@ -52,10 +53,11 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Determine if using light theme (for Layers and Settings)
-  const isLightTheme = contentType === 'layers' || contentType === 'settings';
-  // Hide header for Layers (LayersContent has its own header); Settings shows header
-  const hideHeader = contentType === 'layers';
+  // Determine if using light theme (for Layers, Settings, Search)
+  const isLightTheme =
+    contentType === 'layers' || contentType === 'settings' || contentType === 'search';
+  // Hide header for Layers and Search (their content has its own header); Settings shows header
+  const hideHeader = contentType === 'layers' || contentType === 'search';
 
   // Focus trap and focus management
   useEffect(() => {

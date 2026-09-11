@@ -1,0 +1,36 @@
+MIT License
+
+Copyright (c) 2016-2026 Chronas (Joachim Aumann) and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+NOTE ON DATA VS. CODE
+
+This MIT License covers the SOURCE CODE of the Chronas frontend only.
+
+The historical DATA displayed by this application — province and area
+geometry, and per-year ruler, culture, religion, capital, and related entity
+data — is served by the Chronas API and licensed separately under the
+Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA
+4.0), because it is substantially derived from Wikipedia and other CC BY-SA
+sources.
+
+See DATA-LICENSE.md for the terms that apply to the data.

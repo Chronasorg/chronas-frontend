@@ -3,6 +3,7 @@
     "layers": "Layers",
     "discover": "Discover",
     "random": "Random Article",
+    "search": "Search",
     "configuration": "Configuration",
     "settings": "Configuration",
     "pro": "PRO Version",
@@ -12,6 +13,18 @@
     "logout": "Logout",
     "community": "Community Board",
     "account": "Manage Account"
+  },
+  "search": {
+    "placeholder": "Search places, cities, regions…",
+    "hint": "Type a placename to find provinces, cities, and historical landmarks. Selecting a result moves the map there.",
+    "inView": "In view",
+    "acrossHistory": "Across history",
+    "empty": "No matches found.",
+    "province": "Province",
+    "marker": "Marker",
+    "otherYear": "Other year",
+    "close": "Close search",
+    "clear": "Clear search"
   },
   "auth": {
     "signIn": "Sign In",

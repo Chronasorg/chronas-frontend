@@ -72,6 +72,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           case 'settings':
             toggleDrawer('settings');
             break;
+          case 'search':
+            toggleDrawer('search');
+            break;
           case 'random': {
             // Pick a random province from area data and open its Wikipedia article
             if (currentAreaData) {
@@ -165,6 +168,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return true;
     }
     if (item.action === 'settings' && drawerOpen && drawerContent === 'settings') {
+      return true;
+    }
+    if (item.action === 'search' && drawerOpen && drawerContent === 'search') {
       return true;
     }
     return false;

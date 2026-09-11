@@ -61,3 +61,16 @@ Requires AWS CLI configured with `chronas-dev` profile.
 - React Router v6 (HashRouter)
 - Axios (API client)
 - Vitest + Playwright (testing)
+
+## License
+
+Chronas uses a split license for code and data:
+
+- **Code** — [MIT License](LICENSE). Reuse the source freely with attribution.
+- **Data** — [CC BY-SA 4.0](DATA-LICENSE.md). The historical data displayed by
+  the app (served by the [Chronas API](https://github.com/Chronasorg/chronas-api))
+  is derived substantially from Wikipedia and inherits its attribution +
+  share-alike terms.
+
+If you build on the Chronas data, please credit Chronas (https://chronas.org)
+and honor the underlying Wikipedia sources. See [DATA-LICENSE.md](DATA-LICENSE.md).

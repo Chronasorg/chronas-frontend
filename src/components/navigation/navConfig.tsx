@@ -22,6 +22,7 @@ import {
   LayersIcon,
   DiscoverIcon,
   RandomIcon,
+  SearchIcon,
   SettingsIcon,
   StarIcon,
   CollectionsIcon,
@@ -33,7 +34,16 @@ import {
 /**
  * Action types for navigation items that don't navigate to a route.
  */
-export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help' | 'info' | 'play';
+export type NavAction =
+  | 'layers'
+  | 'collections'
+  | 'random'
+  | 'logout'
+  | 'settings'
+  | 'help'
+  | 'info'
+  | 'play'
+  | 'search';
 
 /**
  * Navigation item configuration interface.
@@ -93,6 +103,13 @@ export const NAV_ITEMS: NavItemConfig[] = [
     action: 'random',
     section: 'top',
     disabled: true,
+  },
+  {
+    id: 'search',
+    icon: <SearchIcon />,
+    label: 'Search',
+    action: 'search',
+    section: 'top',
   },
   {
     id: 'settings',
