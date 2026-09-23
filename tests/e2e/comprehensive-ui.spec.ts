@@ -59,14 +59,15 @@ test.describe('Navigation Sidebar', () => {
 
   test('renders all enabled nav items', async ({ page }) => {
     // Issue #20: 'play' is now enabled and opens the autoplay menu.
-    for (const id of ['layers', 'settings', 'play', 'help', 'logout']) {
+    // Issue #53: 'pro' is now enabled and opens the Patreon support dialog.
+    for (const id of ['layers', 'settings', 'play', 'pro', 'help', 'logout']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeEnabled();
     }
   });
 
   test('renders disabled nav items', async ({ page }) => {
-    for (const id of ['discover', 'random', 'pro', 'collections']) {
+    for (const id of ['discover', 'random', 'collections']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeDisabled();
     }
@@ -108,6 +109,32 @@ test.describe('Navigation Sidebar', () => {
   test('logo link points to /info', async ({ page }) => {
     const logo = page.getByTestId('sidebar-logo');
     await expect(logo).toHaveAttribute('href', '#/info');
+  });
+
+  test('clicking PRO opens the Patreon support dialog', async ({ page }) => {
+    await page.getByTestId('nav-item-pro').click();
+    const dialog = page.getByTestId('pro-dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: 'Upgrade Chronas' })).toBeVisible();
+    await expect(page.getByTestId('pro-patreon-link')).toHaveAttribute(
+      'href',
+      'https://www.patreon.com/chronas'
+    );
+    await expect(page.getByTestId('pro-code-submit')).toBeDisabled();
+    await page.getByTestId('pro-code-input').fill('ABC123');
+    await expect(page.getByTestId('pro-code-submit')).toBeEnabled();
+    // Logged out: the dialog prompts for login rather than redeeming
+    await expect(page.getByTestId('pro-login-note')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+  });
+
+  test('PRO dialog Contact Us opens the Contact tab', async ({ page }) => {
+    await page.getByTestId('nav-item-pro').click();
+    await page.getByTestId('pro-contact-link').click();
+    await expect(page.getByTestId('pro-dialog')).not.toBeVisible();
+    await expect(page.getByTestId('info-panel-contact')).toBeVisible();
   });
 });
 

@@ -1,0 +1,444 @@
+/* ProDialog — Issue #53. Matches InfoDialog: Cinzel, white paper, Chronas gold. */
+
+.overlay {
+  --pro-gold: rgb(173, 135, 27);
+  --pro-gold-soft: rgba(173, 135, 27, 0.12);
+  --pro-ink: #494949;
+  --pro-text: #6a6a6a;
+  --pro-muted: #9a9a9a;
+
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  animation: fadeIn 200ms ease-out;
+  overflow: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog {
+  position: relative;
+  width: 90vw;
+  max-width: 760px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  font-family: Cinzel, serif;
+  color: var(--pro-text);
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, var(--pro-gold-soft), transparent 70%), #fff;
+  border-top: 3px solid var(--pro-gold);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUp 250ms ease-out;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  line-height: 1;
+  color: #757575;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.closeButton:hover {
+  color: var(--pro-ink);
+}
+
+/* ── Header ── */
+
+.header {
+  text-align: center;
+  padding: 36px 48px 8px;
+}
+
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #d8b24a, var(--pro-gold) 60%, #8a6a12);
+  box-shadow:
+    0 0 0 4px #fff,
+    0 0 0 5px var(--pro-gold),
+    0 6px 16px rgba(173, 135, 27, 0.35);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: Cinzel, serif;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--pro-text);
+  margin: 0;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pro-gold);
+}
+
+/* ── Content ── */
+
+.content {
+  padding: 16px 48px 32px;
+}
+
+.benefits {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 32px;
+}
+
+.benefit {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: rise 400ms ease-out both;
+}
+
+.benefit:nth-child(2) {
+  animation-delay: 60ms;
+}
+.benefit:nth-child(3) {
+  animation-delay: 120ms;
+}
+.benefit:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.check {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--pro-gold);
+}
+
+.benefitTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pro-ink);
+  margin-bottom: 2px;
+}
+
+.benefitText {
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.divider {
+  border: none;
+  height: 1px;
+  margin: 28px 0 24px;
+  background: linear-gradient(90deg, transparent, var(--pro-gold), transparent);
+  opacity: 0.5;
+}
+
+/* ── Steps ── */
+
+.stepsTitle {
+  font-family: Cinzel, serif;
+  font-size: 15px;
+  font-weight: 400;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--pro-text);
+  margin: 0 0 20px;
+}
+
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* The gold "timeline" thread linking each numeral to the next */
+.step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  bottom: 0;
+  left: 17px;
+  width: 1px;
+  background: linear-gradient(var(--pro-gold), rgba(173, 135, 27, 0.35));
+}
+
+.step {
+  position: relative;
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  padding-bottom: 26px;
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+.numeral {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Cinzel, serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--pro-gold);
+  box-shadow: 0 0 0 4px #fff;
+}
+
+.stepBody {
+  flex: 1;
+  min-width: 0;
+  padding-top: 7px;
+  font-size: 16px;
+  line-height: 24px;
+  font-variant: small-caps;
+}
+
+.stepBody strong {
+  font-weight: 700;
+  color: var(--pro-ink);
+}
+
+/* ── Links ── */
+
+.externalLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--pro-gold);
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.externalLink:hover {
+  opacity: 0.65;
+}
+
+.externalIcon {
+  align-self: flex-start;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+.patreonLink {
+  gap: 6px;
+  color: #1a73e8;
+  vertical-align: bottom;
+}
+
+.patreonLogo {
+  display: block;
+  border-radius: 50%;
+}
+
+.inlineLink {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--pro-gold);
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.inlineLink:hover {
+  opacity: 0.65;
+}
+
+.externalLink:focus-visible,
+.inlineLink:focus-visible,
+.closeButton:focus-visible,
+.submitButton:focus-visible {
+  outline: 2px solid var(--pro-gold);
+  outline-offset: 2px;
+}
+
+/* ── Redeem form ── */
+
+.redeemForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: -7px;
+}
+
+.codeInput {
+  width: 150px;
+  padding: 8px 2px 6px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  background: transparent;
+  font-family: Cinzel, serif;
+  font-size: 16px;
+  font-variant: normal;
+  letter-spacing: 0.08em;
+  color: var(--pro-ink);
+  transition: border-color 150ms ease;
+}
+
+.codeInput::placeholder {
+  color: #bbb;
+  font-variant: small-caps;
+  letter-spacing: normal;
+}
+
+.codeInput:focus {
+  outline: none;
+  border-bottom: 2px solid var(--pro-gold);
+  padding-bottom: 5px;
+}
+
+.codeInput[aria-invalid='true'] {
+  border-bottom-color: #c0392b;
+}
+
+.submitButton {
+  padding: 10px 22px;
+  border: none;
+  background: var(--pro-gold);
+  color: #fff;
+  font-family: Cinzel, serif;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(173, 135, 27, 0.3);
+  transition:
+    opacity 200ms ease,
+    transform 150ms ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  cursor: default;
+  background: #d6d6d6;
+  box-shadow: none;
+}
+
+.feedback {
+  min-height: 20px;
+  margin-top: 6px;
+  font-variant: normal;
+}
+
+.error {
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.loginNote {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-variant: normal;
+  color: var(--pro-muted);
+}
+
+/* ── Footer text ── */
+
+.manage {
+  font-size: 16px;
+  line-height: 24px;
+  margin: 0;
+}
+
+.help {
+  margin: 28px 0 0;
+  font-size: 14px;
+  font-style: italic;
+  font-variant: small-caps;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: 32px 24px 8px;
+  }
+  .content {
+    padding: 16px 24px 28px;
+  }
+  .benefits {
+    grid-template-columns: 1fr;
+  }
+  .title {
+    font-size: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .dialog,
+  .benefit {
+    animation: none;
+  }
+}

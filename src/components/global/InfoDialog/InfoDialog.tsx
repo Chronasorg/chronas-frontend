@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import type { InfoDialogTab as InfoTab } from '@/stores/uiStore';
 import styles from './InfoDialog.module.css';
-
-type InfoTab = 'welcome' | 'howto' | 'contact';
 
 const TABS: { id: InfoTab; label: string }[] = [
   { id: 'welcome', label: 'Welcome' },
@@ -29,16 +28,18 @@ const DEVELOPERS = [
 export interface InfoDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Tab shown when the dialog opens */
+  initialTab?: InfoTab;
 }
 
-export function InfoDialog({ isOpen, onClose }: InfoDialogProps) {
+export function InfoDialog({ isOpen, onClose, initialTab = 'welcome' }: InfoDialogProps) {
   if (!isOpen) return null;
 
-  return <InfoDialogContent onClose={onClose} />;
+  return <InfoDialogContent onClose={onClose} initialTab={initialTab} />;
 }
 
-function InfoDialogContent({ onClose }: { onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<InfoTab>('welcome');
+function InfoDialogContent({ onClose, initialTab }: { onClose: () => void; initialTab: InfoTab }) {
+  const [activeTab, setActiveTab] = useState<InfoTab>(initialTab);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

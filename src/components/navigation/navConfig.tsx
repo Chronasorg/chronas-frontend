@@ -33,7 +33,7 @@ import {
 /**
  * Action types for navigation items that don't navigate to a route.
  */
-export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help' | 'info' | 'play';
+export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help' | 'info' | 'play' | 'pro';
 
 /**
  * Navigation item configuration interface.
@@ -106,10 +106,9 @@ export const NAV_ITEMS: NavItemConfig[] = [
     id: 'pro',
     icon: <StarIcon />,
     label: 'PRO Version',
-    to: '/pro',
+    action: 'pro',
     section: 'bottom',
     highlightWhenPro: true,
-    disabled: true,
   },
   {
     id: 'collections',

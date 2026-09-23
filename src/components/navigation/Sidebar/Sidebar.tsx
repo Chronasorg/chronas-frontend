@@ -19,6 +19,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useMapStore } from '../../../stores/mapStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
+import { isProSubscription } from '../../../utils/subscriptionUtils';
 import styles from './Sidebar.module.css';
 
 export interface SidebarProps {
@@ -53,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const topItems = getNavItemsBySection('top');
   const bottomItems = getNavItemsBySection('bottom');
 
-  const isPro = subscription === 'pro';
+  const isPro = isProSubscription(subscription);
 
   /**
    * Handle navigation item click.
@@ -106,6 +107,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             break;
           case 'info':
             useUIStore.getState().openInfoDialog();
+            break;
+          case 'pro':
+            // Issue #53: PRO star opens the Patreon support dialog
+            useUIStore.getState().openProDialog();
             break;
           case 'logout':
             if (isAuthenticated) {

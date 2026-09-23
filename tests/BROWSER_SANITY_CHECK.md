@@ -16,8 +16,10 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 
 ## 2. Navigation Sidebar
 
-- [ ] Layers, Settings, Help, and Logout nav items are visible and enabled
-- [ ] Discover, Random, Pro, Collections, Play items are visible and disabled
+- [ ] Layers, Settings, Play, Pro, Help, and Logout nav items are visible and enabled
+- [ ] Discover, Random, Collections items are visible and disabled
+- [ ] Clicking Pro (star) opens the "Upgrade Chronas" dialog: benefits, 3 steps, Patreon link (new tab), activation code input + Submit (disabled until a code is typed)
+- [ ] Pro dialog: logged out shows "Log in" note; "Contact Us" opens the Info dialog on the Contact tab; Esc / overlay / × close it
 - [ ] Clicking Layers opens the left drawer with layers content
 - [ ] Clicking Settings opens the left drawer with settings content
 - [ ] Clicking Help toggles the announcement banner
