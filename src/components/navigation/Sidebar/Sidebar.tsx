@@ -108,9 +108,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           case 'info':
             useUIStore.getState().openInfoDialog();
             break;
-          case 'pro':
-            // Issue #53: PRO star opens the Patreon support dialog
-            useUIStore.getState().openProDialog();
+          case 'support':
+            // Issue #53: opens the Support Chronas (Patreon) dialog
+            useUIStore.getState().openSupportDialog();
             break;
           case 'logout':
             if (isAuthenticated) {
@@ -204,7 +204,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     isOpen && styles['open'],
     !isOpen && styles['closed'],
     className,
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <aside
@@ -220,7 +222,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Top navigation items */}
-        <nav className={styles['topSection']} aria-label="Primary navigation" data-testid="nav-section-top">
+        <nav
+          className={styles['topSection']}
+          aria-label="Primary navigation"
+          data-testid="nav-section-top"
+        >
           {topItems.map(renderNavItem)}
         </nav>
 
@@ -228,7 +234,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={styles['spacer']} />
 
         {/* Bottom navigation items */}
-        <nav className={styles['bottomSection']} aria-label="Secondary navigation" data-testid="nav-section-bottom">
+        <nav
+          className={styles['bottomSection']}
+          aria-label="Secondary navigation"
+          data-testid="nav-section-bottom"
+        >
           {bottomItems.map(renderNavItem)}
 
           {/* User avatar (shown when authenticated) */}

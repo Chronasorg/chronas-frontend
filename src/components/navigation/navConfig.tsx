@@ -8,7 +8,7 @@
  *
  * Production reference icons (https://chronas.org) - Material-UI icons:
  * Top section: Layers, Discover (compass), Random (dice), Settings (gear)
- * Bottom section: Star (PRO), Collections, Play (gamepad), Help, Logout (power)
+ * Bottom section: Support (heart), Collections, Play (gamepad), Help, Logout (power)
  *
  * Icon styling from production:
  * - viewBox="0 0 24 24"
@@ -23,7 +23,7 @@ import {
   DiscoverIcon,
   RandomIcon,
   SettingsIcon,
-  StarIcon,
+  SupportIcon,
   CollectionsIcon,
   PlayIcon,
   HelpIcon,
@@ -33,7 +33,16 @@ import {
 /**
  * Action types for navigation items that don't navigate to a route.
  */
-export type NavAction = 'layers' | 'collections' | 'random' | 'logout' | 'settings' | 'help' | 'info' | 'play' | 'pro';
+export type NavAction =
+  | 'layers'
+  | 'collections'
+  | 'random'
+  | 'logout'
+  | 'settings'
+  | 'help'
+  | 'info'
+  | 'play'
+  | 'support';
 
 /**
  * Navigation item configuration interface.
@@ -55,7 +64,7 @@ export interface NavItemConfig {
   requiresAuth?: boolean;
   /** Whether the item should only show when authenticated */
   showWhenAuth?: boolean;
-  /** Whether to highlight when user has PRO subscription */
+  /** Whether to highlight when the user is a Patreon supporter */
   highlightWhenPro?: boolean;
   /** Whether to highlight when user is authenticated */
   highlightWhenAuth?: boolean;
@@ -68,7 +77,7 @@ export interface NavItemConfig {
  * Defines all items in the sidebar with their properties.
  * Order matches production (https://chronas.org):
  * Top: Layers, Discover, Random, Settings
- * Bottom: Star (PRO), Collections, Play, Help, Logout
+ * Bottom: Support, Collections, Play, Help, Logout
  */
 export const NAV_ITEMS: NavItemConfig[] = [
   {
@@ -103,10 +112,10 @@ export const NAV_ITEMS: NavItemConfig[] = [
   },
 
   {
-    id: 'pro',
-    icon: <StarIcon />,
-    label: 'PRO Version',
-    action: 'pro',
+    id: 'support',
+    icon: <SupportIcon />,
+    label: 'Support Chronas',
+    action: 'support',
     section: 'bottom',
     highlightWhenPro: true,
   },
@@ -156,4 +165,3 @@ export function getNavItemsBySection(section: 'top' | 'bottom'): NavItemConfig[]
 export function getNavItemById(id: string): NavItemConfig | undefined {
   return NAV_ITEMS.find((item) => item.id === id);
 }
-

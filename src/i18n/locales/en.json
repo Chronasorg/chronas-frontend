@@ -11,7 +11,8 @@
     "help": "Help",
     "logout": "Logout",
     "community": "Community Board",
-    "account": "Manage Account"
+    "account": "Manage Account",
+    "support": "Support Chronas"
   },
   "auth": {
     "signIn": "Sign In",
@@ -157,50 +158,20 @@
     "ad": "AD",
     "bc": "BC"
   },
-  "pro": {
-    "title": "Upgrade Chronas",
-    "subtitle": "Pay what you want",
-    "thanksTitle": "Thank you for your support!",
-    "close": "Close",
-    "benefits": {
-      "features": {
-        "title": "Full Features",
-        "text": "Unlimited markers, epics and media, access to the community board & more"
-      },
-      "noAds": {
-        "title": "No Ads",
-        "text": "More content space where ads used to be!"
-      },
-      "development": {
-        "title": "Support the development",
-        "textBefore": "Help shape the",
-        "link": "complete rewrite"
-      },
-      "write": {
-        "title": "Full write permissions",
-        "text": "As a trusted supporter of the project, if you see false data - simply change it!"
-      }
-    },
-    "stepsTitle": "Supporting Chronas is quick and easy:",
-    "step1Before": "Head over to",
-    "step1After": "and pledge an amount of your choice!",
-    "step1Emphasis": "Whatever Chronas is worth to you!",
-    "step2": "Check your inbox",
-    "step3Before": "Paste the Activation Code",
-    "codePlaceholder": "here",
-    "step3After": "and hit",
-    "submit": "Submit",
-    "submitting": "Submitting…",
-    "loginRequired": "You need an account to redeem your code.",
-    "login": "Log in",
-    "manage": "You can manage your subscription on",
+  "support": {
+    "title": "Support Chronas",
+    "subtitle": "Keep history on the map",
+    "intro": "Chronas is free for everyone, without ads. Your support keeps the servers running and the map growing.",
+    "ctaBefore": "Head over to",
+    "ctaAfter": "and pledge an amount of your choice!",
+    "ctaEmphasis": "Whatever Chronas is worth to you!",
+    "button": "Become a patron",
+    "supporter": "You are already supporting Chronas, thank you!",
+    "otherTitle": "Other ways to help",
+    "github": "Found a bug or have an idea? Let us know on GitHub",
     "help": "If you have any questions or need help",
     "contact": "Contact Us",
-    "opensInNewTab": "(opens in a new tab)",
-    "errors": {
-      "invalid": "This activation code seems to be incorrect.",
-      "unavailable": "Redeeming codes is not available right now. Please contact us.",
-      "generic": "Something went wrong. Please try again."
-    }
+    "close": "Close",
+    "opensInNewTab": "(opens in a new tab)"
   }
 }

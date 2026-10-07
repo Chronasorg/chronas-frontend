@@ -121,7 +121,7 @@ test.describe('Unit 1: Visual Parity Fixes', () => {
       await page.goto(DEV_URL, { waitUntil: 'networkidle' });
       await page.waitForSelector('[data-testid="nav-section-bottom"]', { timeout: 15000 });
 
-      await expect(page.getByTestId('nav-item-pro')).toBeVisible();
+      await expect(page.getByTestId('nav-item-support')).toBeVisible();
       await expect(page.getByTestId('nav-item-collections')).toBeVisible();
       await expect(page.getByTestId('nav-item-play')).toBeVisible();
       await expect(page.getByTestId('nav-item-help')).toBeVisible();

@@ -10,7 +10,7 @@
  * - Discover icon (compass)
  * - Random icon (dice)
  * - Settings icon
- * - Star icon (PRO)
+ * - Support icon (hand + heart)
  * - Collections icon
  * - Play icon (gamepad)
  * - Help icon
@@ -51,14 +51,14 @@ const mockUseNavigationStore = useNavigationStore as unknown as ReturnType<typeo
  * 
  * Production order:
  * Top: Layers, Discover, Random, Settings
- * Bottom: Star (PRO), Collections, Play, Help, Logout
+ * Bottom: Support, Collections, Play, Help, Logout
  */
 const REQUIRED_NAV_ITEMS = [
   { id: 'layers', label: 'Layers' },
   { id: 'discover', label: 'Discover' },
   { id: 'random', label: 'Random Article' },
   { id: 'settings', label: 'Configuration' },
-  { id: 'pro', label: 'PRO Version' },
+  { id: 'support', label: 'Support Chronas' },
   { id: 'collections', label: 'Collections' },
   { id: 'play', label: 'Play' },
   { id: 'help', label: 'Help' },
@@ -167,7 +167,7 @@ describe('Sidebar Property Tests', () => {
      * For any rendered Left_Sidebar in collapsed state, all required navigation items
      * SHALL be present matching production (https://chronas.org):
      * Top: Layers, Discover, Random, Settings
-     * Bottom: Star (PRO), Collections, Play, Help, Logout
+     * Bottom: Support, Collections, Play, Help, Logout
      */
 
     it('should contain Layers navigation item for any sidebar state', () => {
@@ -254,7 +254,7 @@ describe('Sidebar Property Tests', () => {
       );
     });
 
-    it('should contain Star/PRO navigation item for any sidebar state', () => {
+    it('should contain Support navigation item for any sidebar state', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
@@ -265,8 +265,8 @@ describe('Sidebar Property Tests', () => {
             setupMocks(uiState, authState, navState);
             const { unmount } = renderSidebar(props);
 
-            const proItem = screen.getByTestId('nav-item-pro');
-            expect(proItem).toBeInTheDocument();
+            const supportItem = screen.getByTestId('nav-item-support');
+            expect(supportItem).toBeInTheDocument();
 
             unmount();
           }
@@ -529,7 +529,7 @@ describe('Sidebar Property Tests', () => {
             // Bottom section items: pro, collections, play, help, logout
             const bottomSection = container.querySelector('[aria-label="Secondary navigation"]');
             expect(bottomSection).toBeInTheDocument();
-            expect(bottomSection?.querySelector('[data-testid="nav-item-pro"]')).toBeInTheDocument();
+            expect(bottomSection?.querySelector('[data-testid="nav-item-support"]')).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-collections"]')).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-play"]')).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-help"]')).toBeInTheDocument();

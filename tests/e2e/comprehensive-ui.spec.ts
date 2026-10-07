@@ -46,7 +46,6 @@ async function openSettings(page: Page): Promise<void> {
   }
 }
 
-
 // ---------------------------------------------------------------------------
 // 1. Navigation Sidebar
 // ---------------------------------------------------------------------------
@@ -59,8 +58,8 @@ test.describe('Navigation Sidebar', () => {
 
   test('renders all enabled nav items', async ({ page }) => {
     // Issue #20: 'play' is now enabled and opens the autoplay menu.
-    // Issue #53: 'pro' is now enabled and opens the Patreon support dialog.
-    for (const id of ['layers', 'settings', 'play', 'pro', 'help', 'logout']) {
+    // Issue #53: 'support' opens the Patreon support page.
+    for (const id of ['layers', 'settings', 'play', 'support', 'help', 'logout']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeEnabled();
     }
@@ -111,29 +110,26 @@ test.describe('Navigation Sidebar', () => {
     await expect(logo).toHaveAttribute('href', '#/info');
   });
 
-  test('clicking PRO opens the Patreon support dialog', async ({ page }) => {
-    await page.getByTestId('nav-item-pro').click();
-    const dialog = page.getByTestId('pro-dialog');
+  test('clicking Support opens the Patreon support page', async ({ page }) => {
+    await page.getByTestId('nav-item-support').click();
+    const dialog = page.getByTestId('support-dialog');
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('heading', { name: 'Upgrade Chronas' })).toBeVisible();
-    await expect(page.getByTestId('pro-patreon-link')).toHaveAttribute(
-      'href',
-      'https://www.patreon.com/chronas'
-    );
-    await expect(page.getByTestId('pro-code-submit')).toBeDisabled();
-    await page.getByTestId('pro-code-input').fill('ABC123');
-    await expect(page.getByTestId('pro-code-submit')).toBeEnabled();
-    // Logged out: the dialog prompts for login rather than redeeming
-    await expect(page.getByTestId('pro-login-note')).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: 'Support Chronas' })).toBeVisible();
+    await expect(dialog).toContainText('pledge an amount of your choice!');
+    await expect(dialog).toContainText('Whatever Chronas is worth to you!');
+    for (const id of ['support-patreon-link', 'support-patreon-button']) {
+      await expect(page.getByTestId(id)).toHaveAttribute('href', 'https://www.patreon.com/chronas');
+      await expect(page.getByTestId(id)).toHaveAttribute('target', '_blank');
+    }
 
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
   });
 
-  test('PRO dialog Contact Us opens the Contact tab', async ({ page }) => {
-    await page.getByTestId('nav-item-pro').click();
-    await page.getByTestId('pro-contact-link').click();
-    await expect(page.getByTestId('pro-dialog')).not.toBeVisible();
+  test('Support page Contact Us opens the Contact tab', async ({ page }) => {
+    await page.getByTestId('nav-item-support').click();
+    await page.getByTestId('support-contact-link').click();
+    await expect(page.getByTestId('support-dialog')).not.toBeVisible();
     await expect(page.getByTestId('info-panel-contact')).toBeVisible();
   });
 });
@@ -184,7 +180,22 @@ test.describe('Layers Panel — Marker Filters', () => {
   });
 
   const markerTypes = [
-    'ar', 'b', 'si', 'cp', 'c', 'ca', 'l', 'm', 'p', 'e', 's', 'a', 'r', 'at', 'op', 'o',
+    'ar',
+    'b',
+    'si',
+    'cp',
+    'c',
+    'ca',
+    'l',
+    'm',
+    'p',
+    'e',
+    's',
+    'a',
+    'r',
+    'at',
+    'op',
+    'o',
   ] as const;
 
   test('all 16 marker type checkboxes are visible and checked by default', async ({ page }) => {
@@ -413,7 +424,9 @@ test.describe('Timeline Controls', () => {
   });
 
   test('year display shows 1000 by default', async ({ page }) => {
-    await expect(page.locator('[data-testid="year-notification"], [role="status"]').first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid="year-notification"], [role="status"]').first()
+    ).toBeVisible();
   });
 
   test('expand timeline button is visible', async ({ page }) => {
@@ -427,7 +440,6 @@ test.describe('Timeline Controls', () => {
   test('autoplay button is visible', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'Start autoplay' })).toBeVisible();
   });
-
 });
 
 // ---------------------------------------------------------------------------

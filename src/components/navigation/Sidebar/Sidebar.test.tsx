@@ -35,7 +35,7 @@ describe('Sidebar', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockUseUIStore.mockReturnValue({ theme: 'light' });
     mockUseAuthStore.mockReturnValue({
       isAuthenticated: false,
@@ -130,8 +130,8 @@ describe('Sidebar', () => {
         </MemoryRouter>
       );
 
-      // Production-matching icons: Star/PRO, Collections, Play, Help, Logout
-      expect(screen.getByTestId('nav-item-pro')).toBeInTheDocument();
+      // Production-matching icons: Support, Collections, Play, Help, Logout
+      expect(screen.getByTestId('nav-item-support')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-collections')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-play')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-help')).toBeInTheDocument();
@@ -270,10 +270,12 @@ describe('Sidebar', () => {
       expect(screen.queryByTestId('sidebar-user-avatar')).not.toBeInTheDocument();
     });
   });
-  describe('PRO item (Issue #53)', () => {
-    it('is enabled and opens the PRO dialog', () => {
-      const openProDialog = vi.fn();
-      (mockUseUIStore as unknown as { getState: () => unknown }).getState = () => ({ openProDialog });
+  describe('Support item (Issue #53)', () => {
+    it('is enabled and opens the support dialog', () => {
+      const openSupportDialog = vi.fn();
+      (mockUseUIStore as unknown as { getState: () => unknown }).getState = () => ({
+        openSupportDialog,
+      });
 
       render(
         <MemoryRouter>
@@ -281,16 +283,16 @@ describe('Sidebar', () => {
         </MemoryRouter>
       );
 
-      const proItem = screen.getByTestId('nav-item-pro');
-      expect(proItem).toBeEnabled();
-      fireEvent.click(proItem);
-      expect(openProDialog).toHaveBeenCalledTimes(1);
+      const supportItem = screen.getByTestId('nav-item-support');
+      expect(supportItem).toBeEnabled();
+      fireEvent.click(supportItem);
+      expect(openSupportDialog).toHaveBeenCalledTimes(1);
     });
 
     it.each([
       ['pro_v1', true],
       ['-1', false],
-    ])('highlights the star for subscription %p: %p', (subscription, highlighted) => {
+    ])('highlights the support icon for subscription %p: %p', (subscription, highlighted) => {
       mockUseAuthStore.mockReturnValue({
         isAuthenticated: true,
         username: 'user',
@@ -306,7 +308,9 @@ describe('Sidebar', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByTestId('nav-item-pro').className.includes('highlighted')).toBe(highlighted);
+      expect(screen.getByTestId('nav-item-support').className.includes('highlighted')).toBe(
+        highlighted
+      );
     });
   });
 });

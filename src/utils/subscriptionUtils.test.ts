@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { isProSubscription, PRO_SUBSCRIPTION_ID } from './subscriptionUtils';
+import { isProSubscription } from './subscriptionUtils';
 
 describe('isProSubscription', () => {
-  it('treats the redeemed subscription id as PRO', () => {
-    expect(isProSubscription(PRO_SUBSCRIPTION_ID)).toBe(true);
+  it('treats the legacy supporter id as PRO', () => {
+    expect(isProSubscription('pro_v1')).toBe(true);
   });
 
   it('treats any other non-empty value as PRO (matches the API)', () => {
