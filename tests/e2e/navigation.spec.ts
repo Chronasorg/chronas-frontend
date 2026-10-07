@@ -56,9 +56,9 @@ test.describe('Navigation', () => {
       await expect(page).toHaveURL(/\/configuration/);
     });
 
-    test('should navigate to /pro when PRO is clicked', async ({ page }) => {
+    test('should open the PRO dialog when PRO is clicked', async ({ page }) => {
       await page.getByTestId('nav-item-pro').click();
-      await expect(page).toHaveURL(/\/pro/);
+      await expect(page.getByTestId('pro-dialog')).toBeVisible();
     });
 
     test('should navigate to /play when Play is clicked', async ({ page }) => {

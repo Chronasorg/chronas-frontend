@@ -22,6 +22,11 @@ export type DrawerContent =
   | { type: 'epic'; epicId: string; epicName: string; wikiUrl: string };
 
 /**
+ * Tabs of the info dialog (Welcome/How To/Contact)
+ */
+export type InfoDialogTab = 'welcome' | 'howto' | 'contact';
+
+/**
  * Applies the theme to the document element by setting the data-theme attribute.
  * This enables CSS custom properties to be applied based on the active theme.
  *
@@ -65,6 +70,10 @@ export interface UIState {
   loginDialogOpen: boolean;
   /** Whether the info dialog (Welcome/How To/Contact) is open */
   infoDialogOpen: boolean;
+  /** Tab the info dialog opens on */
+  infoDialogTab: InfoDialogTab;
+  /** Whether the PRO / Patreon support dialog is open (Issue #53) */
+  proDialogOpen: boolean;
   /** Rendering detail level — null until first chosen/auto-detected (Issue #8) */
   detailLevel: DetailLevel | null;
 }
@@ -90,9 +99,13 @@ export interface UIActions {
   /** Closes the login dialog */
   closeLoginDialog: () => void;
   /** Opens the info dialog (Welcome/How To/Contact) */
-  openInfoDialog: () => void;
+  openInfoDialog: (tab?: InfoDialogTab) => void;
   /** Closes the info dialog */
   closeInfoDialog: () => void;
+  /** Opens the PRO / Patreon support dialog */
+  openProDialog: () => void;
+  /** Closes the PRO / Patreon support dialog */
+  closeProDialog: () => void;
   /** Sets the rendering detail level preset (Issue #8) */
   setDetailLevel: (level: DetailLevel) => void;
 }
@@ -115,6 +128,8 @@ const defaultState: UIState = {
   bannerVisible: true,
   loginDialogOpen: false,
   infoDialogOpen: false,
+  infoDialogTab: 'welcome',
+  proDialogOpen: false,
   detailLevel: null,
 };
 
@@ -252,12 +267,20 @@ export const useUIStore = create<UIStore>()(
         set({ loginDialogOpen: false });
       },
 
-      openInfoDialog: () => {
-        set({ infoDialogOpen: true });
+      openInfoDialog: (tab: InfoDialogTab = 'welcome') => {
+        set({ infoDialogOpen: true, infoDialogTab: tab });
       },
 
       closeInfoDialog: () => {
         set({ infoDialogOpen: false });
+      },
+
+      openProDialog: () => {
+        set({ proDialogOpen: true });
+      },
+
+      closeProDialog: () => {
+        set({ proDialogOpen: false });
       },
 
       setDetailLevel: (level: DetailLevel) => {

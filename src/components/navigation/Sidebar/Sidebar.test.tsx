@@ -270,4 +270,43 @@ describe('Sidebar', () => {
       expect(screen.queryByTestId('sidebar-user-avatar')).not.toBeInTheDocument();
     });
   });
+  describe('PRO item (Issue #53)', () => {
+    it('is enabled and opens the PRO dialog', () => {
+      const openProDialog = vi.fn();
+      (mockUseUIStore as unknown as { getState: () => unknown }).getState = () => ({ openProDialog });
+
+      render(
+        <MemoryRouter>
+          <Sidebar />
+        </MemoryRouter>
+      );
+
+      const proItem = screen.getByTestId('nav-item-pro');
+      expect(proItem).toBeEnabled();
+      fireEvent.click(proItem);
+      expect(openProDialog).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['pro_v1', true],
+      ['-1', false],
+    ])('highlights the star for subscription %p: %p', (subscription, highlighted) => {
+      mockUseAuthStore.mockReturnValue({
+        isAuthenticated: true,
+        username: 'user',
+        avatar: null,
+        score: null,
+        subscription,
+        clearUser: mockClearUser,
+      });
+
+      render(
+        <MemoryRouter>
+          <Sidebar />
+        </MemoryRouter>
+      );
+
+      expect(screen.getByTestId('nav-item-pro').className.includes('highlighted')).toBe(highlighted);
+    });
+  });
 });
