@@ -30,8 +30,6 @@ export const USERS = {
   DELETE: (userId: string) => `/users/${userId}`,
   SUSTAINERS: '/users/sustainers',
   HIGHSCORE: '/users/highscore',
-  /** Redeem a Patreon activation code; responds with a fresh JWT. Issue #53 */
-  REDEEM_SUBSCRIPTION: (userId: string) => `/users/${userId}/subscription/redeem`,
 } as const;
 
 // ============================================================================

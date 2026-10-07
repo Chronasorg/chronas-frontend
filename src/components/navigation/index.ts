@@ -22,7 +22,7 @@ export {
   DiscoverIcon,
   RandomIcon,
   SettingsIcon,
-  StarIcon,
+  SupportIcon,
   CollectionsIcon,
   PlayIcon,
   HelpIcon,

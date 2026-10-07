@@ -1,0 +1,323 @@
+/* SupportDialog — "Support Chronas" page (Issue #53) */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 16, 8, 0.55);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dialog {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 40px 44px 28px;
+  border-radius: 6px;
+  color: #6a6a6a;
+  background:
+    url('/images/compass.png') no-repeat right -90px top -90px / 300px auto,
+    linear-gradient(180deg, #fffdf7 0%, #fbf6e9 100%);
+  box-shadow:
+    0 0 0 1px rgba(173, 135, 27, 0.25),
+    0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: rise 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Faint gold frame */
+.dialog::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(173, 135, 27, 0.22);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.closeButton {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  display: flex;
+  padding: 6px;
+  border: none;
+  border-radius: 50%;
+  color: #494949;
+  background: transparent;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: rgba(173, 135, 27, 0.12);
+}
+
+.closeButton:focus-visible,
+.ctaButton:focus-visible,
+.patreonInline:focus-visible,
+.footerLink:focus-visible,
+.inlineLink:focus-visible {
+  outline: 2px solid rgb(173, 135, 27);
+  outline-offset: 3px;
+}
+
+/* Header */
+
+.header {
+  text-align: center;
+}
+
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, rgb(214, 176, 66), rgb(173, 135, 27) 70%);
+  box-shadow:
+    0 0 0 5px rgba(173, 135, 27, 0.15),
+    0 6px 16px rgba(173, 135, 27, 0.35);
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  font-family: Cinzel, serif;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(173, 135, 27);
+}
+
+.title {
+  margin: 0 0 14px;
+  font-family: Cinzel, serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #494949;
+}
+
+.intro {
+  max-width: 400px;
+  margin: 0 auto;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.supporterNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: rgb(140, 108, 18);
+  background: rgba(173, 135, 27, 0.1);
+}
+
+/* Pledge card */
+
+.pledge {
+  margin: 26px 0 0;
+  padding: 26px 24px 24px;
+  border: 1px solid rgba(173, 135, 27, 0.3);
+  border-radius: 6px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.pledgeText {
+  margin: 0 0 22px;
+  font-family: Cinzel, serif;
+  font-size: 19px;
+  line-height: 1.7;
+  color: #494949;
+}
+
+.pledgeText strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 21px;
+  color: rgb(173, 135, 27);
+}
+
+.patreonInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #e8333c;
+  text-decoration: none;
+  border-bottom: 2px solid rgba(255, 66, 77, 0.35);
+  transition: border-color 0.15s;
+}
+
+.patreonInline:hover {
+  border-bottom-color: #ff424d;
+}
+
+.patreonBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  background: #ff424d;
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 28px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-decoration: none;
+  background: #ff424d;
+  box-shadow: 0 6px 18px rgba(255, 66, 77, 0.35);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.ctaButton:hover {
+  background: #f1323d;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(255, 66, 77, 0.45);
+}
+
+.externalIcon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Footer */
+
+.footer {
+  margin-top: 26px;
+  text-align: center;
+}
+
+.footerTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-family: Cinzel, serif;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(173, 135, 27);
+}
+
+.footerTitle::before,
+.footerTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(173, 135, 27, 0.3);
+}
+
+.footerLinks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #494949;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  color: rgb(173, 135, 27);
+  text-decoration: underline;
+}
+
+.help {
+  margin: 0;
+}
+
+.inlineLink {
+  padding: 0;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  color: rgb(173, 135, 27);
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@media (max-width: 520px) {
+  .dialog {
+    padding: 32px 22px 22px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .pledgeText {
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .dialog {
+    animation: none;
+  }
+
+  .ctaButton {
+    transition: none;
+  }
+
+  .ctaButton:hover {
+    transform: none;
+  }
+}

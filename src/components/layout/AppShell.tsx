@@ -11,7 +11,7 @@ import { LoadingBar } from '../global/LoadingBar';
 import { AnnouncementBanner } from '../global/AnnouncementBanner/AnnouncementBanner';
 import { LoginDialog } from '../auth/LoginDialog/LoginDialog';
 import { InfoDialog } from '../global/InfoDialog/InfoDialog';
-import { ProDialog } from '../global/ProDialog/ProDialog';
+import { SupportDialog } from '../global/SupportDialog/SupportDialog';
 import { useUIStore } from '../../stores/uiStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { clearURLParams } from '../../utils/urlStateUtils';
@@ -29,7 +29,7 @@ export interface AppShellProps {
  * Requirements: 2.1, 2.4, 2.7, 2.8, 2.9
  */
 export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
-  const { sidebarOpen, toggleSidebar, rightDrawerOpen, rightDrawerContent, closeRightDrawer, loginDialogOpen, openLoginDialog, closeLoginDialog, infoDialogOpen, infoDialogTab, openInfoDialog, closeInfoDialog, proDialogOpen, closeProDialog } = useUIStore();
+  const { sidebarOpen, toggleSidebar, rightDrawerOpen, rightDrawerContent, closeRightDrawer, loginDialogOpen, closeLoginDialog, infoDialogOpen, infoDialogTab, openInfoDialog, closeInfoDialog, supportDialogOpen, closeSupportDialog } = useUIStore();
   const { drawerOpen, drawerContent, closeDrawer } = useNavigationStore();
 
   /**
@@ -91,15 +91,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
 
       <LoginDialog isOpen={loginDialogOpen} onClose={closeLoginDialog} />
       <InfoDialog isOpen={infoDialogOpen} onClose={closeInfoDialog} initialTab={infoDialogTab} />
-      <ProDialog
-        isOpen={proDialogOpen}
-        onClose={closeProDialog}
-        onRequestLogin={() => {
-          closeProDialog();
-          openLoginDialog();
-        }}
+      <SupportDialog
+        isOpen={supportDialogOpen}
+        onClose={closeSupportDialog}
         onRequestContact={() => {
-          closeProDialog();
+          closeSupportDialog();
           openInfoDialog('contact');
         }}
       />

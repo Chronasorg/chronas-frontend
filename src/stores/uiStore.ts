@@ -72,8 +72,8 @@ export interface UIState {
   infoDialogOpen: boolean;
   /** Tab the info dialog opens on */
   infoDialogTab: InfoDialogTab;
-  /** Whether the PRO / Patreon support dialog is open (Issue #53) */
-  proDialogOpen: boolean;
+  /** Whether the Support Chronas (Patreon) dialog is open (Issue #53) */
+  supportDialogOpen: boolean;
   /** Rendering detail level — null until first chosen/auto-detected (Issue #8) */
   detailLevel: DetailLevel | null;
 }
@@ -102,10 +102,10 @@ export interface UIActions {
   openInfoDialog: (tab?: InfoDialogTab) => void;
   /** Closes the info dialog */
   closeInfoDialog: () => void;
-  /** Opens the PRO / Patreon support dialog */
-  openProDialog: () => void;
-  /** Closes the PRO / Patreon support dialog */
-  closeProDialog: () => void;
+  /** Opens the Support Chronas (Patreon) dialog */
+  openSupportDialog: () => void;
+  /** Closes the Support Chronas (Patreon) dialog */
+  closeSupportDialog: () => void;
   /** Sets the rendering detail level preset (Issue #8) */
   setDetailLevel: (level: DetailLevel) => void;
 }
@@ -129,7 +129,7 @@ const defaultState: UIState = {
   loginDialogOpen: false,
   infoDialogOpen: false,
   infoDialogTab: 'welcome',
-  proDialogOpen: false,
+  supportDialogOpen: false,
   detailLevel: null,
 };
 
@@ -275,12 +275,12 @@ export const useUIStore = create<UIStore>()(
         set({ infoDialogOpen: false });
       },
 
-      openProDialog: () => {
-        set({ proDialogOpen: true });
+      openSupportDialog: () => {
+        set({ supportDialogOpen: true });
       },
 
-      closeProDialog: () => {
-        set({ proDialogOpen: false });
+      closeSupportDialog: () => {
+        set({ supportDialogOpen: false });
       },
 
       setDetailLevel: (level: DetailLevel) => {
