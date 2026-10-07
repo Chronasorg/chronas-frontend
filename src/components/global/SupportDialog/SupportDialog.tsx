@@ -135,7 +135,9 @@ function SupportDialogContent({ onClose, onRequestContact }: Omit<SupportDialogP
               className={styles['patreonInline']}
               data-testid="support-patreon-link"
             >
-              <img src="/images/patreon-logo.png" alt="" width="26" height="26" />
+              <span className={styles['patreonBadge']} aria-hidden="true">
+                <PatreonMark size={12} />
+              </span>
               Patreon
               <ExternalIcon />
               {newTab}
@@ -216,9 +218,9 @@ function ExternalIcon() {
 }
 
 /** Patreon wordmark glyph (circle + bar) */
-function PatreonMark() {
+function PatreonMark({ size = 18 }: { size?: number }) {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
       <circle cx="15" cy="9.5" r="7" />
       <rect x="2" y="2.5" width="3.5" height="19" />
     </svg>

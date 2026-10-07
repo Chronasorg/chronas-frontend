@@ -167,10 +167,15 @@
   border-bottom-color: #ff424d;
 }
 
-.patreonInline img {
+.patreonBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 22px;
   height: 22px;
   border-radius: 50%;
+  color: #fff;
+  background: #ff424d;
 }
 
 .ctaButton {
