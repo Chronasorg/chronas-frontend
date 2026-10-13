@@ -401,11 +401,11 @@ function deploy(environment: string): void {
   //
   // Walks all of dist/, not just dist/assets/. The sync above excludes "*.js"
   // everywhere, so anything this step misses is never uploaded at all — and
-  // scoping it to dist/assets/ silently dropped `dist/vendor/mapbox-gl-rtl-text.js`
-  // from every deploy. CloudFront maps 404 to index.html for SPA routing, so the
-  // missing file answered 200 with HTML instead of failing loudly, and Arabic and
-  // Hebrew labels rendered unshaped in production while every test passed (the
-  // E2E suite is dev-server-only, and the dev server serves public/ directly).
+  // scoping it to dist/assets/ once silently dropped a vendored script under
+  // dist/vendor/ from every deploy. CloudFront maps 404 to index.html for SPA
+  // routing, so the missing file answered 200 with HTML instead of failing loudly
+  // while every test passed (the E2E suite is dev-server-only, and the dev server
+  // serves public/ directly).
   console.log('   Uploading JavaScript files...');
   run(
     `aws s3 cp dist/ s3://${config.s3Bucket}/ ` +

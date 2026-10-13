@@ -25,9 +25,6 @@ import {
 } from './mapUtils';
 import type { AreaData, ProvinceData } from '../stores/mapStore';
 
-// Suppress unused variable warning - getPositionFromURL is tested indirectly
-void updatePositionInURL;
-
 describe('mapUtils', () => {
   describe('formatPositionToURL', () => {
     it('should format viewport to URL string with correct precision', () => {
