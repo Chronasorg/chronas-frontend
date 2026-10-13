@@ -24,6 +24,28 @@ import { useUIStore } from '../stores/uiStore';
 const TOKEN_STORAGE_KEY = 'chs_token';
 
 /**
+ * GET paths that need the token. Every other GET the API serves is public.
+ * Sending Authorization on those would make each one a CORS-preflighted
+ * request and give every logged-in user their own edge cache entry for the
+ * same map data.
+ */
+const AUTHENTICATED_GET_PREFIXES = ['/users', '/revisions', '/auth'];
+
+/**
+ * Whether a request needs the Authorization header: every write, and GETs
+ * under the authenticated prefixes. `url` may be relative to the base URL
+ * (`/users/x`) or absolute.
+ */
+export function needsAuthorization(method: string | undefined, url: string | undefined): boolean {
+  const verb = (method ?? 'get').toLowerCase();
+  if (verb !== 'get' && verb !== 'head') return true;
+  const path = (url ?? '').replace(/^[a-z]+:\/\/[^/]+/i, '').replace(/^\/v1(?=\/|$)/, '');
+  return AUTHENTICATED_GET_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`) || path.startsWith(`${prefix}?`)
+  );
+}
+
+/**
  * Default timeout for API requests (30 seconds)
  */
 const DEFAULT_TIMEOUT = 30000;
@@ -75,7 +97,7 @@ function createApiClient(): AxiosInstance {
       // Get token from localStorage
       const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
-      if (token) {
+      if (token && needsAuthorization(config.method, config.url)) {
         // Attach Authorization header with Bearer token
         config.headers.Authorization = `Bearer ${token}`;
       }
