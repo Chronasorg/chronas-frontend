@@ -308,8 +308,8 @@ test.describe('Map Integration Checks', () => {
       } catch {
         return;
       }
-      // Hostname, not substring: our own vendored RTL plugin is served from a
-      // same-origin path that contains "mapbox".
+      // Hostname, not substring: only requests to mapbox.com count, not
+      // same-origin paths that happen to contain "mapbox".
       if (/(^|\.)mapbox\.com$/.test(hostname)) {
         mapboxRequests.push(url);
       }
@@ -429,8 +429,8 @@ test.describe('Map Integration Checks', () => {
 //
 // Nothing caught it: CloudFront maps 404 to `index.html` for SPA routing, so the
 // missing script answered **200 with HTML**, and `basemap-maplibre.spec.ts` is
-// dev-server-only (the dev server serves `public/` straight off disk, where the
-// file is present).
+// dev-server-only (the dev server serves `public/` straight off disk, so a file
+// missing from the bucket still loads locally).
 // ---------------------------------------------------------------------------
 
 test.describe('Static asset deployment', () => {

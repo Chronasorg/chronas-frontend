@@ -14,6 +14,8 @@ import { registerMapWorker } from './config/mapWorker';
 // Must run before any Map is constructed: MapLibre caches its worker pool globally.
 // No RTL text plugin is registered — MapLibre >= 6.9 shapes Arabic and Hebrew
 // natively, and a plugin set via setRTLTextPlugin would replace that built-in code.
+// Caveat: styles using `font-faces` still need the plugin to shape across cluster
+// boundaries; none of our basemap styles (liberty, positron, satellite) use it.
 registerMapWorker();
 
 declare const __BUILD_TIMESTAMP__: string;
