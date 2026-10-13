@@ -10,12 +10,13 @@ import { useUIStore } from './stores/uiStore';
 import { useMapStore } from './stores/mapStore';
 import { DETAIL_LEVEL_PRESETS, detectDetailLevel } from './utils/detailLevelUtils';
 import { registerMapWorker } from './config/mapWorker';
-import { registerRTLTextPlugin } from './config/rtlText';
 
-// Both must run before any Map is constructed: MapLibre caches its worker pool
-// globally, and RTL shaping happens inside those workers.
+// Must run before any Map is constructed: MapLibre caches its worker pool globally.
+// No RTL text plugin is registered — MapLibre >= 6.9 shapes Arabic and Hebrew
+// natively, and a plugin set via setRTLTextPlugin would replace that built-in code.
+// Caveat: styles using `font-faces` still need the plugin to shape across cluster
+// boundaries; none of our basemap styles (liberty, positron, satellite) use it.
 registerMapWorker();
-registerRTLTextPlugin();
 
 declare const __BUILD_TIMESTAMP__: string;
 console.log(`%cChronas build: ${__BUILD_TIMESTAMP__}`, 'color: #888; font-size: 10px;');

@@ -867,8 +867,8 @@ function layerById(facts: StyleFacts, id: string): { id: string; textField: unkn
 
 function mapboxRequests(log: RequestLog): string[] {
   return log.urls.filter((url) => {
-    // Match on hostname, not the raw URL: our own vendored
-    // `mapbox-gl-rtl-text.js` is a same-origin path containing "mapbox".
+    // Match on hostname, not the raw URL: only requests to mapbox.com count,
+    // not same-origin paths that happen to contain "mapbox".
     try {
       return /(^|\.)mapbox\.com$/.test(new URL(url).hostname);
     } catch {
@@ -1666,19 +1666,11 @@ test.describe('Basemap: relief and zoom limits', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 10. RTL text shaping (a pre-existing gap the migration closes)
+// 10. RTL text shaping (built into MapLibre >= 6.9, no plugin)
 // ---------------------------------------------------------------------------
 
 test.describe('Basemap: right-to-left text', () => {
-  test('serves the vendored RTL plugin from our own origin', async ({ page }) => {
-    await gotoMap(page);
-    const response = await page.request.get('/vendor/mapbox-gl-rtl-text.js');
-    expect(response.status()).toBe(200);
-    // The worker loads it with `importScripts`, so it must be a classic script.
-    expect(await response.text()).not.toContain('export default');
-  });
-
-  test('renders Arabic labels without MapLibre errors', async ({ page }) => {
+  test('renders Arabic labels without MapLibre errors or an RTL plugin', async ({ page }) => {
     const log = collectRequests(page);
     await gotoMap(page);
     await selectLocale(page, 'ar');
@@ -1687,9 +1679,9 @@ test.describe('Basemap: right-to-left text', () => {
 
     const facts = await readStyleFacts(page);
     expect(facts.errors).toEqual([]);
-    // Registered lazily, so the fetch only happens once a tile carries RTL
-    // text — but if it did happen it must have succeeded.
-    expect(log.failures.filter((f) => f.url.includes('mapbox-gl-rtl-text'))).toEqual([]);
+    // MapLibre shapes Arabic itself; a plugin set via setRTLTextPlugin would
+    // replace that built-in implementation, so none must be fetched.
+    expect(log.urls.filter((url) => url.includes('rtl-text'))).toEqual([]);
   });
 });
 

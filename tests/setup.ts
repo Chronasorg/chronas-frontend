@@ -5,7 +5,7 @@
  * It sets up the testing environment with necessary configurations.
  */
 
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 // Mock environment variables for tests
 // These are required by the env config and API client

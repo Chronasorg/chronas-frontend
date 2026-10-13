@@ -308,8 +308,8 @@ test.describe('Map Integration Checks', () => {
       } catch {
         return;
       }
-      // Hostname, not substring: our own vendored RTL plugin is served from a
-      // same-origin path that contains "mapbox".
+      // Hostname, not substring: only requests to mapbox.com count, not
+      // same-origin paths that happen to contain "mapbox".
       if (/(^|\.)mapbox\.com$/.test(hostname)) {
         mapboxRequests.push(url);
       }
@@ -424,14 +424,13 @@ test.describe('Map Integration Checks', () => {
 // These can only be checked against a deployed artifact. `scripts/deploy.ts`
 // uploads in two passes — an `s3 sync` that excludes `*.js` everywhere, then an
 // `s3 cp --include "*.js"` — so a JS file the second pass does not cover is
-// never uploaded at all. It was scoped to `dist/assets/`, which silently dropped
-// `dist/vendor/mapbox-gl-rtl-text.js` from every deploy that has ever run.
+// never uploaded at all. It was once scoped to `dist/assets/`, which silently
+// dropped a vendored script under `dist/vendor/` from every deploy.
 //
 // Nothing caught it: CloudFront maps 404 to `index.html` for SPA routing, so the
 // missing script answered **200 with HTML**, and `basemap-maplibre.spec.ts` is
-// dev-server-only (the dev server serves `public/` straight off disk, where the
-// file is present). The user-visible symptom was Arabic and Hebrew labels
-// rendering unshaped, on a site that has a live `ar.chronas.org` subdomain.
+// dev-server-only (the dev server serves `public/` straight off disk, so a file
+// missing from the bucket still loads locally).
 // ---------------------------------------------------------------------------
 
 test.describe('Static asset deployment', () => {
@@ -440,7 +439,6 @@ test.describe('Static asset deployment', () => {
    * fetched at runtime by URL, so a build cannot fail loudly when one is absent.
    */
   const RUNTIME_ASSETS = [
-    { path: '/vendor/mapbox-gl-rtl-text.js', type: /javascript/, minBytes: 50_000 },
     { path: '/styles/liberty.json', type: /json/, minBytes: 50_000 },
     { path: '/styles/satellite-eox.json', type: /json/, minBytes: 500 },
     { path: '/styles/empty.json', type: /json/, minBytes: 200 },

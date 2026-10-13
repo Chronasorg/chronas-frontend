@@ -22,6 +22,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Deploy (staging) | `npm run deploy:staging` |
 | Deploy (prod) | `npm run deploy:prod` |
 
+**Node:** `^22.22.0 || ^24.0.0 || >=26.0.0` (CI uses 24 LTS). The floor comes from
+`@vitest/coverage-v8` 5 (`>=22.22.0`); vitest 5 excludes the odd releases 23 and 25.
+
 ## Architecture
 
 **Stack:** React 19, TypeScript 6 (strict), Vite 8, Zustand 5, React Router 7 (HashRouter)
