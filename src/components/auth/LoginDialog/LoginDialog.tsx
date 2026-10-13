@@ -3,24 +3,15 @@
  *
  * Modal overlay for authentication, matching the old chronas.org login popup.
  * Renders on top of the map so users never lose context.
- * Supports login and signup modes with OAuth buttons.
+ * Supports login and signup modes (email and password).
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { apiClient } from '@/api/client';
 import { AUTH } from '@/api/endpoints';
 import { getApiErrorMessage } from '@/api/errors';
-import { env } from '@/config/env';
 import { useAuthStore } from '@/stores/authStore';
 import styles from './LoginDialog.module.css';
-
-const API_BASE = env.apiBaseUrl;
-
-const OAUTH_PROVIDERS = [
-  { id: 'github', label: 'Github', color: '#333', path: '/auth/login/github' },
-  { id: 'google', label: 'Google', color: '#db4437', path: '/auth/login/google' },
-  { id: 'facebook', label: 'Facebook', color: '#1877F2', path: '/auth/login/facebook' },
-] as const;
 
 export interface LoginDialogProps {
   isOpen: boolean;
@@ -136,24 +127,6 @@ export function LoginDialog({ isOpen, onClose }: LoginDialogProps) {
           <h2 className={styles['title']}>
             {mode === 'login' ? 'Sign into Chronas' : 'Join Chronas'}
           </h2>
-
-          {/* OAuth — horizontal row like old Chronas */}
-          <p className={styles['oauthHeader']}>with one click:</p>
-          <div className={styles['oauthRow']}>
-            {OAUTH_PROVIDERS.map((p) => (
-              <a
-                key={p.id}
-                href={`${API_BASE}${p.path}`}
-                className={styles['oauthButton']}
-                style={{ backgroundColor: p.color }}
-                data-testid={`login-dialog-oauth-${p.id}`}
-              >
-                {p.label}
-              </a>
-            ))}
-          </div>
-
-          <div className={styles['divider']}>or</div>
 
           {error && (
             <div className={styles['error']} role="alert" data-testid="login-dialog-error">
