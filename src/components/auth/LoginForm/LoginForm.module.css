@@ -90,24 +90,6 @@
   font-size: 13px;
 }
 
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 8px 0;
-  color: rgb(189, 189, 189);
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background-color: rgb(224, 224, 224);
-}
-
 .switchLink {
   text-align: center;
   font-size: 13px;

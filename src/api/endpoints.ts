@@ -13,10 +13,6 @@
 export const AUTH = {
   LOGIN: '/auth/login',
   SIGNUP: '/auth/signup',
-  LOGIN_TWITTER: '/auth/login/twitter',
-  LOGIN_FACEBOOK: '/auth/login/facebook',
-  LOGIN_GOOGLE: '/auth/login/google',
-  LOGIN_GITHUB: '/auth/login/github',
 } as const;
 
 // ============================================================================

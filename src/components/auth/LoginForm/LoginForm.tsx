@@ -1,7 +1,7 @@
 /**
  * LoginForm Component
  *
- * Email/password login form with OAuth buttons.
+ * Email/password login form.
  * Requirements: US-8.1, US-8.2
  */
 
@@ -11,7 +11,6 @@ import { apiClient } from '@/api/client';
 import { AUTH } from '@/api/endpoints';
 import { getApiErrorMessage } from '@/api/errors';
 import { useAuthStore } from '@/stores/authStore';
-import { OAuthButtons } from '../OAuthButtons/OAuthButtons';
 import styles from './LoginForm.module.css';
 
 export interface LoginFormProps {
@@ -92,10 +91,6 @@ export function LoginForm({ onSwitchToSignup, testId = 'login-form' }: LoginForm
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-
-      <div className={styles['divider']}>or</div>
-
-      <OAuthButtons />
 
       {onSwitchToSignup && (
         <p className={styles['switchLink']}>
