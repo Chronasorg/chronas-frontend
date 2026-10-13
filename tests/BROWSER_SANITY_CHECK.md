@@ -16,13 +16,13 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 
 ## 2. Navigation Sidebar
 
-- [ ] Layers, Settings, Play, Support, Help, and Logout nav items are visible and enabled
-- [ ] Discover, Random, Collections items are visible and disabled
+- [ ] Layers, Settings, Play, Support, and Help nav items are visible and enabled
+- [ ] Discover, Random, Collections, and Logout items are visible and disabled
 - [ ] Clicking Support (hand + heart icon) opens the "Support Chronas" page: "Head over to Patreon and pledge an amount of your choice! Whatever Chronas is worth to you!", Patreon link + "Become a patron" button (new tab), no benefits list / activation code
 - [ ] Support page: GitHub link; "Contact Us" opens the Info dialog on the Contact tab; Esc / overlay / × close it
 - [ ] Clicking Layers opens the left drawer with layers content
 - [ ] Clicking Settings opens the left drawer with settings content
-- [ ] Clicking Help toggles the announcement banner
+- [ ] Clicking Help opens the Information dialog (Welcome / How To / Contact tabs)
 - [ ] Clicking Layers twice closes the drawer
 - [ ] Switching from Layers to Settings replaces drawer content
 - [ ] Logo link points to `#/info`

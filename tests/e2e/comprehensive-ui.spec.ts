@@ -59,32 +59,30 @@ test.describe('Navigation Sidebar', () => {
   test('renders all enabled nav items', async ({ page }) => {
     // Issue #20: 'play' is now enabled and opens the autoplay menu.
     // Issue #53: 'support' opens the Patreon support page.
-    for (const id of ['layers', 'settings', 'play', 'support', 'help', 'logout']) {
+    for (const id of ['layers', 'settings', 'play', 'support', 'help']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeEnabled();
     }
   });
 
   test('renders disabled nav items', async ({ page }) => {
-    for (const id of ['discover', 'random', 'collections']) {
+    // 'logout' is disabled in navConfig until auth is re-enabled.
+    for (const id of ['discover', 'random', 'collections', 'logout']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeDisabled();
     }
   });
 
-  test('clicking Help toggles the announcement banner', async ({ page }) => {
-    const banner = page.getByRole('banner');
+  test('clicking Help opens the Information dialog', async ({ page }) => {
+    // Issue #14: Help opens the Info popup (Welcome / How To / Contact tabs).
+    const dialog = page.getByTestId('info-dialog');
+    await expect(dialog).toBeHidden();
 
-    // Click help to dismiss
     await page.getByTestId('nav-item-help').click();
-    const bannerVisibleAfterFirst = await banner.isVisible().catch(() => false);
+    await expect(dialog).toBeVisible();
 
-    // Click help again to toggle back
-    await page.getByTestId('nav-item-help').click();
-    const bannerVisibleAfterSecond = await banner.isVisible().catch(() => false);
-
-    // States should differ (toggling)
-    expect(bannerVisibleAfterFirst).not.toBe(bannerVisibleAfterSecond);
+    await page.getByTestId('info-dialog-close').click();
+    await expect(dialog).toBeHidden();
   });
 
   test('clicking Layers twice toggles the drawer closed', async ({ page }) => {
