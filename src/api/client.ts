@@ -51,6 +51,49 @@ export function needsAuthorization(method: string | undefined, url: string | und
 const DEFAULT_TIMEOUT = 30000;
 
 /**
+ * Retries for idempotent reads. The API runs on a Lambda Web Function, which
+ * answers 429 when its environments are busy and does not queue requests; the
+ * AWS docs ask clients to retry idempotent requests with exponential backoff
+ * and jitter (web-functions-scaling.html), and to retry a 503 the same way.
+ * A platform 429 may come without CORS headers, which the browser reports as
+ * a network error without a response, so those are retried too. Cancelled
+ * requests and timeouts are not; writes never are.
+ */
+const RETRY_METHODS = ['get', 'head'];
+const RETRY_STATUSES = [429, 503];
+export const MAX_RETRIES = 2;
+const BACKOFF_BASE_MS = 300;
+const MAX_RETRY_AFTER_MS = 5000;
+
+type RetryableConfig = InternalAxiosRequestConfig & { retryCount?: number };
+
+/** Whether a failed request should be sent again. */
+export function isRetryable(error: AxiosError): boolean {
+  const config = error.config as RetryableConfig | undefined;
+  if (!config || axios.isCancel(error)) return false;
+  if (!RETRY_METHODS.includes((config.method ?? 'get').toLowerCase())) return false;
+  if ((config.retryCount ?? 0) >= MAX_RETRIES) return false;
+  if (error.response) return RETRY_STATUSES.includes(error.response.status);
+  // No response: network or CORS failure. A timeout has already waited 30 s.
+  return !['ECONNABORTED', 'ETIMEDOUT', 'ERR_CANCELED'].includes(error.code ?? '');
+}
+
+/**
+ * Wait before retry number `attempt` (0-based): Retry-After when the response
+ * exposes it (capped at 5 s), otherwise full jitter, a random 0–300 ms × 2^attempt.
+ */
+export function retryDelayMs(
+  error: AxiosError,
+  attempt: number,
+  random: () => number = Math.random
+): number {
+  const header: unknown = error.response?.headers['retry-after'];
+  const seconds = typeof header === 'string' && header.trim() !== '' ? Number(header) : NaN;
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, MAX_RETRY_AFTER_MS);
+  return Math.floor(random() * BACKOFF_BASE_MS * 2 ** attempt);
+}
+
+/**
  * API Client configuration interface
  */
 export interface ApiClientConfig {
@@ -117,7 +160,16 @@ function createApiClient(): AxiosInstance {
       // Return successful responses as-is
       return response;
     },
-    (error: AxiosError): Promise<never> => {
+    async (error: AxiosError): Promise<AxiosResponse> => {
+      // Retry idempotent reads that hit a busy or briefly unavailable API
+      if (isRetryable(error)) {
+        const config = error.config as RetryableConfig;
+        const attempt = config.retryCount ?? 0;
+        config.retryCount = attempt + 1;
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs(error, attempt)));
+        return instance.request(config);
+      }
+
       // Handle 401 Unauthorized errors
       if (error.response?.status === 401) {
         // Clear auth state using Zustand store
