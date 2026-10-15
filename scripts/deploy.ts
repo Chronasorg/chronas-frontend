@@ -389,10 +389,12 @@ function deploy(environment: string): void {
   // Step 5: Upload to S3 with correct content types and cache headers
   console.log('\n☁️ Uploading to S3...');
   
-  // First sync everything except JS files and index.html
+  // First sync everything except JS files and index.html.
+  // api/* belongs to chronas-api (api/statistics.json lives in the same bucket),
+  // so it is excluded to keep --delete from removing it.
   run(
     `aws s3 sync dist/ s3://${config.s3Bucket}/ --delete ` +
-    `--exclude "*.js" --exclude "*.js.map" --exclude "index.html" ` +
+    `--exclude "*.js" --exclude "*.js.map" --exclude "index.html" --exclude "api/*" ` +
     `--cache-control "public, max-age=31536000, immutable" ` +
     `--profile ${config.awsProfile} --region ${config.awsRegion}`
   );
