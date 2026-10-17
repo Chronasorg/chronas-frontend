@@ -301,6 +301,8 @@ export const useUIStore = create<UIStore>()(
         sidebarOpen: state.sidebarOpen,
         isFullscreen: state.isFullscreen,
         detailLevel: state.detailLevel,
+        // Remember a dismissed announcement banner across visits
+        bannerVisible: state.bannerVisible,
       }),
       version: 2,
       migrate: (persistedState: unknown, version: number) => {
