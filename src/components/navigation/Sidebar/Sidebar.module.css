@@ -8,7 +8,7 @@
 
 .sidebar {
   position: fixed;
-  top: 0;
+  top: var(--banner-height, 0px);
   left: 0;
   bottom: 0;
   /* Kept at 50px — several map/timeline components depend on this width */
@@ -125,12 +125,22 @@
   outline-offset: 2px;
 }
 
-/* Mobile */
+/* Mobile: the rail can be collapsed to give the map the full width. The toggle
+ * is a 44px tab in the top-left corner of the map, clear of drawer content. */
 @media (max-width: 767px) {
   .sidebar { z-index: 10001; }
-  .sidebar.closed { margin-left: -50px; }
+  .sidebar.closed { margin-left: -50px; box-shadow: none; }
   .sidebar.open { margin-left: 0; }
-  .toggleButton { display: flex; }
+  .toggleButton {
+    display: flex;
+    top: 12px;
+    right: -44px;
+    transform: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 2px 1px 8px rgba(40, 30, 10, 0.15);
+  }
 }
 
 /* Dark theme — darker charcoal paper, warm gold accents unchanged */

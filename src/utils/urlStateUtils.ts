@@ -121,7 +121,36 @@ export function parseURLState(): URLState {
 }
 
 /**
- * Updates the URL hash with new state parameters.
+ * Applies `mutate` to the current query params and writes the URL back with
+ * `replaceState`.
+ *
+ * Handles both URL shapes the app can be in, like `updateQueryStringParameter`
+ * in mapUtils.ts (which writes `year` and `pos`): HashRouter's `/#/?year=1000`,
+ * and plain `/?year=1000` on a visit to `chronas.org/` with no hash. Writing
+ * the hash in the second case would replace the query string and drop `year`
+ * and `pos` from a shared link.
+ */
+function replaceQueryParams(mutate: (params: URLSearchParams) => void): void {
+  const { hash, pathname, search } = window.location;
+
+  if (hash.startsWith('#/')) {
+    const queryIndex = hash.indexOf('?');
+    const path = queryIndex === -1 ? hash : hash.slice(0, queryIndex);
+    const params = new URLSearchParams(queryIndex === -1 ? '' : hash.slice(queryIndex + 1));
+    mutate(params);
+    const query = params.toString();
+    window.history.replaceState({}, '', `${pathname}${query ? `${path}?${query}` : path}`);
+    return;
+  }
+
+  const params = new URLSearchParams(search);
+  mutate(params);
+  const query = params.toString();
+  window.history.replaceState({}, '', `${pathname}${query ? `?${query}` : ''}${hash}`);
+}
+
+/**
+ * Updates the URL with new state parameters.
  *
  * Uses `replaceState` to avoid polluting browser history.
  *
@@ -140,33 +169,16 @@ export function parseURLState(): URLState {
  * // New URL: /#/?year=1000
  */
 export function updateURLState(params: Partial<URLState>): void {
-  // Get current hash
-  const hash = window.location.hash;
-
-  // Extract path and query from hash
-  const queryIndex = hash.indexOf('?');
-  const path = queryIndex === -1 ? hash : hash.slice(0, queryIndex);
-  const queryString = queryIndex === -1 ? '' : hash.slice(queryIndex + 1);
-
-  // Parse existing params
-  const searchParams = new URLSearchParams(queryString);
-
-  // Update params - use type assertion since Object.entries loses type info
-  (Object.entries(params) as [string, string | number | undefined][]).forEach(([key, value]) => {
-    if (value !== undefined) {
-      searchParams.set(key, String(value));
-    } else {
-      searchParams.delete(key);
-    }
+  replaceQueryParams((searchParams) => {
+    // Type assertion since Object.entries loses type info
+    (Object.entries(params) as [string, string | number | undefined][]).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.set(key, String(value));
+      } else {
+        searchParams.delete(key);
+      }
+    });
   });
-
-  // Build new hash
-  const newQueryString = searchParams.toString();
-  const newHash = newQueryString ? `${path}?${newQueryString}` : path;
-
-  // Update URL without adding to history
-  const newUrl = `${window.location.pathname}${newHash}`;
-  window.history.replaceState({}, '', newUrl);
 }
 
 /**
@@ -182,29 +194,11 @@ export function updateURLState(params: Partial<URLState>): void {
  * // New URL: /#/?year=1000
  */
 export function clearURLParams(keys: (keyof URLState)[]): void {
-  // Get current hash
-  const hash = window.location.hash;
-
-  // Extract path and query from hash
-  const queryIndex = hash.indexOf('?');
-  const path = queryIndex === -1 ? hash : hash.slice(0, queryIndex);
-  const queryString = queryIndex === -1 ? '' : hash.slice(queryIndex + 1);
-
-  // Parse existing params
-  const searchParams = new URLSearchParams(queryString);
-
-  // Remove specified keys
-  keys.forEach((key) => {
-    searchParams.delete(key);
+  replaceQueryParams((searchParams) => {
+    keys.forEach((key) => {
+      searchParams.delete(key);
+    });
   });
-
-  // Build new hash
-  const newQueryString = searchParams.toString();
-  const newHash = newQueryString ? `${path}?${newQueryString}` : path;
-
-  // Update URL without adding to history
-  const newUrl = `${window.location.pathname}${newHash}`;
-  window.history.replaceState({}, '', newUrl);
 }
 
 /**
