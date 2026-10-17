@@ -4,7 +4,7 @@
 
 .drawer {
   position: fixed;
-  top: 0;
+  top: var(--banner-height, 0px);
   left: 50px;
   bottom: 0;
   width: 320px;
@@ -141,12 +141,20 @@
 
 .headerHidden { display: none; }
 
+/* Phones: open beside the rail (so the other panels stay one tap away) and
+ * above the timeline, overlaying the map instead of squeezing it. */
 @media (max-width: 767px) {
   .drawer {
-    left: 0;
-    width: 280px;
-    min-width: 260px;
-    max-width: 300px;
+    left: 50px;
+    width: calc(100vw - 50px);
+    min-width: 0;
+    max-width: 360px;
+    z-index: 10002;
+  }
+
+  .closeButton {
+    width: 44px;
+    height: 44px;
   }
 }
 

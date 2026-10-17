@@ -17,6 +17,9 @@
   display: flex;
   align-items: flex-start;
   padding-top: 4px;
+  /* Narrow bands (Late Medieval, Renaissance) would otherwise spill their
+   * labels over the next band */
+  overflow: hidden;
 }
 
 .eraLabel {
@@ -26,6 +29,8 @@
   letter-spacing: 1px;
   padding-left: 6px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   user-select: none;
 }
 
