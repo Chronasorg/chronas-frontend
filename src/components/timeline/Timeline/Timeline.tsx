@@ -16,6 +16,7 @@ import type { EpicItem } from '../../../stores/timelineStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useMapStore } from '../../../stores/mapStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import { TimelineControls } from '../TimelineControls/TimelineControls';
 import { YearDialog } from '../YearDialog/YearDialog';
 import { AutoplayMenu } from '../AutoplayMenu/AutoplayMenu';
@@ -107,6 +108,8 @@ export const Timeline: React.FC<TimelineProps> = ({
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
   // Get layers drawer state to shift timeline controls
   const layersDrawerOpen = useNavigationStore((state) => state.drawerOpen);
+  const sidebarOpen = useUIStore((state) => state.sidebarOpen);
+  const isMobile = useIsMobile();
 
   // Ref for the vis-timeline wrapper
   const timelineRef = useRef<VisTimelineRef>(null);
@@ -466,10 +469,21 @@ export const Timeline: React.FC<TimelineProps> = ({
   const stateClass = isExpanded ? expandedClass : collapsedClass;
   const combinedClassName = `${timelineClass} ${stateClass} ${className ?? ''}`.trim();
 
-  // Shift timeline away from open drawers
-  const timelineRight = rightDrawerOpen ? '35%' : '0';
+  // Desktop: shift the timeline away from open drawers. Phones: drawers overlay the
+  // timeline, and it spans the full width once the sidebar rail is collapsed.
+  const timelineLeft = isMobile && !sidebarOpen ? 0 : 50;
+  const timelineRight = rightDrawerOpen && !isMobile ? '35%' : '0';
   // Controls left: 50px sidebar + 250px layers panel + 14px gap = 314px when open, 64px when closed
-  const controlsLeft = layersDrawerOpen ? 314 : 64;
+  const controlsLeft = isMobile ? timelineLeft + 8 : layersDrawerOpen ? 314 : 64;
+
+  // The timeline is portaled to <body> above the whole app (#root is its own
+  // stacking context), so on phones it hides while a drawer covers its area.
+  const hiddenBehindDrawer = isMobile && (rightDrawerOpen || layersDrawerOpen);
+
+  // Publish the height so map controls (attribution) and floating buttons can sit above it.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--timeline-height', `${String(currentHeight)}px`);
+  }, [currentHeight]);
 
   const timelineContent = (
     <div
@@ -477,7 +491,14 @@ export const Timeline: React.FC<TimelineProps> = ({
       data-year={selectedYear}
       data-expanded={isExpanded}
       className={combinedClassName}
-      style={{ height: `${String(currentHeight)}px`, right: timelineRight, transition: 'right 300ms ease-in-out, height 500ms ease-in-out' }}
+      style={{
+        height: `${String(currentHeight)}px`,
+        left: `${String(timelineLeft)}px`,
+        right: timelineRight,
+        ...(hiddenBehindDrawer ? { visibility: 'hidden', opacity: 0 } : {}),
+        transition: 'left 300ms ease-in-out, right 300ms ease-in-out, height 500ms ease-in-out, opacity 200ms ease-in-out, visibility 200ms',
+      }}
+      aria-hidden={hiddenBehindDrawer || undefined}
       role="navigation"
       aria-label="Timeline navigation"
     >

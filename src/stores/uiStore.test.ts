@@ -317,7 +317,8 @@ describe('uiStore', () => {
         expect(persisted).toHaveProperty('locale');
         expect(persisted).toHaveProperty('sidebarOpen');
         expect(persisted).toHaveProperty('isFullscreen');
-        
+        expect(persisted).toHaveProperty('bannerVisible');
+
         // Should not include action functions
         expect(persisted).not.toHaveProperty('setTheme');
         expect(persisted).not.toHaveProperty('setLocale');

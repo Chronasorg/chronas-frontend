@@ -223,29 +223,31 @@
   border-right-color: var(--chronas-fore-2, #e9caab);
 }
 
-/* Responsive adjustments */
+/* Phones: a row of full-size tap targets just above the timeline, instead of a
+ * column of small buttons over the map. Hover tooltips are dropped because a tap
+ * leaves them stuck open; the buttons keep their aria-labels. */
 @media (max-width: 767px) {
   .timelineControls {
-    /* Keep after sidebar on mobile */
-    left: 60px;
-    bottom: 12px;
-    gap: 6px;
+    flex-direction: row;
+    bottom: calc(var(--timeline-height, 110px) + 6px);
+    gap: 4px;
   }
-  
+
   .controlButton {
-    /* Slightly smaller on mobile but still touch-friendly */
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
+    padding: 6px;
   }
-  
+
   .controlButton svg {
-    width: 18px;
-    height: 18px;
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
-  
+
   .tooltip {
-    font-size: 11px;
-    padding: 3px 6px;
+    display: none;
   }
 }
 
