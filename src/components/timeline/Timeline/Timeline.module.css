@@ -82,21 +82,9 @@
   opacity: 0.7;
 }
 
-/* Responsive adjustments for smaller screens */
+/* Responsive adjustments for smaller screens. The height stays at 110/280px on
+ * phones too: it is set inline from TIMELINE_HEIGHT_* and vis-timeline needs it. */
 @media (max-width: 767px) {
-  .timeline {
-    --timeline-collapsed-height: 64px;
-    --timeline-expanded-height: 220px;
-  }
-
-  .collapsed {
-    height: var(--timeline-collapsed-height, 64px);
-  }
-
-  .expanded {
-    height: var(--timeline-expanded-height, 220px);
-  }
-  
   .yearDisplay {
     font-size: 24px;
   }

@@ -2,9 +2,16 @@ import { useEffect, useRef } from 'react';
 import { HashRouter } from 'react-router';
 import AppRoutes from './routes';
 import { useAuthStore } from './stores';
-import { applyMarkersOffFromURL, useMapStore, isValidColorDimension } from './stores/mapStore';
+import {
+  applyMarkersOffFromURL,
+  useMapStore,
+  isValidColorDimension,
+  type AreaColorDimension,
+  type AreaData,
+  type EntityMetadata,
+} from './stores/mapStore';
 import { applyEpicsFromURL, useTimelineStore } from './stores/timelineStore';
-import { useUIStore } from './stores/uiStore';
+import { useUIStore, type DrawerContent } from './stores/uiStore';
 import { getPositionFromURL, getYearFromURL } from './utils/mapUtils';
 import { parseURLState } from './utils/urlStateUtils';
 import { DETAIL_LEVEL_PRESETS } from './utils/detailLevelUtils';
@@ -50,12 +57,57 @@ function buildWikiUrl(
     : `https://en.wikipedia.org/wiki/${encodeURIComponent(provinceId.replace(/ /g, '_'))}`;
 }
 
+type EntityDimension = 'ruler' | 'culture' | 'religion' | 'religionGeneral';
+const ENTITY_DIMENSIONS: EntityDimension[] = ['ruler', 'culture', 'religion', 'religionGeneral'];
+
+/**
+ * Resolves the drawer content for a `?type=area&value=…` deep link once metadata and
+ * area data have loaded. Map clicks put a province ID in `value`; label clicks put
+ * the entity ID (ruler, culture, religion) there, so a value that is not a province
+ * is looked up as an entity, starting with the active color dimension.
+ */
+function resolveAreaDeepLink(
+  value: string,
+  activeColor: AreaColorDimension,
+  currentAreaData: AreaData,
+  metadata: EntityMetadata,
+  getEntityWiki: (value: string, dimension: AreaColorDimension) => string | undefined
+): DrawerContent | null {
+  if (currentAreaData[value]) {
+    return {
+      type: 'area',
+      provinceId: value,
+      provinceName: value,
+      wikiUrl: buildWikiUrl(value, activeColor, currentAreaData, getEntityWiki),
+    };
+  }
+
+  const dimensions =
+    activeColor === 'population'
+      ? ENTITY_DIMENSIONS
+      : [activeColor, ...ENTITY_DIMENSIONS.filter((d) => d !== activeColor)];
+  for (const dimension of dimensions) {
+    const entry = metadata[dimension][value];
+    if (entry) {
+      const article = entry.wiki ?? entry.name;
+      return {
+        type: 'epic',
+        epicId: value,
+        epicName: entry.name,
+        wikiUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(article.replace(/ /g, '_'))}`,
+      };
+    }
+  }
+  return null;
+}
+
 function App() {
   const loadFromStorage = useAuthStore((state) => state.loadFromStorage);
   const loadMetadata = useMapStore((state) => state.loadMetadata);
   const currentAreaData = useMapStore((state) => state.currentAreaData);
   const activeColor = useMapStore((state) => state.activeColor);
   const getEntityWiki = useMapStore((state) => state.getEntityWiki);
+  const metadata = useMapStore((state) => state.metadata);
   const setViewport = useMapStore((state) => state.setViewport);
   const selectedYear = useTimelineStore((state) => state.selectedYear);
   const setYear = useTimelineStore((state) => state.setYear);
@@ -63,6 +115,23 @@ function App() {
   const locale = useUIStore((state) => state.locale);
   const openRightDrawer = useUIStore((state) => state.openRightDrawer);
   const closeRightDrawer = useUIStore((state) => state.closeRightDrawer);
+
+  // ID from a `?type=area&value=…` deep link whose article still has to be resolved
+  // (see resolveAreaDeepLink). The drawer opens straight away with a guess.
+  const pendingAreaDeepLinkRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const value = pendingAreaDeepLinkRef.current;
+    if (!value || !metadata || !currentAreaData) return;
+    pendingAreaDeepLinkRef.current = null;
+
+    // Leave the drawer alone if the user has already selected something else
+    const content = useUIStore.getState().rightDrawerContent;
+    if (content?.type !== 'area' || content.provinceId !== value) return;
+
+    const resolved = resolveAreaDeepLink(value, activeColor, currentAreaData, metadata, getEntityWiki);
+    if (resolved) openRightDrawer(resolved);
+  }, [metadata, currentAreaData, activeColor, getEntityWiki, openRightDrawer]);
 
   // Re-fetch metadata when locale changes to get localized entity names
   const localeRef = useRef(locale);
@@ -131,6 +200,7 @@ function App() {
       if (urlState.type === 'area') {
         // Open right drawer with province content
         // Wiki URL will be updated when area data loads
+        pendingAreaDeepLinkRef.current = urlState.value;
         const wikiUrl = buildWikiUrl(urlState.value, activeColor, currentAreaData, getEntityWiki);
         openRightDrawer({
           type: 'area',
@@ -169,13 +239,23 @@ function App() {
       const newUrlState = parseURLState();
       if (newUrlState.type && newUrlState.value) {
         if (newUrlState.type === 'area') {
-          const wikiUrl = buildWikiUrl(newUrlState.value, activeColor, currentAreaData, getEntityWiki);
-          openRightDrawer({
-            type: 'area',
-            provinceId: newUrlState.value,
-            provinceName: newUrlState.value,
-            wikiUrl,
-          });
+          // Read the stores directly: this listener's closure is from the first render
+          const map = useMapStore.getState();
+          const resolved =
+            map.metadata && map.currentAreaData
+              ? resolveAreaDeepLink(newUrlState.value, map.activeColor, map.currentAreaData, map.metadata, map.getEntityWiki)
+              : null;
+          if (resolved) {
+            openRightDrawer(resolved);
+          } else {
+            pendingAreaDeepLinkRef.current = newUrlState.value;
+            openRightDrawer({
+              type: 'area',
+              provinceId: newUrlState.value,
+              provinceName: newUrlState.value,
+              wikiUrl: buildWikiUrl(newUrlState.value, map.activeColor, map.currentAreaData, map.getEntityWiki),
+            });
+          }
         } else {
           // type === 'marker'
           openRightDrawer({

@@ -13,9 +13,10 @@
 }
 
 /* Map View Container */
+/* Starts below the announcement banner while it is shown */
 .mapView {
   position: absolute;
-  top: 0;
+  top: var(--banner-height, 0px);
   left: 0;
   right: 0;
   bottom: 0;
@@ -25,7 +26,7 @@
 /* Year Notification - Top center positioning */
 .yearNotification {
   position: absolute;
-  top: var(--spacing-lg, 24px);
+  top: calc(var(--banner-height, 0px) + var(--spacing-lg, 24px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;

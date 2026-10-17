@@ -1,8 +1,9 @@
 .banner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 2px 6px;
   width: 100%;
   padding: 6px 40px;
   background: #2b2520;
@@ -48,4 +49,35 @@
 
 .closeButton:hover {
   opacity: 1;
+}
+
+.closeButton:focus-visible,
+.link:focus-visible {
+  outline: 2px solid #c8b990;
+  outline-offset: 2px;
+}
+
+/* Phones: one or two lines of sentence-case text, and a full-size close target.
+ * The uppercase, tracked desktop style wraps to four lines at 390px. */
+@media (max-width: 767px) {
+  .banner {
+    justify-content: flex-start;
+    padding: 6px 48px 6px 12px;
+    font-size: 12px;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .optional {
+    display: none;
+  }
+
+  .closeButton {
+    right: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 22px;
+  }
 }

@@ -23,6 +23,7 @@ import { useNavigationStore } from '../../../stores/navigationStore';
 import { getThemeConfig, AREA_LABEL_CONFIG, getAreaLabelFonts, LOCAL_FONT_NAMES, DEFAULT_FONT, DEFAULT_BOLD_FONT } from '../../../config/mapTheme';
 import { updatePositionInURL, updateYearInURL } from '../../../utils/mapUtils';
 import { updateURLState } from '../../../utils/urlStateUtils';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import type { Marker } from '../../../api/types';
 import { ProvinceTooltip } from '../ProvinceTooltip/ProvinceTooltip';
 import type { ProvinceFeatureProperties } from '../ProvinceTooltip/ProvinceTooltip.utils';
@@ -264,6 +265,18 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
 
   // Menu drawer state for map left offset
   const drawerOpen = useNavigationStore((state) => state.drawerOpen);
+  const sidebarOpen = useUIStore((state) => state.sidebarOpen);
+  const isMobile = useIsMobile();
+
+  /**
+   * Map container offsets. On desktop the menu drawer and right drawer push the
+   * map aside. On phones there is no room for that: both drawers overlay the map,
+   * and collapsing the sidebar rail gives its 50px back to the map.
+   */
+  const railWidth = isMobile && !sidebarOpen ? 0 : SIDEBAR_WIDTH_CLOSED;
+  const leftOffset = drawerOpen && !isMobile ? SIDEBAR_WIDTH_OPEN : railWidth;
+  const rightOffset =
+    rightDrawerOpen && !isMobile ? `${String(RIGHT_DRAWER_WIDTH_PERCENT)}%` : '0';
 
   // Get cancel functions for request cancellation
   // Requirement 9.5, 11.2: Cancel in-flight requests on new year change
@@ -550,8 +563,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
      * The viewport width is reduced by the sidebar width.
      */
     const handleResize = () => {
-      const sidebarWidth = drawerOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
-      const newWidth = window.innerWidth - sidebarWidth;
+      const newWidth = window.innerWidth - leftOffset;
       const newHeight = window.innerHeight;
 
       setViewport({
@@ -572,7 +584,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [drawerOpen, setViewport]);
+  }, [leftOffset, setViewport]);
 
   /**
    * Subscribe to selectedYear changes and trigger data fetch.
@@ -985,7 +997,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   }, [rightDrawerOpen]);
 
   /**
-   * Resize map when left drawer (layers panel) opens/closes.
+   * Resize map when its left edge moves (layers panel or mobile sidebar rail).
    * Without this, Mapbox GL's internal canvas bounding rect becomes stale
    * and hover/click detection is offset by the drawer width.
    */
@@ -996,7 +1008,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       }
     }, 350);
     return () => { clearTimeout(timeoutId); };
-  }, [drawerOpen]);
+  }, [leftOffset]);
 
   /**
    * Handles mouse hover over map features (provinces and markers).
@@ -1391,19 +1403,6 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   ]
     .filter(Boolean)
     .join(' ');
-
-  /**
-   * Calculate sidebar layout offsets.
-   * Sidebar is always 50px. When the menu drawer is open, add its width.
-   */
-  const leftOffset = drawerOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
-
-  /**
-   * Calculate right offset for right drawer.
-   * Requirement 2.2: WHEN the RightDrawer opens, THE MapView SHALL reduce its width by 25%
-   * Requirement 2.8: WHEN the RightDrawer closes, THE MapView SHALL expand to full width
-   */
-  const rightOffset = rightDrawerOpen ? `${String(RIGHT_DRAWER_WIDTH_PERCENT)}%` : '0';
 
   return (
     <div

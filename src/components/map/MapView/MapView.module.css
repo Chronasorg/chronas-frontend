@@ -147,23 +147,26 @@
 }
 
 /* Lift the bottom-right controls clear of the timeline, which is fixed to
- * bottom:0 at 110px tall (64px under 768px). Without this the credits render
- * behind the timeline's gradient and year labels — technically "displayed" but
- * illegible, which does not discharge the attribution obligation. The z-index
- * keeps them readable when the timeline is expanded to 280px too; the timeline
- * is pointer-events:none, so nothing is stolen from it.
+ * bottom:0. Timeline.tsx publishes its current height (110px, or 280px when
+ * expanded) as --timeline-height. Without this the credits render behind the
+ * timeline's gradient and year labels — technically "displayed" but illegible,
+ * which does not discharge the attribution obligation. The z-index keeps them
+ * above the timeline while it animates between heights.
  *
  * `!important` because maplibre-gl.css sets `bottom: 0` and `z-index: 2` on the
  * same single-class selectors and is injected after this module, so it would
  * otherwise win on document order. */
 :global(.maplibregl-ctrl-bottom-right) {
-  bottom: 114px !important;
+  bottom: calc(var(--timeline-height, 110px) + 4px) !important;
   z-index: calc(var(--z-timeline, 350) + 1) !important;
+  transition: bottom 500ms ease-in-out;
 }
 
+/* Phones: the timeline buttons are a row just above the timeline
+ * (TimelineControls.module.css), so the credits go above that row. */
 @media (max-width: 767px) {
   :global(.maplibregl-ctrl-bottom-right) {
-    bottom: 68px !important;
+    bottom: calc(var(--timeline-height, 110px) + 56px) !important;
   }
 }
 

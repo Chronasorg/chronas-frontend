@@ -14,7 +14,11 @@ import { useMapStore } from '@/stores/mapStore';
 import { ProvinceDrawerContent } from '@/components/content/ProvinceDrawerContent/ProvinceDrawerContent';
 import { MarkerDrawerContent } from '@/components/content/MarkerDrawerContent/MarkerDrawerContent';
 import { ArticleIframe } from '@/components/content/ArticleIframe/ArticleIframe';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import styles from './RightDrawer.module.css';
+
+/** Vertical distance (px) a swipe on the mobile sheet must travel to count */
+const SHEET_SWIPE_THRESHOLD = 50;
 
 export interface RightDrawerProps {
   /** Whether the drawer is open */
@@ -73,6 +77,18 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
 
+  // Mobile bottom sheet: half height by default, full height when expanded.
+  // Collapses again whenever the drawer closes.
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) setSheetExpanded(false);
+  }
+  const isMobile = useIsMobile();
+  const sheetSwipeStartY = useRef<number | null>(null);
+  const sheetSwiped = useRef(false);
+
   // Get metadata and province data from mapStore for rendering content
   const metadata = useMapStore((state) => state.metadata);
   const currentAreaData = useMapStore((state) => state.currentAreaData);
@@ -105,6 +121,45 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
       document.removeEventListener('mouseup', handleDragEnd);
     };
   }, [isDragging]);
+
+  // Bottom-sheet swipe on the grab bar or header. Phones only: on desktop the
+  // drawer is a side panel and a vertical mouse drag must not close it.
+  const handleSheetPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isMobile) return;
+      sheetSwipeStartY.current = e.clientY;
+      sheetSwiped.current = false;
+    },
+    [isMobile]
+  );
+
+  const handleSheetPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      const startY = sheetSwipeStartY.current;
+      sheetSwipeStartY.current = null;
+      if (startY === null) return;
+      const deltaY = e.clientY - startY;
+      if (Math.abs(deltaY) < SHEET_SWIPE_THRESHOLD) return;
+      sheetSwiped.current = true;
+      if (deltaY < 0) {
+        setSheetExpanded(true);
+      } else if (sheetExpanded) {
+        setSheetExpanded(false);
+      } else {
+        onClose();
+      }
+    },
+    [sheetExpanded, onClose]
+  );
+
+  const handleSheetHandleClick = useCallback(() => {
+    // A swipe that ends on the handle also fires click; it was already handled
+    if (sheetSwiped.current) {
+      sheetSwiped.current = false;
+      return;
+    }
+    setSheetExpanded((expanded) => !expanded);
+  }, []);
 
   // Handle Escape key to close drawer (Requirement 4.6, 10.4)
   const handleKeyDown = useCallback(
@@ -202,7 +257,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
     <aside
       ref={drawerRef}
       data-testid="right-drawer"
-      className={`${drawerClass} ${isOpen ? openClass : closedClass} ${isDragging ? draggingClass : ''}`}
+      className={`${drawerClass} ${isOpen ? openClass : closedClass} ${isDragging ? draggingClass : ''} ${sheetExpanded ? styles['sheetExpanded'] ?? '' : ''}`}
       style={isOpen ? { width: drawerWidth } : undefined}
       role="complementary"
       aria-label="Content details panel"
@@ -219,8 +274,29 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
           aria-label="Resize panel"
         />
       )}
+      {/* Bottom-sheet grab bar (shown on phones only) */}
+      {isOpen && (
+        <button
+          type="button"
+          className={styles['sheetHandle'] ?? ''}
+          onClick={handleSheetHandleClick}
+          onPointerDown={handleSheetPointerDown}
+          onPointerUp={handleSheetPointerUp}
+          aria-label={
+            sheetExpanded
+              ? t('drawer.shrinkPanel', 'Shrink panel')
+              : t('drawer.expandPanel', 'Expand panel')
+          }
+          aria-expanded={sheetExpanded}
+          data-testid="right-drawer-sheet-handle"
+        />
+      )}
       {/* Header with title and close button (Requirements 4.3, 4.4) */}
-      <header className={headerClass}>
+      <header
+        className={headerClass}
+        onPointerDown={handleSheetPointerDown}
+        onPointerUp={handleSheetPointerUp}
+      >
         <h2 className={titleClass} data-testid="right-drawer-title">
           {title}
         </h2>

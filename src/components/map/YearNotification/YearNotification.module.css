@@ -9,7 +9,7 @@
 /* Main notification container */
 .yearNotification {
   position: fixed;
-  top: 0;
+  top: var(--banner-height, 0px);
   left: 50%;
   transform: translateX(-50%) translateY(-100%);
   z-index: 1000;

@@ -15,7 +15,7 @@
 
 .drawer {
   position: fixed;
-  top: 0;
+  top: var(--banner-height, 0px);
   right: 0;
   bottom: 0;
   width: 35%;
@@ -254,14 +254,97 @@
   }
 }
 
-@media (max-width: 600px) {
+/* Grab bar for the mobile bottom sheet; hidden on desktop */
+.sheetHandle {
+  display: none;
+}
+
+/* Phones: a bottom sheet over the map, sidebar rail and timeline, instead of a
+ * full-width side panel the rail and timeline would cover. The top of the map
+ * stays visible so the selected area remains in view. */
+@media (max-width: 767px) {
   .drawer {
+    top: auto;
+    left: 0;
     width: 100% !important;
     min-width: unset;
     max-width: none;
+    height: 62vh;
+    height: 62dvh;
+    border-radius: 14px 14px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+    z-index: 10003;
+    transition:
+      transform 300ms ease-in-out,
+      height 300ms ease-in-out;
+  }
+
+  .drawer.open {
+    transform: translateY(0);
+  }
+
+  .drawer.closed {
+    transform: translateY(100%);
+  }
+
+  .drawer.sheetExpanded {
+    height: calc(100vh - var(--banner-height, 0px));
+    height: calc(100dvh - var(--banner-height, 0px));
+    border-radius: 0;
   }
 
   .dragHandle {
     display: none;
   }
+
+  .sheetHandle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 100%;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background-color: rgb(242, 242, 242);
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .sheetHandle::after {
+    content: '';
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+
+  .sheetHandle:focus-visible {
+    outline: 2px solid var(--color-primary, #1976d2);
+    outline-offset: -2px;
+  }
+
+  .header {
+    height: 48px;
+    touch-action: none;
+  }
+
+  .closeButton {
+    width: 44px;
+    height: 44px;
+    margin-right: -6px;
+  }
+}
+
+[data-theme='dark'] .sheetHandle {
+  background-color: var(--color-surface, #1e1e1e);
+}
+
+[data-theme='dark'] .sheetHandle::after {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme='luther'] .sheetHandle {
+  background-color: var(--color-surface, #ebe4d4);
 }

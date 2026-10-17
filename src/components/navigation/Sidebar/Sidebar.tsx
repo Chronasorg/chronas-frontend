@@ -20,6 +20,7 @@ import { useNavigationStore } from '../../../stores/navigationStore';
 import { useMapStore } from '../../../stores/mapStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
 import { isProSubscription } from '../../../utils/subscriptionUtils';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import styles from './Sidebar.module.css';
 
 export interface SidebarProps {
@@ -55,6 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const bottomItems = getNavItemsBySection('bottom');
 
   const isPro = isProSubscription(subscription);
+  const isMobile = useIsMobile();
 
   /**
    * Handle navigation item click.
@@ -179,7 +181,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
    * Render a navigation item with optional separator.
    */
   const renderNavItem = (item: NavItemConfig) => {
-    if (!isItemVisible(item)) {
+    // Phones have no hover, so a greyed-out "coming soon" icon can't explain
+    // itself there; leave it out to keep the rail short.
+    if (!isItemVisible(item) || (isMobile && item.disabled === true)) {
       return null;
     }
 
@@ -267,8 +271,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <svg
             viewBox="0 0 24 24"
-            width="16"
-            height="16"
+            width="20"
+            height="20"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -276,10 +280,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             strokeLinejoin="round"
           >
             {isOpen ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
+              <polyline points="15 18 9 12 15 6" />
             ) : (
               <>
                 <line x1="3" y1="12" x2="21" y2="12" />

@@ -1,6 +1,8 @@
 # ADR 0001 — Use OpenFreeMap hosted styles instead of self-hosted Protomaps
 
-- **Status:** Accepted
+- **Status:** Accepted — amended 2026-09-03 (a031fbc): `topographic` now uses a vendored,
+  patched copy of `liberty` (`public/styles/liberty.json`); only `light` is still fetched
+  from OpenFreeMap at runtime. This addresses the relief item under *Still open* below.
 - **Date:** 2026-08-21
 - **Context:** issue [#46](https://github.com/Chronasorg/chronas-frontend/issues/46) (MapLibre migration)
 - **Supersedes:** the basemap-hosting portion of issue #46's implementation plan (Phase 2 and Phase 4)
@@ -91,8 +93,8 @@ handful of files.
 
 Guarded by two E2E tests: `serves the scripts our locales need, from our own
 origin` (asserts all eight script blocks carry real glyph data locally) and
-`requests no glyphs from a third party` (fails if any fontstack escapes to a
-remote glyph endpoint).
+`resolves every fontstack of our own layers from our own origin` (fails if any
+fontstack on a Chronas layer is not in `LOCAL_FONT_NAMES`).
 
 **Still open — ~12 MB of relief raster on a cold first visit.** A single boot at
 the default z2.5 globe issues 161 Natural Earth relief tile requests (119
@@ -129,5 +131,3 @@ self-hosting #46 asked for.
 
 - OpenFreeMap announces shutdown, rate limits, or requires accounts.
 - First-visit basemap traffic becomes a measured problem for real users.
-- We want our own labels to survive an OpenFreeMap outage — item 1 above is the
-  cheapest fix and does not require changing basemap hosting at all.

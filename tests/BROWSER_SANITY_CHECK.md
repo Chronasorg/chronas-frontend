@@ -49,8 +49,8 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 ## 5. Layers Panel — Epic Filters
 
 - [ ] All 6 epic type checkboxes are visible: war, empire, religion, culture, person, other
-- [ ] All epic checkboxes are checked by default
-- [ ] "Uncheck All" unchecks every epic type
+- [ ] All epic checkboxes are unchecked by default
+- [ ] "Check All" checks every epic type and the button changes to "Uncheck All", which unchecks them again
 - [ ] Individual epic checkbox can be toggled
 
 ## 6. Layers Panel — Advanced Section
@@ -76,6 +76,8 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 - [ ] Clicking Dark applies dark theme (visual change, aria-pressed updates)
 - [ ] Clicking Luther applies luther theme
 - [ ] Language dropdown is visible with English default
+- [ ] Detail level buttons are visible: Low, Medium, High
+- [ ] Clicking Low makes it active (`aria-pressed="true"`) and it stays active after a reload
 
 ## 9. Right Drawer
 
@@ -88,7 +90,7 @@ This checklist replaces the flaky automated E2E tests that were removed due to W
 - [ ] Expand timeline button is visible
 - [ ] Search epics button is visible
 - [ ] Autoplay button is visible
-- [ ] Epic items are rendered in the timeline
+- [ ] After enabling epic types in Layers → Epics (all are off by default), epic items are rendered in the timeline
 
 ## 11. Announcement Banner
 
