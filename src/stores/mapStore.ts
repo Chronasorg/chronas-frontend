@@ -192,6 +192,10 @@ export interface MapState {
   markers: Marker[];
   /** Whether markers are currently being loaded - Requirement 5.1 */
   isLoadingMarkers: boolean;
+  /** Every city marker, for the historical city labels (loaded once) */
+  cities: Marker[];
+  /** Load state of `cities` */
+  citiesStatus: 'idle' | 'loading' | 'loaded' | 'error';
   /** Maximum markers to fetch from API - Requirement 4.1, 4.5 */
   markerLimit: number;
   /** Whether marker clustering is enabled - Requirement 5.1 */
@@ -528,6 +532,12 @@ export interface MapActions {
   loadMarkers: (year: number) => Promise<Marker[]>;
 
   /**
+   * Loads every city marker once, for the historical city labels. A failed
+   * load can be retried by calling it again.
+   */
+  loadCities: () => Promise<void>;
+
+  /**
    * Sets the marker filter state for a specific marker type.
    * Requirement 6.3: THE Map_Store SHALL maintain the current marker filter state.
    *
@@ -828,6 +838,8 @@ export const initialState: MapState = {
   isLoadingMetadata: false,
   markers: [],
   isLoadingMarkers: false,
+  cities: [],
+  citiesStatus: 'idle',
   markerLimit: 5000,
   clusterMarkers: false,
   markerFilters: { ...defaultMarkerFilters },
@@ -2025,6 +2037,20 @@ export const useMapStore = create<MapStore>((set, get) => ({
         features: updatedFeatures,
       },
     });
+  },
+
+  loadCities: async (): Promise<void> => {
+    const { citiesStatus } = get();
+    if (citiesStatus === 'loading' || citiesStatus === 'loaded') return;
+    set({ citiesStatus: 'loading' });
+    try {
+      const data = await apiClient.get<Marker[]>(MARKERS.ALL_CITIES);
+      if (!Array.isArray(data)) throw new Error('cities: not an array');
+      set({ cities: data, citiesStatus: 'loaded' });
+    } catch (error) {
+      console.error('API ERROR: Failed to load cities:', error);
+      set({ citiesStatus: 'error' });
+    }
   },
 
   /**

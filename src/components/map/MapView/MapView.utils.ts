@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import type { FeatureCollection, Point, Polygon, MultiPolygon } from 'geojson';
 import { FALLBACK_COLOR } from '../../../stores/mapStore';
 import type { Marker } from '../../../api/types';
+import { cityNameInYear } from '../../../utils/cityNames';
 import {
   type MapExpression,
   POPULATION_OPACITY_MIN,
@@ -180,9 +181,10 @@ export function checkWebGLSupport(): boolean {
  * Requirement 5.2: THE MapView SHALL display markers as icons on the map using a GeoJSON point source
  *
  * @param markers - Array of markers to convert
+ * @param year - The selected year; cities get their name of that year
  * @returns GeoJSON FeatureCollection of Point features
  */
-export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
+export function markersToGeoJSON(markers: Marker[], year?: number): FeatureCollection<Point> {
   let skippedCount = 0;
   const result: FeatureCollection<Point> = {
     type: 'FeatureCollection',
@@ -211,7 +213,8 @@ export function markersToGeoJSON(markers: Marker[]): FeatureCollection<Point> {
         },
         properties: {
           id: marker._id,
-          name: marker.name,
+          // A city shows the name it had in the selected year (issue #69).
+          name: year === undefined ? marker.name : cityNameInYear(marker, year),
           type: marker.type,
           year: marker.year,
           wiki: marker.wiki ?? null,

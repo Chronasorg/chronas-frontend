@@ -65,6 +65,12 @@ export const MARKERS = {
    * Get markers for a specific year with limit.
    * Requirements: 4.2, 4.3
    */
+  /**
+   * Every city (type `c`) with its founding year, end year and name history.
+   * One fixed URL, so the edge caches it for all visitors; the map filters it
+   * by year itself.
+   */
+  ALL_CITIES: '/markers?types=c&year=-5000&end=2100&limit=10000',
   GET_BY_YEAR_WITH_LIMIT: (year: number, limit: number) =>
     `/markers?year=${String(year)}&limit=${String(limit)}`,
   /**

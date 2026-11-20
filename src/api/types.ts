@@ -142,7 +142,19 @@ export interface Marker {
   end?: number;
   wiki?: string;
   data?: MarkerData;
+  /**
+   * Name history of a city: [fromYear | null, untilYear | null, name]; the
+   * name applies from fromYear (inclusive) until untilYear (exclusive), null
+   * is open. Outside every entry the city keeps `name`. Optional: only some
+   * city markers (type `c`) carry one.
+   */
+  names?: CityNamePeriod[];
+  /** Years a city was a capital: [fromYear, untilYear, rulerId]. */
+  capital?: [number, number, string][];
 }
+
+/** One period of a city's name history. */
+export type CityNamePeriod = [number | null, number | null, string];
 
 /**
  * Additional marker data
