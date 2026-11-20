@@ -19,6 +19,7 @@ import type { FeatureCollection, Feature, Point, Polygon, MultiPolygon } from 'g
 import { useMapStore, FALLBACK_COLOR, BASEMAP_STYLES, type LabelFeatureCollection, type LabelLineFeatureCollection } from '../../../stores/mapStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
+import { citiesToGeoJSON } from '../../../utils/cityNames';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { getThemeConfig, AREA_LABEL_CONFIG, getAreaLabelFonts, LOCAL_FONT_NAMES, DEFAULT_FONT, DEFAULT_BOLD_FONT } from '../../../config/mapTheme';
 import { updatePositionInURL, updateYearInURL } from '../../../utils/mapUtils';
@@ -40,7 +41,7 @@ import {
   MAX_POPULATION_FOR_OPACITY,
   DEFAULT_FILL_OPACITY,
   ATTRIBUTION_OPTIONS,
-  OWN_SOURCE_IDS,
+  OWN_SOURCE_IDS, MODERN_PLACE_SOURCE_LAYERS,
 } from './MapView.constants';
 import {
   useDebounce,
@@ -229,6 +230,8 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   const labelData = useMapStore((state) => state.labelData);
   const labelLineData = useMapStore((state) => state.labelLineData);
   const labelNameMode = useMapStore((state) => state.labelNameMode);
+  const cities = useMapStore((state) => state.cities);
+  const loadCities = useMapStore((state) => state.loadCities);
   const calculateLabels = useMapStore((state) => state.calculateLabels);
   const activeColor = useMapStore((state) => state.activeColor);
   // Active label dimension for map labels (can be different from activeColor when unlocked)
@@ -424,7 +427,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
    */
   const markersGeoJSON = useMemo(() => {
     const filteredMarkers = getFilteredMarkers();
-    const geojson = markersToGeoJSON(filteredMarkers);
+    const geojson = markersToGeoJSON(filteredMarkers, selectedYear);
     
     // Debug logging for marker visibility issues
     console.log('[MapView] Markers GeoJSON:', {
@@ -437,7 +440,25 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
     });
     
     return geojson;
-  }, [markers, markerFilters, getFilteredMarkers, clusterMarkers]);
+  }, [markers, markerFilters, getFilteredMarkers, clusterMarkers, selectedYear]);
+
+  /**
+   * Historical city labels (issue #69): every city that existed in the
+   * selected year, with the name it had then. Hidden in 'modern' label mode,
+   * where the basemap's own place names show instead. Cities that are on the
+   * map as event markers already (founded within the marker window) are left
+   * out so they aren't labelled twice.
+   */
+  const showHistoricalCities = labelNameMode !== 'modern';
+  useEffect(() => {
+    if (showHistoricalCities) void loadCities();
+  }, [showHistoricalCities, loadCities]);
+
+  const citiesGeoJSON = useMemo(() => {
+    if (!showHistoricalCities) return citiesToGeoJSON([], selectedYear);
+    const shown = new Set(markersGeoJSON.features.map((f) => String(f.properties?.['id'])));
+    return citiesToGeoJSON(cities, selectedYear, shown);
+  }, [cities, selectedYear, markersGeoJSON, showHistoricalCities]);
 
   /**
    * Memoized tooltip feature properties from currentAreaData.
@@ -874,7 +895,7 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
   }, [locale, isLoaded, basemap, styleVersion]);
 
   /**
-   * Toggle basemap country/state labels based on labelNameMode.
+   * Toggle basemap place labels based on labelNameMode.
    * In 'historical' mode, hide basemap labels so only custom area-labels are visible.
    * In 'modern' mode, show basemap labels and hide custom area-labels.
    * In 'both' mode, show both.
@@ -890,12 +911,15 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
       for (const layer of style.layers) {
         if (layer.type !== 'symbol') continue;
         if (OWN_SOURCE_IDS.has(layer.source)) continue;
-        // OpenMapTiles ids are `label_country_1`, `label_state`; Mapbox Streets
-        // used `country-label`, `state-label`. Both match on these substrings.
-        // (The old filter also tested `continent`, which matches nothing in
-        // either schema.)
-        if (!layer.id.includes('label')) continue;
-        if (!layer.id.includes('country') && !layer.id.includes('state')) continue;
+        // Every OpenMapTiles `place` layer (countries, states, cities, towns,
+        // villages) plus POIs and airports: modern names that didn't exist in
+        // most years (issue #69: Sevastopol shown in the year 1000). Chronas'
+        // own city labels replace them. Mapbox Streets ids (`country-label`,
+        // `state-label`) still match on the substrings.
+        const sourceLayer = (layer as { 'source-layer'?: string })['source-layer'];
+        const isModernPlace = sourceLayer !== undefined && MODERN_PLACE_SOURCE_LAYERS.has(sourceLayer);
+        const isLegacyLabel = layer.id.includes('label') && (layer.id.includes('country') || layer.id.includes('state'));
+        if (!isModernPlace && !isLegacyLabel) continue;
         // Idempotency guard — `visibility` defaults to 'visible' when unset.
         if ((layer.layout?.visibility ?? 'visible') === visibility) continue;
         map.setLayoutProperty(layer.id, 'visibility', visibility);
@@ -1793,6 +1817,64 @@ export function MapView({ className, isBlurred = false }: MapViewProps) {
               'text-color': '#333333',
               'text-halo-color': '#ffffff',
               'text-halo-width': 2,
+            }}
+          />
+        </Source>
+
+        {/* Historical city labels (issue #69), above markers (so marker icons don't hide
+            capitals), beneath area labels */}
+        <Source id="historical-cities" type="geojson" data={citiesGeoJSON}>
+          <Layer
+            id="historical-cities-dot"
+            type="circle"
+            minzoom={3}
+            paint={{
+              'circle-radius': ['case', ['==', ['get', 'capital'], 1], 3, 2],
+              'circle-color': '#3a3a3a',
+              'circle-stroke-color': '#ffffff',
+              'circle-stroke-width': 1,
+              // Below zoom 5 only capitals; others fade in from 5.
+              'circle-opacity': ['step', ['zoom'], ['case', ['==', ['get', 'capital'], 1], 0.9, 0], 5, 0.9],
+              'circle-stroke-opacity': ['step', ['zoom'], ['case', ['==', ['get', 'capital'], 1], 0.9, 0], 5, 0.9],
+            }}
+          />
+          <Layer
+            id="historical-cities-capital-label"
+            type="symbol"
+            minzoom={3}
+            filter={['==', ['get', 'capital'], 1]}
+            layout={{
+              'text-field': ['get', 'name'],
+              'text-font': [DEFAULT_BOLD_FONT],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 3, 10, 6, 12, 9, 14],
+              'text-offset': [0, 0.6],
+              'text-anchor': 'top',
+              'text-max-width': 8,
+            }}
+            paint={{
+              'text-color': '#2b2b2b',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 1.5,
+            }}
+          />
+          <Layer
+            id="historical-cities-label"
+            type="symbol"
+            minzoom={5}
+            filter={['==', ['get', 'capital'], 0]}
+            layout={{
+              'symbol-sort-key': ['get', 'rank'],
+              'text-field': ['get', 'name'],
+              'text-font': [DEFAULT_FONT],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 5, 10, 8, 12, 11, 14],
+              'text-offset': [0, 0.6],
+              'text-anchor': 'top',
+              'text-max-width': 8,
+            }}
+            paint={{
+              'text-color': '#3a3a3a',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 1.5,
             }}
           />
         </Source>

@@ -160,6 +160,17 @@ export const OWN_SOURCE_IDS: ReadonlySet<string> = new Set([
   'area-label-lines',
   'area-labels',
   'entity-outline',
+  'historical-cities',
+]);
+
+/**
+ * Basemap (OpenMapTiles) source layers whose labels are modern place names:
+ * hidden in the 'historical' label mode, where Chronas' own city labels show.
+ */
+export const MODERN_PLACE_SOURCE_LAYERS: ReadonlySet<string> = new Set([
+  'place',
+  'poi',
+  'aerodrome_label',
 ]);
 
 export const ATTRIBUTION_OPTIONS: AttributionControlOptions = {
