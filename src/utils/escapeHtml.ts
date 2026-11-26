@@ -13,6 +13,15 @@ const HTML_ESCAPES: Record<string, string> = {
   "'": '&#39;',
 };
 
-export function escapeHtml(text: string): string {
+/**
+ * The value is typed `unknown` on purpose: these names come from the API, and
+ * a malformed record (a number, null, an object) must not throw while the
+ * timeline renders. A number is shown as text; anything else that is not a
+ * string becomes ''.
+ */
+export function escapeHtml(value: unknown): string {
+  let text = '';
+  if (typeof value === 'string') text = value;
+  else if (typeof value === 'number' && Number.isFinite(value)) text = String(value);
   return text.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char] ?? char);
 }
