@@ -108,6 +108,17 @@ export default tseslint.config(
     },
   },
 
+  // Plain Node scripts for CloudFront and Route 53 (infra/): no TypeScript
+  // project, so no type-aware rules.
+  {
+    files: ['infra/**/*.mjs'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: globals.node,
+    },
+  },
+
   // Prettier config - must be last to override other formatting rules
   eslintConfigPrettier
 );
