@@ -56,3 +56,6 @@ screenshots/
 
 # Deployment config (contains distribution IDs)
 .deploy-config.json
+
+# CloudFront/Route 53 snapshots written by infra/ scripts
+infra/backups/
