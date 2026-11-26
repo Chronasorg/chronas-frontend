@@ -69,12 +69,22 @@ describe('ArticleIframe', () => {
       expect(isValidWikiUrl('https://evil.com/wikipedia.org/wiki/Test')).toBe(false);
     });
 
+    it('rejects hosts that only end in the same letters, other schemes and credentials tricks', () => {
+      expect(isValidWikiUrl('https://evilwikipedia.org/wiki/Test')).toBe(false);
+      expect(isValidWikiUrl('https://attacker-wikimedia.org/x')).toBe(false);
+      expect(isValidWikiUrl('https://en.wikipedia.org.evil.com/wiki/Test')).toBe(false);
+      expect(isValidWikiUrl('https://en.wikipedia.org@evil.com/wiki/Test')).toBe(false);
+      expect(isValidWikiUrl('http://en.wikipedia.org/wiki/Test')).toBe(false);
+      expect(isValidWikiUrl('data:text/html,<script>alert(1)</script>')).toBe(false);
+    });
+
     it('should handle edge cases', () => {
       // Subdomain variations
       expect(isValidWikiUrl('https://m.wikipedia.org/wiki/Test')).toBe(true);
       expect(isValidWikiUrl('https://en.m.wikipedia.org/wiki/Test')).toBe(true);
       // Protocol variations (only https should work with URL parsing)
-      expect(isValidWikiUrl('http://en.wikipedia.org/wiki/Test')).toBe(true);
+      expect(isValidWikiUrl('HTTPS://EN.WIKIPEDIA.ORG/wiki/Test')).toBe(true);
+      expect(isValidWikiUrl('https://wikipedia.org/wiki/Test')).toBe(true);
     });
   });
 

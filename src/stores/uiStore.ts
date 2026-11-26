@@ -66,8 +66,6 @@ export interface UIState {
   rightDrawerContent: DrawerContent | null;
   /** Whether the announcement banner is visible */
   bannerVisible: boolean;
-  /** Whether the login dialog is open */
-  loginDialogOpen: boolean;
   /** Whether the info dialog (Welcome/How To/Contact) is open */
   infoDialogOpen: boolean;
   /** Tab the info dialog opens on */
@@ -94,10 +92,6 @@ export interface UIActions {
   closeRightDrawer: () => void;
   /** Toggles the announcement banner */
   toggleBanner: () => void;
-  /** Opens the login dialog */
-  openLoginDialog: () => void;
-  /** Closes the login dialog */
-  closeLoginDialog: () => void;
   /** Opens the info dialog (Welcome/How To/Contact) */
   openInfoDialog: (tab?: InfoDialogTab) => void;
   /** Closes the info dialog */
@@ -126,7 +120,6 @@ const defaultState: UIState = {
   rightDrawerOpen: false,
   rightDrawerContent: null,
   bannerVisible: true,
-  loginDialogOpen: false,
   infoDialogOpen: false,
   infoDialogTab: 'welcome',
   supportDialogOpen: false,
@@ -257,14 +250,6 @@ export const useUIStore = create<UIStore>()(
 
       toggleBanner: () => {
         set((state) => ({ bannerVisible: !state.bannerVisible }));
-      },
-
-      openLoginDialog: () => {
-        set({ loginDialogOpen: true });
-      },
-
-      closeLoginDialog: () => {
-        set({ loginDialogOpen: false });
       },
 
       openInfoDialog: (tab: InfoDialogTab = 'welcome') => {

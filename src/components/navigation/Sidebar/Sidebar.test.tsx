@@ -9,7 +9,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { Sidebar } from './Sidebar';
 import { useUIStore } from '../../../stores/uiStore';
-import { useAuthStore } from '../../../stores/authStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 
 // Mock the stores
@@ -17,34 +16,20 @@ vi.mock('../../../stores/uiStore', () => ({
   useUIStore: vi.fn(),
 }));
 
-vi.mock('../../../stores/authStore', () => ({
-  useAuthStore: vi.fn(),
-}));
-
 vi.mock('../../../stores/navigationStore', () => ({
   useNavigationStore: vi.fn(),
 }));
 
 const mockUseUIStore = useUIStore as unknown as ReturnType<typeof vi.fn>;
-const mockUseAuthStore = useAuthStore as unknown as ReturnType<typeof vi.fn>;
 const mockUseNavigationStore = useNavigationStore as unknown as ReturnType<typeof vi.fn>;
 
 describe('Sidebar', () => {
   const mockToggleDrawer = vi.fn();
-  const mockClearUser = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockUseUIStore.mockReturnValue({ theme: 'light' });
-    mockUseAuthStore.mockReturnValue({
-      isAuthenticated: false,
-      username: null,
-      avatar: null,
-      score: null,
-      subscription: null,
-      clearUser: mockClearUser,
-    });
     mockUseNavigationStore.mockReturnValue({
       toggleDrawer: mockToggleDrawer,
       drawerOpen: false,
@@ -130,12 +115,13 @@ describe('Sidebar', () => {
         </MemoryRouter>
       );
 
-      // Production-matching icons: Support, Collections, Play, Help, Logout
+      // Support, Collections, Play, Help. Logout was removed with the login (2026-11).
       expect(screen.getByTestId('nav-item-support')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-collections')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-play')).toBeInTheDocument();
       expect(screen.getByTestId('nav-item-help')).toBeInTheDocument();
-      expect(screen.getByTestId('nav-item-logout')).toBeInTheDocument();
+      expect(screen.queryByTestId('nav-item-logout')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('sidebar-user-avatar')).not.toBeInTheDocument();
     });
 
     it('should render nav sections with test IDs', () => {
@@ -240,36 +226,6 @@ describe('Sidebar', () => {
     });
   });
 
-  describe('User avatar', () => {
-    it('should render user avatar when authenticated', () => {
-      mockUseAuthStore.mockReturnValue({
-        isAuthenticated: true,
-        username: 'testuser',
-        avatar: 'https://example.com/avatar.jpg',
-        score: 100,
-        subscription: null,
-        clearUser: mockClearUser,
-      });
-
-      render(
-        <MemoryRouter>
-          <Sidebar />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByTestId('sidebar-user-avatar')).toBeInTheDocument();
-    });
-
-    it('should not render user avatar when not authenticated', () => {
-      render(
-        <MemoryRouter>
-          <Sidebar />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByTestId('sidebar-user-avatar')).not.toBeInTheDocument();
-    });
-  });
   describe('Support item (Issue #53)', () => {
     it('is enabled and opens the support dialog', () => {
       const openSupportDialog = vi.fn();
@@ -287,30 +243,6 @@ describe('Sidebar', () => {
       expect(supportItem).toBeEnabled();
       fireEvent.click(supportItem);
       expect(openSupportDialog).toHaveBeenCalledTimes(1);
-    });
-
-    it.each([
-      ['pro_v1', true],
-      ['-1', false],
-    ])('highlights the support icon for subscription %p: %p', (subscription, highlighted) => {
-      mockUseAuthStore.mockReturnValue({
-        isAuthenticated: true,
-        username: 'user',
-        avatar: null,
-        score: null,
-        subscription,
-        clearUser: mockClearUser,
-      });
-
-      render(
-        <MemoryRouter>
-          <Sidebar />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByTestId('nav-item-support').className.includes('highlighted')).toBe(
-        highlighted
-      );
     });
   });
 });

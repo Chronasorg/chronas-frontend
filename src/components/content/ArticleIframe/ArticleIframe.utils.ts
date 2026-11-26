@@ -5,20 +5,23 @@
  * Extracted from ArticleIframe.tsx to satisfy react-refresh/only-export-components.
  */
 
+const TRUSTED_DOMAINS = ['wikipedia.org', 'wikimedia.org'];
+
 /**
- * Validates that a URL is from a trusted Wikipedia/Wikimedia domain.
- * This prevents embedding content from untrusted sources.
+ * Validates that a URL is an https URL on a Wikipedia or Wikimedia host: the
+ * domain itself or one of its subdomains (en.wikipedia.org,
+ * upload.wikimedia.org). A host that only ends in the same letters, like
+ * evilwikipedia.org, is refused, and so is plain http.
  *
  * @param url - The URL to validate
- * @returns true if the URL is from wikipedia.org or wikimedia.org
+ * @returns true if the URL may be shown in the article iframe
  */
 export function isValidWikiUrl(url: string): boolean {
   try {
-    const parsed = new URL(url);
-    return (
-      parsed.hostname.endsWith('wikipedia.org') ||
-      parsed.hostname.endsWith('wikimedia.org')
-    );
+    const { protocol, hostname } = new URL(url);
+    if (protocol !== 'https:') return false;
+    const host = hostname.toLowerCase();
+    return TRUSTED_DOMAINS.some((domain) => host === domain || host.endsWith(`.${domain}`));
   } catch {
     return false;
   }

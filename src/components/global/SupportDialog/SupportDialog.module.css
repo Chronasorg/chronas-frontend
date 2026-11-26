@@ -113,19 +113,6 @@
   line-height: 1.6;
 }
 
-.supporterNote {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 18px 0 0;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  color: rgb(140, 108, 18);
-  background: rgba(173, 135, 27, 0.1);
-}
-
 /* Pledge card */
 
 .pledge {

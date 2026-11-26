@@ -1146,8 +1146,9 @@ describe('toWikipediaUrl utility', () => {
     expect(toWikipediaUrl('https://en.wikipedia.org/wiki/Test')).toBe('https://en.wikipedia.org/wiki/Test');
   });
 
-  it('should return full URL as-is when already a http URL', () => {
-    expect(toWikipediaUrl('http://en.wikipedia.org/wiki/Test')).toBe('http://en.wikipedia.org/wiki/Test');
+  it('should upgrade a full http URL to https', () => {
+    // http is upgraded: the article iframe accepts https only
+    expect(toWikipediaUrl('http://en.wikipedia.org/wiki/Test')).toBe('https://en.wikipedia.org/wiki/Test');
   });
 
   it('should return empty string for empty input', () => {

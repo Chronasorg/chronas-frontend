@@ -66,11 +66,12 @@ test.describe('Navigation Sidebar', () => {
   });
 
   test('renders disabled nav items', async ({ page }) => {
-    // 'logout' is disabled in navConfig until auth is re-enabled.
-    for (const id of ['discover', 'random', 'collections', 'logout']) {
+    for (const id of ['discover', 'random', 'collections']) {
       await expect(page.getByTestId(`nav-item-${id}`)).toBeVisible();
       await expect(page.getByTestId(`nav-item-${id}`)).toBeDisabled();
     }
+    // Logout was removed with the login (2026-11).
+    await expect(page.getByTestId('nav-item-logout')).toHaveCount(0);
   });
 
   test('clicking Help opens the Information dialog', async ({ page }) => {

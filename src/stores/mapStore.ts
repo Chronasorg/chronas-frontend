@@ -39,6 +39,22 @@ export type ProvinceData = [string, string, string, string | null, number];
 export type AreaData = Record<string, ProvinceData>;
 
 /**
+ * The province's data, or undefined when the area data has no such province.
+ * Province ids can come from the URL (`#/?type=area&value=…`), so a plain
+ * `areaData[id]` is unsafe: `__proto__` or `constructor` would return
+ * Object.prototype or a function instead of undefined, and the drawer that
+ * spreads the result blanked the whole app (pentest V2, 2026-11).
+ */
+export function getOwnProvinceData(
+  areaData: AreaData | null | undefined,
+  provinceId: string
+): ProvinceData | undefined {
+  if (!areaData || !Object.prototype.hasOwnProperty.call(areaData, provinceId)) return undefined;
+  const value = areaData[provinceId];
+  return Array.isArray(value) ? value : undefined;
+}
+
+/**
  * Viewport state interface containing all map view properties.
  * Requirement 2.1: THE MapStore SHALL maintain viewport state including
  * longitude, latitude, zoom, pitch, bearing, width, height

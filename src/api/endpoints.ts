@@ -1,32 +1,11 @@
 /**
  * API Endpoints Module
  *
- * Provides centralized endpoint constants for all chronas-api routes.
+ * Endpoint constants for the public chronas-api reads this site uses. Writes
+ * are admin-only on the API and login was removed from the site (2026-11).
  *
  * Requirements: 5.5
  */
-
-// ============================================================================
-// Authentication Endpoints
-// ============================================================================
-
-export const AUTH = {
-  LOGIN: '/auth/login',
-  SIGNUP: '/auth/signup',
-} as const;
-
-// ============================================================================
-// User Endpoints
-// ============================================================================
-
-export const USERS = {
-  CREATE: '/users',
-  GET: (userId: string) => `/users/${userId}`,
-  UPDATE: (userId: string) => `/users/${userId}`,
-  DELETE: (userId: string) => `/users/${userId}`,
-  SUSTAINERS: '/users/sustainers',
-  HIGHSCORE: '/users/highscore',
-} as const;
 
 // ============================================================================
 // Area Endpoints
@@ -34,10 +13,7 @@ export const USERS = {
 
 export const AREAS = {
   LIST: '/areas',
-  CREATE: '/areas',
   GET: (areaId: string) => `/areas/${areaId}`,
-  UPDATE: (areaId: string) => `/areas/${areaId}`,
-  DELETE: (areaId: string) => `/areas/${areaId}`,
   /**
    * Get area data for a specific year.
    * Returns province data dictionary keyed by province ID.
@@ -52,10 +28,7 @@ export const AREAS = {
 
 export const MARKERS = {
   LIST: '/markers',
-  CREATE: '/markers',
   GET: (markerId: string) => `/markers/${markerId}`,
-  UPDATE: (markerId: string) => `/markers/${markerId}`,
-  DELETE: (markerId: string) => `/markers/${markerId}`,
   /**
    * Get markers for a specific year.
    * Requirements: 9.1
@@ -87,10 +60,7 @@ export const MARKERS = {
 
 export const METADATA = {
   LIST: '/metadata',
-  CREATE: '/metadata',
   GET: (metadataId: string) => `/metadata/${metadataId}`,
-  UPDATE: (metadataId: string) => `/metadata/${metadataId}`,
-  DELETE: (metadataId: string) => `/metadata/${metadataId}`,
   /**
    * Get metadata list.
    * Requirements: 9.1
@@ -162,8 +132,6 @@ export const VERSION = {
 // ============================================================================
 
 export const ENDPOINTS = {
-  AUTH,
-  USERS,
   AREAS,
   MARKERS,
   METADATA,

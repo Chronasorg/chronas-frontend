@@ -2,24 +2,20 @@
  * Sidebar Component
  *
  * The main navigation container that renders the vertical icon menu.
- * Integrates with useUIStore, useAuthStore, and useNavigationStore.
+ * Integrates with useUIStore and useNavigationStore.
  *
  * Requirements: 1.1-1.6, 7.1-7.5, 10.1, 10.3, 10.4
  */
 
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '../Logo';
 import { NavItem } from '../NavItem';
-import { UserAvatar } from '../UserAvatar';
 import { getNavItemsBySection, type NavItemConfig } from '../navConfig';
 import { useUIStore } from '../../../stores/uiStore';
-import { useAuthStore } from '../../../stores/authStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useMapStore } from '../../../stores/mapStore';
 import { useTimelineStore } from '../../../stores/timelineStore';
-import { isProSubscription } from '../../../utils/subscriptionUtils';
 import styles from './Sidebar.module.css';
 
 export interface SidebarProps {
@@ -35,7 +31,7 @@ export interface SidebarProps {
 
 /**
  * Sidebar component - the main navigation container.
- * Renders Logo, NavItems, and UserAvatar based on authentication state.
+ * Renders the logo and the navigation items.
  */
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen = true,
@@ -43,18 +39,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   className,
   testId = 'navigation-sidebar',
 }) => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const { theme } = useUIStore();
-  const { isAuthenticated, username, avatar, score, subscription, clearUser } = useAuthStore();
   const { toggleDrawer, drawerOpen, drawerContent } = useNavigationStore();
   const currentAreaData = useMapStore((s) => s.currentAreaData);
   const openRightDrawer = useUIStore((s) => s.openRightDrawer);
 
   const topItems = getNavItemsBySection('top');
   const bottomItems = getNavItemsBySection('bottom');
-
-  const isPro = isProSubscription(subscription);
 
   /**
    * Handle navigation item click.
@@ -112,52 +104,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             // Issue #53: opens the Support Chronas (Patreon) dialog
             useUIStore.getState().openSupportDialog();
             break;
-          case 'logout':
-            if (isAuthenticated) {
-              clearUser();
-              void navigate('/');
-            } else {
-              // Open login dialog overlay
-              useUIStore.getState().openLoginDialog();
-            }
-            break;
         }
       }
     },
-    [toggleDrawer, isAuthenticated, clearUser, navigate, currentAreaData, openRightDrawer]
+    [toggleDrawer, currentAreaData, openRightDrawer]
   );
-
-  /**
-   * Handle user avatar click - navigate to profile.
-   */
-  const handleAvatarClick = useCallback(() => {
-    if (username) {
-      void navigate(`/community/user/${username}`);
-    }
-  }, [navigate, username]);
-
-  /**
-   * Determine if a navigation item should be visible.
-   */
-  const isItemVisible = (item: NavItemConfig): boolean => {
-    if (item.showWhenAuth && !isAuthenticated) {
-      return false;
-    }
-    return true;
-  };
-
-  /**
-   * Determine if a navigation item should be highlighted.
-   */
-  const isItemHighlighted = (item: NavItemConfig): boolean => {
-    if (item.highlightWhenPro && isPro) {
-      return true;
-    }
-    if (item.highlightWhenAuth && isAuthenticated) {
-      return true;
-    }
-    return false;
-  };
 
   /**
    * Determine if a navigation item is active (drawer open with matching content).
@@ -179,10 +130,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
    * Render a navigation item with optional separator.
    */
   const renderNavItem = (item: NavItemConfig) => {
-    if (!isItemVisible(item)) {
-      return null;
-    }
-
     return (
       <React.Fragment key={item.id}>
         <NavItem
@@ -191,7 +138,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           to={item.disabled ? undefined : item.to}
           onClick={item.action && !item.disabled ? () => handleItemClick(item) : undefined}
           isActive={isItemActive(item)}
-          isHighlighted={isItemHighlighted(item)}
           disabled={item.disabled === true}
           testId={`nav-item-${item.id}`}
         />
@@ -240,19 +186,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           data-testid="nav-section-bottom"
         >
           {bottomItems.map(renderNavItem)}
-
-          {/* User avatar (shown when authenticated) */}
-          {isAuthenticated && (
-            <div className={styles['avatarSection']}>
-              <UserAvatar
-                avatarUrl={avatar}
-                username={username}
-                score={score}
-                onClick={handleAvatarClick}
-                testId="sidebar-user-avatar"
-              />
-            </div>
-          )}
         </nav>
       </div>
 

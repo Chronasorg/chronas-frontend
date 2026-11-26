@@ -455,9 +455,10 @@ export function toWikipediaUrl(wikiArticle: string): string {
   if (!wikiArticle) {
     return '';
   }
-  // If it's already a full URL, return as-is
+  // If it's already a full URL, return it, upgraded to https (the article
+  // iframe accepts https only)
   if (wikiArticle.startsWith('http://') || wikiArticle.startsWith('https://')) {
-    return wikiArticle;
+    return wikiArticle.replace(/^http:\/\//, 'https://');
   }
   // Otherwise, construct the full Wikipedia URL
   return `${WIKIPEDIA_BASE_URL}${wikiArticle}`;

@@ -33,7 +33,9 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // No source maps in production builds: they published the full source
+    // (pentest 2026-11). scripts/deploy.ts also deletes old ones from the bucket.
+    sourcemap: false,
     rolldownOptions: {
       output: {
         manualChunks(id) {

@@ -25,7 +25,6 @@ import { MemoryRouter } from 'react-router';
 import * as fc from 'fast-check';
 import { Sidebar, type SidebarProps } from './Sidebar';
 import { useUIStore } from '../../../stores/uiStore';
-import { useAuthStore } from '../../../stores/authStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 
 // Mock the stores
@@ -33,16 +32,11 @@ vi.mock('../../../stores/uiStore', () => ({
   useUIStore: vi.fn(),
 }));
 
-vi.mock('../../../stores/authStore', () => ({
-  useAuthStore: vi.fn(),
-}));
-
 vi.mock('../../../stores/navigationStore', () => ({
   useNavigationStore: vi.fn(),
 }));
 
 const mockUseUIStore = useUIStore as unknown as ReturnType<typeof vi.fn>;
-const mockUseAuthStore = useAuthStore as unknown as ReturnType<typeof vi.fn>;
 const mockUseNavigationStore = useNavigationStore as unknown as ReturnType<typeof vi.fn>;
 
 /**
@@ -51,7 +45,7 @@ const mockUseNavigationStore = useNavigationStore as unknown as ReturnType<typeo
  * 
  * Production order:
  * Top: Layers, Discover, Random, Settings
- * Bottom: Support, Collections, Play, Help, Logout
+ * Bottom: Support, Collections, Play, Help (Logout was removed with the login, 2026-11)
  */
 const REQUIRED_NAV_ITEMS = [
   { id: 'layers', label: 'Layers' },
@@ -62,12 +56,10 @@ const REQUIRED_NAV_ITEMS = [
   { id: 'collections', label: 'Collections' },
   { id: 'play', label: 'Play' },
   { id: 'help', label: 'Help' },
-  { id: 'logout', label: 'Logout' },
 ] as const;
 
 describe('Sidebar Property Tests', () => {
   const mockToggleDrawer = vi.fn();
-  const mockClearUser = vi.fn();
 
   /**
    * Arbitrary generator for sidebar props
@@ -94,17 +86,6 @@ describe('Sidebar Property Tests', () => {
   );
 
   /**
-   * Arbitrary generator for authentication state
-   */
-  const authStateArbitrary = fc.record({
-    isAuthenticated: fc.boolean(),
-    username: fc.option(fc.string(), { nil: null }),
-    avatar: fc.option(fc.webUrl(), { nil: null }),
-    score: fc.option(fc.integer({ min: 0, max: 10000 }), { nil: null }),
-    subscription: fc.option(fc.constantFrom('free', 'pro'), { nil: null }),
-  });
-
-  /**
    * Arbitrary generator for UI store state
    */
   const uiStateArbitrary = fc.record({
@@ -124,20 +105,9 @@ describe('Sidebar Property Tests', () => {
    */
   const setupMocks = (
     uiState: { theme: string },
-    authState: {
-      isAuthenticated: boolean;
-      username: string | null;
-      avatar: string | null;
-      score: number | null;
-      subscription: string | null;
-    },
     navState: { drawerOpen: boolean; drawerContent: string | null }
   ) => {
     mockUseUIStore.mockReturnValue(uiState);
-    mockUseAuthStore.mockReturnValue({
-      ...authState,
-      clearUser: mockClearUser,
-    });
     mockUseNavigationStore.mockReturnValue({
       ...navState,
       toggleDrawer: mockToggleDrawer,
@@ -167,18 +137,17 @@ describe('Sidebar Property Tests', () => {
      * For any rendered Left_Sidebar in collapsed state, all required navigation items
      * SHALL be present matching production (https://chronas.org):
      * Top: Layers, Discover, Random, Settings
-     * Bottom: Support, Collections, Play, Help, Logout
+     * Bottom: Support, Collections, Play, Help (Logout was removed with the login, 2026-11)
      */
 
     it('should contain Layers navigation item for any sidebar state', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const layersItem = screen.getByTestId('nav-item-layers');
@@ -195,11 +164,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const discoverItem = screen.getByTestId('nav-item-discover');
@@ -216,11 +184,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const randomItem = screen.getByTestId('nav-item-random');
@@ -237,11 +204,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const settingsItem = screen.getByTestId('nav-item-settings');
@@ -258,11 +224,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const supportItem = screen.getByTestId('nav-item-support');
@@ -279,11 +244,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const collectionsItem = screen.getByTestId('nav-item-collections');
@@ -300,11 +264,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const playItem = screen.getByTestId('nav-item-play');
@@ -321,11 +284,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const helpItem = screen.getByTestId('nav-item-help');
@@ -338,36 +300,14 @@ describe('Sidebar Property Tests', () => {
       );
     });
 
-    it('should contain Logout navigation item for any sidebar state', () => {
-      fc.assert(
-        fc.property(
-          sidebarPropsArbitrary,
-          authStateArbitrary,
-          uiStateArbitrary,
-          navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
-            const { unmount } = renderSidebar(props);
-
-            const logoutItem = screen.getByTestId('nav-item-logout');
-            expect(logoutItem).toBeInTheDocument();
-
-            unmount();
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-
     it('should contain ALL required navigation items for any sidebar state', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             // Verify all required navigation items are present
@@ -383,15 +323,14 @@ describe('Sidebar Property Tests', () => {
       );
     });
 
-    it('should have exactly 9 required navigation items for any sidebar state', () => {
+    it('should have exactly 8 required navigation items for any sidebar state', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             // Count all nav items that match required IDs
@@ -417,11 +356,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             // Each navigation item should contain an SVG icon
@@ -442,12 +380,12 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           fc.array(
-            fc.tuple(sidebarPropsArbitrary, authStateArbitrary, uiStateArbitrary, navigationStateArbitrary),
+            fc.tuple(sidebarPropsArbitrary, uiStateArbitrary, navigationStateArbitrary),
             { minLength: 2, maxLength: 5 }
           ),
           (stateConfigs) => {
-            for (const [props, authState, uiState, navState] of stateConfigs) {
-              setupMocks(uiState, authState, navState);
+            for (const [props, uiState, navState] of stateConfigs) {
+              setupMocks(uiState, navState);
               const { unmount } = renderSidebar(props);
 
               // All required navigation items should be present for each state
@@ -467,11 +405,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             // Use getByRole to find the sidebar since testId may be empty string
@@ -490,11 +427,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { unmount } = renderSidebar(props);
 
             const logo = screen.getByTestId('sidebar-logo');
@@ -511,11 +447,10 @@ describe('Sidebar Property Tests', () => {
       fc.assert(
         fc.property(
           sidebarPropsArbitrary,
-          authStateArbitrary,
           uiStateArbitrary,
           navigationStateArbitrary,
-          (props, authState, uiState, navState) => {
-            setupMocks(uiState, authState, navState);
+          (props, uiState, navState) => {
+            setupMocks(uiState, navState);
             const { container, unmount } = renderSidebar(props);
 
             // Top section items: layers, discover, random, settings
@@ -526,14 +461,14 @@ describe('Sidebar Property Tests', () => {
             expect(topSection?.querySelector('[data-testid="nav-item-random"]')).toBeInTheDocument();
             expect(topSection?.querySelector('[data-testid="nav-item-settings"]')).toBeInTheDocument();
 
-            // Bottom section items: pro, collections, play, help, logout
+            // Bottom section items: support, collections, play, help; no logout
             const bottomSection = container.querySelector('[aria-label="Secondary navigation"]');
             expect(bottomSection).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-support"]')).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-collections"]')).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-play"]')).toBeInTheDocument();
             expect(bottomSection?.querySelector('[data-testid="nav-item-help"]')).toBeInTheDocument();
-            expect(bottomSection?.querySelector('[data-testid="nav-item-logout"]')).toBeInTheDocument();
+            expect(bottomSection?.querySelector('[data-testid="nav-item-logout"]')).not.toBeInTheDocument();
 
             unmount();
           }

@@ -1,15 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@/i18n/i18n';
-import { useAuthStore } from '@/stores/authStore';
 import { SupportDialog, PATREON_URL, GITHUB_ISSUES_URL } from './SupportDialog';
-
-function makeToken(payload: Record<string, unknown>): string {
-  const encode = (obj: Record<string, unknown>) =>
-    btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const exp = Math.floor(Date.now() / 1000) + 3600;
-  return `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ iat: 0, exp, ...payload })}.sig`;
-}
 
 describe('SupportDialog', () => {
   const onClose = vi.fn();
@@ -20,7 +12,6 @@ describe('SupportDialog', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    useAuthStore.getState().clearUser();
   });
 
   it('renders nothing when closed', () => {
@@ -91,18 +82,7 @@ describe('SupportDialog', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('thanks existing supporters', () => {
-    useAuthStore
-      .getState()
-      .setUser(makeToken({ id: 'u@example.com', username: 'u', subscription: 'pro_v1' }));
-    renderDialog();
-    expect(screen.getByTestId('support-supporter-note')).toBeInTheDocument();
-  });
-
-  it('hides the supporter note for non-supporters', () => {
-    useAuthStore
-      .getState()
-      .setUser(makeToken({ id: 'u@example.com', username: 'u', subscription: '-1' }));
+  it('shows no supporter note: the site has no login to know who supports', () => {
     renderDialog();
     expect(screen.queryByTestId('support-supporter-note')).toBeNull();
   });
