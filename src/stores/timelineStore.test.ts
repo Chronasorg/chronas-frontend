@@ -1146,8 +1146,9 @@ describe('toWikipediaUrl utility', () => {
     expect(toWikipediaUrl('https://en.wikipedia.org/wiki/Test')).toBe('https://en.wikipedia.org/wiki/Test');
   });
 
-  it('should return full URL as-is when already a http URL', () => {
-    expect(toWikipediaUrl('http://en.wikipedia.org/wiki/Test')).toBe('http://en.wikipedia.org/wiki/Test');
+  it('should upgrade a full http URL to https', () => {
+    // http is upgraded: the article iframe accepts https only
+    expect(toWikipediaUrl('http://en.wikipedia.org/wiki/Test')).toBe('https://en.wikipedia.org/wiki/Test');
   });
 
   it('should return empty string for empty input', () => {
@@ -1362,6 +1363,29 @@ describe('loadEpicItems', () => {
     expect(state.epicItems[0]?.id).toBe('roman-empire');
     expect(state.epicItems[0]?.content).toBe('Roman Empire');
     expect(state.epicItems[1]?.id).toBe('hundred-years-war');
+  });
+
+  it('skips malformed records and falls back for non-string names (review of PR #72)', async () => {
+    mockGet.mockResolvedValueOnce([
+      { _id: 'e_number_name', subtype: 'ei', data: { start: 1000, end: 1010 }, name: 42 },
+      { _id: 'e_null_name', subtype: 'ew', data: { title: { html: '<b>x</b>' }, start: 'soon' }, name: null },
+      { _id: 'e_title_only', subtype: 'ps', data: { title: 'Title only', wiki: 7 } },
+      { _id: 42, subtype: 'ei', data: {} },
+      { _id: '', subtype: 'ei', data: {} },
+      { _id: 'e_no_data', subtype: 'ei', data: null },
+      { _id: 'e_bad_subtype', subtype: 3, data: {} },
+    ]);
+
+    await useTimelineStore.getState().loadEpicItems();
+
+    const items = useTimelineStore.getState().epicItems;
+    expect(items.map((item) => item.id)).toEqual(['e_number_name', 'e_null_name', 'e_title_only']);
+    expect(items.map((item) => item.content)).toEqual(['e_number_name', 'e_null_name', 'Title only']);
+    for (const item of items) {
+      expect(typeof item.content).toBe('string');
+      expect(typeof item.wiki).toBe('string');
+      expect(Number.isNaN(item.start.getTime())).toBe(false);
+    }
   });
 
   it('should filter out non-epic objects from response', async () => {

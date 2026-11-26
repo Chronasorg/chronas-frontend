@@ -25,6 +25,7 @@ import { YearMarkerLabel } from '../YearMarkerLabel';
 import { CenturyNav } from '../CenturyNav';
 import { EraBands } from '../EraBands';
 import styles from './Timeline.module.css';
+import { escapeHtml } from '../../../utils/escapeHtml';
 
 /**
  * Timeline groups configuration - matches production MapTimeline.js
@@ -145,7 +146,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   const getEpicTooltipHtml = useCallback((epic: EpicItem): string => {
     const startYear = epic.start.getFullYear();
     const endYear = epic.end.getFullYear();
-    const title = epic.content;
+    const title = escapeHtml(epic.content);
     
     switch (epic.subtype) {
       case 'ew': // War - show year range
@@ -166,7 +167,7 @@ export const Timeline: React.FC<TimelineProps> = ({
    */
   const transformEpicToTimelineItem = useCallback((epic: EpicItem, _index: number): TimelineItem => {
     const dot = getDotHtml(epic.subtype);
-    const contentHtml = `<div class="warContainer">${dot}${epic.content}</div>`;
+    const contentHtml = `<div class="warContainer">${dot}${escapeHtml(epic.content)}</div>`;
 
     return {
       id: epic.id,

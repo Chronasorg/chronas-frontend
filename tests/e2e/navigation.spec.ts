@@ -36,7 +36,7 @@ test.describe('Navigation', () => {
       await expect(page.getByTestId('nav-item-collections')).toBeVisible();
       await expect(page.getByTestId('nav-item-play')).toBeVisible();
       await expect(page.getByTestId('nav-item-help')).toBeVisible();
-      await expect(page.getByTestId('nav-item-logout')).toBeVisible();
+      await expect(page.getByTestId('nav-item-logout')).toHaveCount(0);
     });
   });
 

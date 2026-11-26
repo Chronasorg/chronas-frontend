@@ -7,7 +7,6 @@
 export { Sidebar, type SidebarProps } from './Sidebar';
 export { NavItem, type NavItemProps } from './NavItem';
 export { Logo, type LogoProps } from './Logo';
-export { UserAvatar, type UserAvatarProps } from './UserAvatar';
 export { MenuDrawer, type MenuDrawerProps } from './MenuDrawer';
 export { Tooltip, type TooltipProps, type TooltipPosition } from './Tooltip';
 export {
@@ -26,5 +25,4 @@ export {
   CollectionsIcon,
   PlayIcon,
   HelpIcon,
-  LogoutIcon,
 } from './navConfig.icons';

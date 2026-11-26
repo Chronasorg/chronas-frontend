@@ -18,6 +18,7 @@ import { apiClient } from '@/api/client';
 import { METADATA } from '@/api/endpoints';
 import { useTimelineStore } from '@/stores/timelineStore';
 import styles from './ProvinceTimeline.module.css';
+import { escapeHtml } from '../../../utils/escapeHtml';
 
 /**
  * Province timeline data structure from API.
@@ -95,12 +96,12 @@ function buildTimelineItems(
       items.push({
         id: `${key}||${String(index)}||${dimKey}`,
         group: key,
-        content: itemTitle,
+        content: escapeHtml(itemTitle),
         start: new Date(new Date(0, 1, 1).setFullYear(startYear)),
         end: new Date(new Date(0, 1, 1).setFullYear(endYear)),
         type: 'range',
         style: bgColor ? `background: ${bgColor}` : '',
-        title: `<span style="color: red">${itemTitle}</span> ${String(startYear)} - ${String(endYear)} (${String(endYear - startYear)} years)`,
+        title: `<span style="color: red">${escapeHtml(itemTitle)}</span> ${String(startYear)} - ${String(endYear)} (${String(endYear - startYear)} years)`,
         className: 'provinceTimelineItem',
       });
     });

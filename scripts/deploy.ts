@@ -418,14 +418,13 @@ function deploy(environment: string): void {
     `--profile ${config.awsProfile} --region ${config.awsRegion}`
   );
 
-  // Upload JS map files with correct content type
-  console.log('   Uploading source maps...');
+  // Source maps are not built (vite.config.ts, sourcemap: false). Delete the
+  // ones earlier deploys uploaded: they published the full source. The sync
+  // above excludes "*.js.map", so its --delete never removes them.
+  console.log('   Deleting source maps...');
   run(
-    `aws s3 cp dist/ s3://${config.s3Bucket}/ ` +
+    `aws s3 rm s3://${config.s3Bucket}/ ` +
     `--recursive --exclude "*" --include "*.js.map" ` +
-    `--content-type "application/json" ` +
-    `--cache-control "public, max-age=31536000, immutable" ` +
-    `--metadata-directive REPLACE ` +
     `--profile ${config.awsProfile} --region ${config.awsRegion}`
   );
   

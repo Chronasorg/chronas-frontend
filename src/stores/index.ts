@@ -5,17 +5,6 @@
  */
 
 export {
-  useAuthStore,
-  decodeJWT,
-  isTokenExpired,
-  TOKEN_STORAGE_KEY,
-  type AuthState,
-  type AuthActions,
-  type AuthStore,
-  type JWTPayload,
-} from './authStore';
-
-export {
   useUIStore,
   isValidTheme,
   isValidLocale,

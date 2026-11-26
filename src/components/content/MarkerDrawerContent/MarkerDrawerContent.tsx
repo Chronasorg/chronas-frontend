@@ -58,9 +58,10 @@ function getMarkerWikiUrl(marker: Marker): string | undefined {
     return undefined;
   }
   
-  // Check if it's already a full URL
+  // Already a full URL: return it, upgraded to https (the article iframe
+  // accepts https only)
   if (wikiId.startsWith('http://') || wikiId.startsWith('https://')) {
-    return wikiId;
+    return wikiId.replace(/^http:\/\//, 'https://');
   }
   
   // Construct full Wikipedia URL from article name

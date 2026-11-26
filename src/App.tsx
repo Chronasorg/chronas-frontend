@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { HashRouter } from 'react-router';
 import AppRoutes from './routes';
-import { useAuthStore } from './stores';
-import { applyMarkersOffFromURL, useMapStore, isValidColorDimension } from './stores/mapStore';
+import { applyMarkersOffFromURL, useMapStore, isValidColorDimension, getOwnProvinceData } from './stores/mapStore';
 import { applyEpicsFromURL, useTimelineStore } from './stores/timelineStore';
 import { useUIStore } from './stores/uiStore';
 import { getPositionFromURL, getYearFromURL } from './utils/mapUtils';
@@ -25,7 +24,7 @@ function buildWikiUrl(
   currentAreaData: Record<string, [string, string, string, string | null, number]> | null,
   getEntityWiki: (value: string, dimension: 'ruler' | 'culture' | 'religion' | 'religionGeneral' | 'population') => string | undefined
 ): string {
-  const provinceData = currentAreaData?.[provinceId];
+  const provinceData = getOwnProvinceData(currentAreaData, provinceId);
   if (!provinceData) {
     return `https://en.wikipedia.org/wiki/${encodeURIComponent(provinceId.replace(/ /g, '_'))}`;
   }
@@ -50,8 +49,19 @@ function buildWikiUrl(
     : `https://en.wikipedia.org/wiki/${encodeURIComponent(provinceId.replace(/ /g, '_'))}`;
 }
 
+/**
+ * chronas.org had a login until 2026-11; its token (chs_token) never expired.
+ * The site no longer logs anyone in, so remove a token left in the browser.
+ */
+function clearLegacyLogin() {
+  try {
+    localStorage.removeItem('chs_token');
+  } catch {
+    // Storage can be unavailable (private mode, blocked cookies); nothing to clear then.
+  }
+}
+
 function App() {
-  const loadFromStorage = useAuthStore((state) => state.loadFromStorage);
   const loadMetadata = useMapStore((state) => state.loadMetadata);
   const currentAreaData = useMapStore((state) => state.currentAreaData);
   const activeColor = useMapStore((state) => state.activeColor);
@@ -92,7 +102,7 @@ function App() {
   // Requirement 2.1: WHEN the application initializes, THE Map_Store SHALL fetch metadata
   // Requirement 9.4: THE application SHALL restore drawer state from URL on page load
   useEffect(() => {
-    loadFromStorage();
+    clearLegacyLogin();
     // Load metadata for entity colors on app startup (with current locale)
     void loadMetadata(locale);
     // Load epic items for timeline display
@@ -207,7 +217,7 @@ function App() {
     // to avoid re-running the effect when they change. The handleURLStateChange callback
     // will use the latest values when called.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadFromStorage, loadMetadata, loadEpicItems, setYear, setViewport, openRightDrawer, closeRightDrawer]);
+  }, [loadMetadata, loadEpicItems, setYear, setViewport, openRightDrawer, closeRightDrawer]);
 
   return (
     <HashRouter>

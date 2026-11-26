@@ -345,7 +345,10 @@ export function safeAreaDataAccess(
   }
 
   // Check if province exists in data
-  const provinceData = areaData[provinceId];
+  // Own keys only: `__proto__` or `constructor` must not count as provinces.
+  const provinceData = Object.prototype.hasOwnProperty.call(areaData, provinceId)
+    ? areaData[provinceId]
+    : undefined;
   if (!provinceData) {
     if (logWarnings) {
       console.warn(`MISSING PROVINCE: ${provinceId} not found when accessing ${dataType}`);

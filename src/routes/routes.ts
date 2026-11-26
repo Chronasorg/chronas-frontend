@@ -6,7 +6,6 @@ export const ROUTES = {
   HOME: '/',
   CONFIGURATION: '/configuration',
   DISCOVER: '/discover',
-  LOGIN: '/login',
   ARTICLE: '/article',
 } as const;
 

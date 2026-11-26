@@ -33,7 +33,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### State Management (Zustand stores in `src/stores/`)
 
-- **authStore** — JWT auth, user session. Token stored in `localStorage` as `chs_token`.
 - **mapStore** — Map viewport, color dimensions, area/marker data, GeoJSON metadata.
 - **timelineStore** — Current year, epic items, autoplay config.
 - **uiStore** — Theme, locale, drawer state (right drawer shows area/marker content).
@@ -48,7 +47,9 @@ HashRouter with routes defined in `src/routes/`. Year, area, and marker selectio
 
 ### API Layer (`src/api/`)
 
-Axios client with JWT Bearer token injection (request interceptor) and 401 redirect handling (response interceptor). Endpoints defined in `endpoints.ts`. 30s timeout.
+Axios client for the public chronas-api reads; it sends no Authorization header. The response interceptor retries busy GET/HEAD reads (429, 503, network errors). Endpoints defined in `endpoints.ts`. 30s timeout.
+
+**No login (since 2026-11):** the login, signup and logout UI, the auth store and the user avatar were removed after the pentest; the API retired signup and made every write admin-only. On startup `App.tsx` deletes a `chs_token` an older version left in `localStorage`. The production build has no source maps (`vite.config.ts`), and `scripts/deploy.ts` deletes any `.js.map` left in the bucket.
 
 ### Map Visualization
 

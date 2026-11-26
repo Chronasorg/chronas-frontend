@@ -10,7 +10,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { DrawerContent } from '@/stores/uiStore';
-import { useMapStore } from '@/stores/mapStore';
+import { useMapStore, getOwnProvinceData } from '@/stores/mapStore';
 import { ProvinceDrawerContent } from '@/components/content/ProvinceDrawerContent/ProvinceDrawerContent';
 import { MarkerDrawerContent } from '@/components/content/MarkerDrawerContent/MarkerDrawerContent';
 import { ArticleIframe } from '@/components/content/ArticleIframe/ArticleIframe';
@@ -242,7 +242,7 @@ export const RightDrawer: React.FC<RightDrawerProps> = ({
           <div className={contentInnerClass}>
             {/* Render ProvinceDrawerContent for area type */}
             {content.type === 'area' && (() => {
-              const provinceData = currentAreaData?.[content.provinceId];
+              const provinceData = getOwnProvinceData(currentAreaData, content.provinceId);
               if (provinceData) {
                 return (
                   <ProvinceDrawerContent

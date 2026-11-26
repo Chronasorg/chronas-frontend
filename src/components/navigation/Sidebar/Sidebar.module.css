@@ -83,15 +83,6 @@
   min-height: 16px;
 }
 
-.avatarSection {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(120, 95, 40, 0.1);
-  width: 32px;
-  display: flex;
-  justify-content: center;
-}
-
 .separator {
   width: 22px;
   height: 1px;
@@ -148,10 +139,6 @@
   background: rgba(173, 135, 27, 0.55);
 }
 
-[data-theme='dark'] .avatarSection {
-  border-top-color: rgba(255, 255, 255, 0.06);
-}
-
 [data-theme='dark'] .separator {
   background-color: rgba(255, 255, 255, 0.08);
 }
@@ -176,10 +163,6 @@
 
 [data-theme='luther'] .logoSection::after {
   background: rgba(255, 243, 211, 0.4);
-}
-
-[data-theme='luther'] .avatarSection {
-  border-top-color: rgba(255, 243, 211, 0.1);
 }
 
 [data-theme='luther'] .separator {

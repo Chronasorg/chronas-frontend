@@ -7,7 +7,7 @@
  * Production HTML reference structure:
  * - Main container: flex column, padding 8px 4px
  * - topMenuItems: Logo, Layers, Discover, Random, Settings
- * - bottomMenu: Star (PRO), Collections, Play, Help, Logout
+ * - bottomMenu: Star (PRO), Collections, Play, Help (Logout removed with the login, 2026-11)
  * - Icons: color rgb(106, 106, 106), fill currentcolor, 24x24px
  * - Logo SVG: fill #fffffe, viewBox 0 0 14930 16000
  *
@@ -166,12 +166,11 @@ test.describe('Navigation Parity with Production', () => {
       await expect(helpPath).toBeVisible({ timeout: 10000 });
     });
 
-    test('should have Logout icon with production SVG path', async ({ page }) => {
+    test('should have no Logout icon (the site has no login)', async ({ page }) => {
       await page.goto(DEV_URL);
       await page.waitForLoadState('networkidle');
-      
-      const logoutPath = page.locator(`path[d="${PRODUCTION_ICON_PATHS.logout}"]`);
-      await expect(logoutPath).toBeVisible({ timeout: 10000 });
+
+      await expect(page.locator(`path[d="${PRODUCTION_ICON_PATHS.logout}"]`)).toHaveCount(0);
     });
 
     test('should have Collections icon with production SVG path', async ({ page }) => {
@@ -319,7 +318,7 @@ test.describe('Navigation Parity with Production', () => {
       }
     });
 
-    test('should have icons in production order: Star, Collections, Play, Help, Logout in bottom', async ({ page }) => {
+    test('should have icons in production order: Star, Collections, Play, Help in bottom', async ({ page }) => {
       await page.goto(DEV_URL);
       await page.waitForLoadState('networkidle');
       
@@ -342,9 +341,9 @@ test.describe('Navigation Parity with Production', () => {
         expect(iconPaths[0]).toBe(PRODUCTION_ICON_PATHS.star);
       }
       
-      // Check Logout is last
+      // Check Help is last (Logout was removed)
       if (iconPaths.length > 0) {
-        expect(iconPaths[iconPaths.length - 1]).toBe(PRODUCTION_ICON_PATHS.logout);
+        expect(iconPaths[iconPaths.length - 1]).toBe(PRODUCTION_ICON_PATHS.help);
       }
     });
   });

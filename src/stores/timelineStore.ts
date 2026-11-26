@@ -455,9 +455,10 @@ export function toWikipediaUrl(wikiArticle: string): string {
   if (!wikiArticle) {
     return '';
   }
-  // If it's already a full URL, return as-is
+  // If it's already a full URL, return it, upgraded to https (the article
+  // iframe accepts https only)
   if (wikiArticle.startsWith('http://') || wikiArticle.startsWith('https://')) {
-    return wikiArticle;
+    return wikiArticle.replace(/^http:\/\//, 'https://');
   }
   // Otherwise, construct the full Wikipedia URL
   return `${WIKIPEDIA_BASE_URL}${wikiArticle}`;
@@ -528,6 +529,33 @@ export function clearEpicCoordinatesCache(): void {
 }
 
 /**
+ * Whether an API list entry can be shown as an epic: a non-empty string id,
+ * a string subtype and a data object. Other entries (like the battles-by-wars
+ * mapping, or a malformed record) are skipped.
+ */
+export function isEpicApiResponse(item: unknown): item is EpicApiResponse {
+  if (item === null || typeof item !== 'object') return false;
+  const record = item as Record<string, unknown>;
+  return (
+    typeof record['_id'] === 'string' &&
+    record['_id'] !== '' &&
+    typeof record['subtype'] === 'string' &&
+    record['data'] !== null &&
+    typeof record['data'] === 'object'
+  );
+}
+
+/** The first argument that is a non-empty string, if any. */
+function firstNonEmptyString(...values: unknown[]): string | undefined {
+  return values.find((v): v is string => typeof v === 'string' && v !== '');
+}
+
+/** The first argument that is a finite number, if any. */
+function firstFiniteNumber(...values: unknown[]): number | undefined {
+  return values.find((v): v is number => typeof v === 'number' && Number.isFinite(v));
+}
+
+/**
  * Transforms an API response item to an EpicItem.
  * Requirements: 6.1
  *
@@ -535,10 +563,13 @@ export function clearEpicCoordinatesCache(): void {
  * @returns The transformed EpicItem
  */
 export function transformApiResponseToEpicItem(apiItem: EpicApiResponse): EpicItem {
-  const startYear = apiItem.data.start ?? apiItem.year ?? 0;
-  const endYear = apiItem.data.end ?? startYear + 1;
-  const title = apiItem.name ?? apiItem.data.title ?? apiItem._id;
-  const wikiArticle = apiItem.data.wiki ?? apiItem.wiki ?? '';
+  // The API's runtime values are not guaranteed to match EpicApiResponse:
+  // take the first value of the expected type and fall back otherwise, so a
+  // malformed record can't break rendering.
+  const startYear = firstFiniteNumber(apiItem.data.start, apiItem.year) ?? 0;
+  const endYear = firstFiniteNumber(apiItem.data.end) ?? startYear + 1;
+  const title = firstNonEmptyString(apiItem.name, apiItem.data.title) ?? apiItem._id;
+  const wikiArticle = firstNonEmptyString(apiItem.data.wiki, apiItem.wiki) ?? '';
   const wiki = toWikipediaUrl(wikiArticle);
 
   return {
@@ -784,13 +815,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
       // Filter out any non-epic objects (like the battles-by-wars mapping)
       // and transform to EpicItem format
       const epicItems = response
-        .filter((item): item is EpicApiResponse => 
-          item !== null && 
-          typeof item === 'object' && 
-          '_id' in item && 
-          'subtype' in item &&
-          'data' in item
-        )
+        .filter((item): item is EpicApiResponse => isEpicApiResponse(item))
         .map(transformApiResponseToEpicItem);
       
       console.log('[Timeline] Transformed epic items:', epicItems.length);

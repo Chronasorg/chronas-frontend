@@ -117,7 +117,7 @@ test.describe('Unit 1: Visual Parity Fixes', () => {
       ]);
     });
 
-    test('bottom section has Star, Collections, Play, Help, Logout icons', async ({ page }) => {
+    test('bottom section has Star, Collections, Play, Help icons and no Logout', async ({ page }) => {
       await page.goto(DEV_URL, { waitUntil: 'networkidle' });
       await page.waitForSelector('[data-testid="nav-section-bottom"]', { timeout: 15000 });
 
@@ -125,7 +125,7 @@ test.describe('Unit 1: Visual Parity Fixes', () => {
       await expect(page.getByTestId('nav-item-collections')).toBeVisible();
       await expect(page.getByTestId('nav-item-play')).toBeVisible();
       await expect(page.getByTestId('nav-item-help')).toBeVisible();
-      await expect(page.getByTestId('nav-item-logout')).toBeVisible();
+      await expect(page.getByTestId('nav-item-logout')).toHaveCount(0);
     });
 
     test('nav icons are 24x24px', async ({ page }) => {
