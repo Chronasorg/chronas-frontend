@@ -118,7 +118,7 @@ Both distributions use Origin Access Control (OAC) with SigV4 signing. Custom er
 
 ### Security headers and mail/CAA records
 
-CloudFront `E2ZHTJ5XV3DHIV` adds HSTS (`includeSubDomains`), a Content-Security-Policy, `X-Frame-Options: SAMEORIGIN`, `nosniff`, `Referrer-Policy` and `Permissions-Policy` through the response headers policy `chronas-frontend-security-headers`; Route 53 has SPF `-all`, DMARC `p=reject` and CAA (Amazon, Let's Encrypt). Both are managed by the scripts in [infra/](infra/README.md) (dry run unless `--apply --confirm`). **A new external host the site loads (basemap, embed, API, analytics) must be added to `CSP_DIRECTIVES` in `infra/edge/security-headers-config.mjs` and applied before it ships**, or the browser blocks it. No inline `<script>`: Google Analytics is loaded from `src/analytics/googleAnalytics.ts`.
+CloudFront `E2ZHTJ5XV3DHIV` adds HSTS (`includeSubDomains`), a Content-Security-Policy, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` and `Permissions-Policy` through a response headers policy (`chronas-frontend-security-headers-report-only` or `-enforce`); Route 53 has SPF `-all`, DMARC `p=reject` and CAA (Amazon, Let's Encrypt). Both are managed by the scripts in [infra/](infra/README.md) (dry run unless `--apply --confirm`). **A new external host the site loads (basemap, embed, API, analytics) must be added to `CSP_DIRECTIVES` in `infra/edge/security-headers-config.mjs` and applied before it ships**, or the browser blocks it. No inline `<script>`: Google Analytics is loaded from `src/analytics/googleAnalytics.ts`.
 
 ### DNS (Route53)
 

@@ -1,24 +1,36 @@
 #!/usr/bin/env node
 /**
  * Applies the chronas.org security headers (security-headers-config.mjs) to
- * CloudFront E2ZHTJ5XV3DHIV as a response headers policy on the default
- * behavior. A dry run unless called with --apply and the confirm phrase.
+ * CloudFront E2ZHTJ5XV3DHIV. A dry run unless called with --apply and the
+ * confirm phrase.
  *
  *   node infra/edge/security-headers.mjs report-only
  *   node infra/edge/security-headers.mjs enforce --apply --confirm "apply chronas.org security headers"
- *   node infra/edge/security-headers.mjs restore <backup.json> --apply --confirm "restore chronas.org distribution"
+ *   node infra/edge/security-headers.mjs restore <backup.json> --apply --confirm "restore chronas.org security headers"
  *
- * Before any change it saves the distribution config to infra/backups/
- * (gitignored). `restore` puts such a backup back; it leaves the policy in
- * place, unattached. Uses the AWS CLI with the chronas-prod profile
- * (CHRONAS_AWS_PROFILE overrides it) and refuses any account but 937826731833.
+ * Each mode has its own response headers policy (POLICY_NAMES); applying a
+ * mode creates or updates that policy and attaches it to the default
+ * behavior. Going back from enforce to report-only is therefore just
+ * `report-only --apply`: it attaches the other policy.
+ *
+ * Before any change the script saves a snapshot to infra/backups/
+ * (gitignored): the distribution config and the full config of every
+ * chronas.org security headers policy. `restore` puts a snapshot back: first
+ * the policies' contents, then the distribution (and with it the attached
+ * policy). Uses the AWS CLI with the chronas-prod profile (CHRONAS_AWS_PROFILE
+ * overrides it) and refuses any account but 937826731833.
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { DISTRIBUTION_ID, POLICY_NAME, policyConfig } from './security-headers-config.mjs';
+import {
+  DISTRIBUTION_ID,
+  LEGACY_POLICY_NAME,
+  POLICY_NAMES,
+  policyConfig,
+} from './security-headers-config.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BACKUP_DIR = process.env.EDGE_BACKUP_DIR || path.join(HERE, '..', 'backups');
@@ -26,7 +38,8 @@ const BACKUP_DIR = process.env.EDGE_BACKUP_DIR || path.join(HERE, '..', 'backups
 const PROFILE = process.env.CHRONAS_AWS_PROFILE || 'chronas-prod';
 const ACCOUNT = '937826731833';
 const CONFIRM_APPLY = 'apply chronas.org security headers';
-const CONFIRM_RESTORE = 'restore chronas.org distribution';
+const CONFIRM_RESTORE = 'restore chronas.org security headers';
+const OUR_POLICY_NAMES = [...Object.values(POLICY_NAMES), LEGACY_POLICY_NAME];
 
 function aws(args) {
   const out = execFileSync('aws', [...args, '--profile', PROFILE, '--output', 'json'], {
@@ -37,12 +50,14 @@ function aws(args) {
 }
 
 function withTempJson(value, fn) {
-  const file = path.join(fs.mkdtempSync(path.join(BACKUP_DIR, 'tmp-')), 'input.json');
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  const dir = fs.mkdtempSync(path.join(BACKUP_DIR, 'tmp-'));
+  const file = path.join(dir, 'input.json');
   fs.writeFileSync(file, JSON.stringify(value));
   try {
     return fn(`file://${file}`);
   } finally {
-    fs.rmSync(path.dirname(file), { recursive: true, force: true });
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 }
 
@@ -52,23 +67,84 @@ function checkAccount() {
     throw new Error(`profile ${PROFILE} is account ${Account}, not ${ACCOUNT}`);
 }
 
-function findPolicy() {
-  const list = aws(['cloudfront', 'list-response-headers-policies', '--type', 'custom']);
-  const item = (list.ResponseHeadersPolicyList?.Items || []).find(
-    (i) => i.ResponseHeadersPolicy.ResponseHeadersPolicyConfig.Name === POLICY_NAME
-  );
-  return item ? item.ResponseHeadersPolicy.Id : null;
+/**
+ * CloudFront returns the sections a policy doesn't use as empty objects
+ * (`XSSProtection: {}`), and refuses them when they are sent back. Drops
+ * empty objects and nulls, recursively, so a read config can be written.
+ */
+export function writableConfig(value) {
+  if (Array.isArray(value)) return value.map(writableConfig);
+  if (value === null || typeof value !== 'object') return value;
+  const out = {};
+  for (const [key, child] of Object.entries(value)) {
+    const cleaned = writableConfig(child);
+    if (cleaned === null || cleaned === undefined) continue;
+    if (typeof cleaned === 'object' && !Array.isArray(cleaned) && Object.keys(cleaned).length === 0)
+      continue;
+    out[key] = cleaned;
+  }
+  return out;
 }
 
-function backupDistribution() {
+/** Our policies by name: { name: { id, config } }. */
+function ourPolicies() {
+  const list = aws(['cloudfront', 'list-response-headers-policies', '--type', 'custom']);
+  const byName = {};
+  for (const item of list.ResponseHeadersPolicyList?.Items || []) {
+    const { Id, ResponseHeadersPolicyConfig: config } = item.ResponseHeadersPolicy;
+    if (OUR_POLICY_NAMES.includes(config.Name))
+      byName[config.Name] = { id: Id, config: writableConfig(config) };
+  }
+  return byName;
+}
+
+/** Saves the distribution config and our policies' configs; returns them. */
+function snapshot() {
+  const distribution = aws(['cloudfront', 'get-distribution-config', '--id', DISTRIBUTION_ID]);
+  const policies = {};
+  for (const { id, config } of Object.values(ourPolicies())) policies[id] = config;
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
-  const dist = aws(['cloudfront', 'get-distribution-config', '--id', DISTRIBUTION_ID]);
   const file = path.join(
     BACKUP_DIR,
-    `${new Date().toISOString().replace(/[:.]/g, '-')}-${DISTRIBUTION_ID}.json`
+    `${new Date().toISOString().replace(/[:.]/g, '-')}-${DISTRIBUTION_ID}-security-headers.json`
   );
-  fs.writeFileSync(file, JSON.stringify(dist, null, 2));
-  return { dist, file };
+  const saved = { takenAt: new Date().toISOString(), distribution, policies };
+  fs.writeFileSync(file, JSON.stringify(saved, null, 2));
+  return { ...saved, file };
+}
+
+function updatePolicy(id, config) {
+  const { ETag } = aws(['cloudfront', 'get-response-headers-policy', '--id', id]);
+  withTempJson(config, (input) =>
+    aws([
+      'cloudfront',
+      'update-response-headers-policy',
+      '--id',
+      id,
+      '--if-match',
+      ETag,
+      '--response-headers-policy-config',
+      input,
+    ])
+  );
+}
+
+// Reads the ETag just before writing: updating a policy that is attached to
+// the distribution changes the distribution's ETag too.
+function updateDistribution(distributionConfig) {
+  const { ETag } = aws(['cloudfront', 'get-distribution-config', '--id', DISTRIBUTION_ID]);
+  withTempJson(distributionConfig, (input) =>
+    aws([
+      'cloudfront',
+      'update-distribution',
+      '--id',
+      DISTRIBUTION_ID,
+      '--if-match',
+      ETag,
+      '--distribution-config',
+      input,
+    ])
+  );
 }
 
 function parseArgs(argv) {
@@ -79,20 +155,26 @@ function parseArgs(argv) {
   return { command, arg, apply, confirm };
 }
 
-function applyPolicy(mode, { apply, confirm }) {
+function applyMode(mode, { apply, confirm }) {
   const config = policyConfig(mode);
-  const policyId = findPolicy();
-  const { dist, file } = backupDistribution();
-  const behavior = dist.DistributionConfig.DefaultCacheBehavior;
+  const policies = ourPolicies();
+  // The first policy (2026-11-26) had no mode in its name and held the
+  // report-only CSP; report-only takes it over and renames it.
+  const existing =
+    policies[config.Name] ?? (mode === 'report-only' ? policies[LEGACY_POLICY_NAME] : undefined);
+  const saved = snapshot();
+  const behavior = saved.distribution.DistributionConfig.DefaultCacheBehavior;
 
-  console.log(`Distribution ${DISTRIBUTION_ID}, backup ${path.relative(process.cwd(), file)}`);
-  console.log(`Policy ${POLICY_NAME}: ${policyId ? `update ${policyId}` : 'create'} (CSP ${mode})`);
+  console.log(`Snapshot ${path.relative(process.cwd(), saved.file)}`);
+  console.log(
+    `Policy ${config.Name}: ${existing ? `update ${existing.id}` : 'create'} (CSP ${mode})`
+  );
   console.log(JSON.stringify(config, null, 2));
   console.log(
-    `Default behavior response headers policy: ${behavior.ResponseHeadersPolicyId || 'none'}` +
-      (policyId && behavior.ResponseHeadersPolicyId === policyId
-        ? ' (already attached)'
-        : ' -> this policy')
+    `Default behavior of ${DISTRIBUTION_ID}: ${behavior.ResponseHeadersPolicyId || 'none'}` +
+      (existing && behavior.ResponseHeadersPolicyId === existing.id
+        ? ' (already this policy)'
+        : ` -> ${existing ? existing.id : 'the new policy'}`)
   );
 
   if (!apply) {
@@ -101,21 +183,9 @@ function applyPolicy(mode, { apply, confirm }) {
   }
   if (confirm !== CONFIRM_APPLY) throw new Error(`--confirm must be "${CONFIRM_APPLY}"`);
 
-  let id = policyId;
+  let id = existing?.id;
   if (id) {
-    const { ETag } = aws(['cloudfront', 'get-response-headers-policy', '--id', id]);
-    withTempJson(config, (input) =>
-      aws([
-        'cloudfront',
-        'update-response-headers-policy',
-        '--id',
-        id,
-        '--if-match',
-        ETag,
-        '--response-headers-policy-config',
-        input,
-      ])
-    );
+    updatePolicy(id, config);
     console.log(`Updated policy ${id}`);
   } else {
     const created = withTempJson(config, (input) =>
@@ -132,61 +202,59 @@ function applyPolicy(mode, { apply, confirm }) {
 
   if (behavior.ResponseHeadersPolicyId !== id) {
     behavior.ResponseHeadersPolicyId = id;
-    withTempJson(dist.DistributionConfig, (input) =>
-      aws([
-        'cloudfront',
-        'update-distribution',
-        '--id',
-        DISTRIBUTION_ID,
-        '--if-match',
-        dist.ETag,
-        '--distribution-config',
-        input,
-      ])
-    );
+    updateDistribution(saved.distribution.DistributionConfig);
     console.log(`Attached policy ${id} to the default behavior of ${DISTRIBUTION_ID}`);
   }
   console.log('CloudFront deploys the change to its edge locations within a few minutes.');
 }
 
 function restore(backupFile, { apply, confirm }) {
-  if (!backupFile) throw new Error('restore needs a backup file');
-  const saved = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
-  const current = backupDistribution();
+  if (!backupFile) throw new Error('restore needs a snapshot file');
+  const target = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
+  if (!target.distribution || !target.policies) {
+    throw new Error(`${backupFile} is not a security headers snapshot`);
+  }
+  const current = snapshot();
+  const attached = (s) =>
+    s.distribution.DistributionConfig.DefaultCacheBehavior.ResponseHeadersPolicyId;
+
   console.log(
-    `Restore ${DISTRIBUTION_ID} from ${backupFile} (current config saved to ${current.file})`
+    `Restore from ${backupFile} (current state saved to ${path.relative(process.cwd(), current.file)})`
   );
-  console.log(
-    `Response headers policy: ${current.dist.DistributionConfig.DefaultCacheBehavior.ResponseHeadersPolicyId || 'none'} -> ${saved.DistributionConfig.DefaultCacheBehavior.ResponseHeadersPolicyId || 'none'}`
+  const policyChanges = Object.entries(target.policies).filter(
+    ([id, config]) =>
+      JSON.stringify(current.policies[id]) !== JSON.stringify(writableConfig(config))
   );
+  for (const [id, config] of policyChanges) {
+    console.log(
+      `Policy ${id}: ${current.policies[id] ? 'restore its config' : 'gone, cannot restore'} (${config.Name})`
+    );
+  }
+  console.log(`Attached policy: ${attached(current) || 'none'} -> ${attached(target) || 'none'}`);
+
   if (!apply) {
     console.log(`\nDry run. To restore: --apply --confirm "${CONFIRM_RESTORE}"`);
     return;
   }
   if (confirm !== CONFIRM_RESTORE) throw new Error(`--confirm must be "${CONFIRM_RESTORE}"`);
-  withTempJson(saved.DistributionConfig, (input) =>
-    aws([
-      'cloudfront',
-      'update-distribution',
-      '--id',
-      DISTRIBUTION_ID,
-      '--if-match',
-      current.dist.ETag,
-      '--distribution-config',
-      input,
-    ])
-  );
-  console.log('Restored.');
+
+  for (const [id, config] of policyChanges) {
+    if (!current.policies[id]) throw new Error(`policy ${id} no longer exists; restore stopped`);
+    updatePolicy(id, writableConfig(config));
+    console.log(`Restored policy ${id}`);
+  }
+  updateDistribution(target.distribution.DistributionConfig);
+  console.log(`Restored the distribution config of ${DISTRIBUTION_ID}.`);
 }
 
 const args = parseArgs(process.argv.slice(2));
 try {
   if (['report-only', 'enforce', 'restore'].includes(args.command)) checkAccount();
-  if (args.command === 'report-only' || args.command === 'enforce') applyPolicy(args.command, args);
+  if (args.command === 'report-only' || args.command === 'enforce') applyMode(args.command, args);
   else if (args.command === 'restore') restore(args.arg, args);
   else {
     console.error(
-      'Usage: security-headers.mjs report-only|enforce|restore <backup.json> [--apply --confirm "<phrase>"]'
+      'Usage: security-headers.mjs report-only|enforce|restore <snapshot.json> [--apply --confirm "<phrase>"]'
     );
     process.exitCode = 2;
   }
