@@ -389,16 +389,38 @@ function deploy(environment: string): void {
   // Step 5: Upload to S3 with correct content types and cache headers
   console.log('\n☁️ Uploading to S3...');
   
-  // First sync everything except JS files and index.html.
+  // First sync everything except JS files, index.html and the basemap styles.
   // api/* belongs to chronas-api (api/statistics.json lives in the same bucket),
   // so it is excluded to keep --delete from removing it.
+  //
+  // Immutable is right here: assets/ is fingerprinted, glyph .pbf ranges under
+  // fonts/ never change for a given font, and images/ only gains files.
   run(
     `aws s3 sync dist/ s3://${config.s3Bucket}/ --delete ` +
     `--exclude "*.js" --exclude "*.js.map" --exclude "index.html" --exclude "api/*" ` +
+    `--exclude "styles/*" ` +
     `--cache-control "public, max-age=31536000, immutable" ` +
     `--profile ${config.awsProfile} --region ${config.awsRegion}`
   );
-  
+
+  // Basemap styles (styles/*.json) live at stable, unfingerprinted paths that
+  // BASEMAP_STYLES in src/stores/mapStore.ts names directly, and we refresh the
+  // vendored ones from upstream. With a one-year immutable header a refresh
+  // would never reach returning visitors, and a CloudFront invalidation clears
+  // only the edge, not browsers. One hour keeps them cheap and lets an update
+  // land the same day. (Browsers that fetched them before this change hold the
+  // old copy until 2027; to reach them with a style update, change the URL in
+  // BASEMAP_STYLES, e.g. add ?v=2.)
+  console.log('   Uploading basemap styles...');
+  run(
+    `aws s3 cp dist/styles/ s3://${config.s3Bucket}/styles/ ` +
+    `--recursive --exclude "*" --include "*.json" ` +
+    `--content-type "application/json" ` +
+    `--cache-control "public, max-age=3600" ` +
+    `--metadata-directive REPLACE ` +
+    `--profile ${config.awsProfile} --region ${config.awsRegion}`
+  );
+
   // Upload JS files with correct content type and cache headers.
   //
   // Walks all of dist/, not just dist/assets/. The sync above excludes "*.js"
